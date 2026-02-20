@@ -286,11 +286,12 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 #### Acceptance Criteria
 
 1. THE Senior_Coach_Site SHALL allow Senior_Coach to generate reports showing lesson deliveries
-2. THE Senior_Coach_Site SHALL allow filtering reports by date range, team, and coach
-3. WHEN generating a report, THE Senior_Coach_Site SHALL display skill, lesson name, coach name, team name, date delivered, lesson version, and notes
-4. THE Senior_Coach_Site SHALL allow Senior_Coach to export reports in CSV format
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to export reports in PDF format
-6. THE Senior_Coach_Site SHALL retrieve report data from Azure_Table_Storage
+2. THE Senior_Coach_Site SHALL allow filtering reports by date range, team, coach, and age group
+3. THE Senior_Coach_Site SHALL support age group filtering for U8, U9, U10, U11, and U12 teams
+4. WHEN generating a report, THE Senior_Coach_Site SHALL display skill, lesson name, coach name, team name, age group, date delivered, lesson version, and notes
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to export reports in CSV format
+6. THE Senior_Coach_Site SHALL allow Senior_Coach to export reports in PDF format
+7. THE Senior_Coach_Site SHALL retrieve report data from Azure_Table_Storage
 
 ### Requirement 13: Audit Trail
 
@@ -348,11 +349,81 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL display game feedback records filtered by team, coach, or date range
-2. WHEN displaying game feedback, THE Senior_Coach_Site SHALL show coach name, team name, game date, and feedback notes
-3. THE Senior_Coach_Site SHALL allow Senior_Coach to export game feedback in CSV format
-4. THE Senior_Coach_Site SHALL retrieve game feedback from Azure_Table_Storage
-5. THE Senior_Coach_Site SHALL display game feedback in chronological order with most recent first
+1. THE Senior_Coach_Site SHALL display game feedback records filtered by team, coach, date range, or age group
+2. THE Senior_Coach_Site SHALL support age group filtering for U8, U9, U10, U11, and U12 teams
+3. WHEN displaying game feedback, THE Senior_Coach_Site SHALL show coach name, team name, age group, game date, and feedback notes
+4. THE Senior_Coach_Site SHALL allow Senior_Coach to export game feedback in CSV format
+5. THE Senior_Coach_Site SHALL retrieve game feedback from Azure_Table_Storage
+6. THE Senior_Coach_Site SHALL display game feedback in chronological order with most recent first
+
+### Requirement 17a: Coach Activity Summary Report
+
+**User Story:** As a senior coach, I want to view coach activity summaries, so that I can monitor coaching engagement and identify coaches who may need support.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL generate coach activity summary reports
+2. THE Senior_Coach_Site SHALL allow filtering by date range, age group, or specific coaches
+3. WHEN generating a coach activity report, THE Senior_Coach_Site SHALL display coach name, number of lessons delivered, number of game feedback entries, and date range
+4. THE Senior_Coach_Site SHALL calculate and display average lessons per coach
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to export coach activity reports in CSV and PDF formats
+6. THE Senior_Coach_Site SHALL retrieve activity data from Azure_Table_Storage
+
+### Requirement 17b: Team Training History Report
+
+**User Story:** As a senior coach, I want to view training history for each team, so that I can ensure balanced skill development and identify training gaps.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL generate team training history reports
+2. THE Senior_Coach_Site SHALL allow filtering by team, age group, or date range
+3. WHEN generating a team training history report, THE Senior_Coach_Site SHALL display team name, age group, lesson name, skill category, date delivered, and coach name
+4. THE Senior_Coach_Site SHALL group lessons by skill category to show skill coverage
+5. THE Senior_Coach_Site SHALL highlight skills that have not been trained within a specified time period
+6. THE Senior_Coach_Site SHALL allow Senior_Coach to export team training history reports in CSV and PDF formats
+7. THE Senior_Coach_Site SHALL retrieve training history from Azure_Table_Storage
+
+### Requirement 17c: Session and Lesson Popularity Report
+
+**User Story:** As a senior coach, I want to view which sessions and lessons are most and least popular based on feedback ratings, so that I can improve content quality.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL generate session and lesson popularity reports based on feedback ratings
+2. THE Senior_Coach_Site SHALL allow filtering by skill category, age group, or date range
+3. WHEN generating a popularity report, THE Senior_Coach_Site SHALL display session/lesson name, skill category, average rating, number of ratings, and number of deliveries
+4. THE Senior_Coach_Site SHALL sort sessions and lessons by average rating (highest to lowest or lowest to highest)
+5. THE Senior_Coach_Site SHALL highlight sessions and lessons with ratings below a configurable threshold (e.g., below 3.0)
+6. THE Senior_Coach_Site SHALL display coach comments alongside ratings for context
+7. THE Senior_Coach_Site SHALL allow Senior_Coach to export popularity reports in CSV and PDF formats
+8. THE Senior_Coach_Site SHALL retrieve feedback data from Azure_Table_Storage
+
+### Requirement 17d: Skill Coverage Report
+
+**User Story:** As a senior coach, I want to view which skills are being trained most and least frequently, so that I can ensure balanced curriculum delivery across teams.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL generate skill coverage reports showing training frequency by skill category
+2. THE Senior_Coach_Site SHALL allow filtering by age group, team, or date range
+3. WHEN generating a skill coverage report, THE Senior_Coach_Site SHALL display skill category, number of lessons delivered, number of teams trained, and percentage of total training time
+4. THE Senior_Coach_Site SHALL identify skills that have not been trained within a specified time period
+5. THE Senior_Coach_Site SHALL compare skill coverage across age groups to identify imbalances
+6. THE Senior_Coach_Site SHALL allow Senior_Coach to export skill coverage reports in CSV and PDF formats
+7. THE Senior_Coach_Site SHALL retrieve lesson delivery data from Azure_Table_Storage
+
+### Requirement 17e: Audit Trail Report
+
+**User Story:** As a senior coach, I want to view detailed audit trails for delivery records, so that I can track who created, modified, or deleted coaching records and maintain data integrity.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL generate audit trail reports for delivery records
+2. THE Senior_Coach_Site SHALL allow filtering by action type (create, edit, delete), user, team, or date range
+3. WHEN generating an audit trail report, THE Senior_Coach_Site SHALL display action type, user ID, user name, team name, lesson name, timestamp, and before/after values for edits
+4. THE Senior_Coach_Site SHALL display audit records in chronological order with most recent first
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to export audit trail reports in CSV and PDF formats
+6. THE Senior_Coach_Site SHALL retrieve audit data from Azure_Table_Storage
 
 ### Requirement 18: Privacy and Access Control
 
@@ -395,15 +466,26 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 21: Messaging Infrastructure Preparation
 
-**User Story:** As a senior coach, I want the system prepared for future messaging capabilities, so that I can communicate with coaches when that feature is implemented.
+**User Story:** As a senior coach, I want the system prepared for future messaging capabilities with flexible targeting options, so that I can communicate effectively with coaches and managers across teams and age groups.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL create a Messages table in Azure_Table_Storage with fields for message ID, sender ID, recipient ID, team ID, title, body, timestamp sent, read status, and message type
-2. THE Mobile_App SHALL include a messages tab in the user interface displaying "Feature coming soon"
-3. THE Mobile_App SHALL register device tokens for push notifications during user authentication
-4. THE Senior_Coach_Site SHALL store user device tokens in Azure_Table_Storage
-5. THE Mobile_App SHALL include role-based permissions data model supporting future message sending and receiving capabilities
+1. THE Senior_Coach_Site SHALL create a Messages table in Azure_Table_Storage with fields for message ID, sender ID, title, body, timestamp sent, read status, and message type
+2. THE Senior_Coach_Site SHALL create a MessageRecipients table to support flexible message targeting with fields for message ID, recipient type (Coach/Manager), recipient ID (for individual users), team ID (for team targeting), and age group (for age group targeting)
+3. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to select recipient types: Coaches, Managers, or both
+4. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to target specific individuals by selecting user IDs
+5. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to target specific teams by selecting team IDs
+6. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to target age groups (e.g., all U9 teams, all U10 teams)
+7. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to combine targeting criteria (e.g., all coaches for U9 teams)
+8. WHEN a message is targeted to a team, THE Mobile_App SHALL deliver the message to all coaches and managers linked to that team via their AccessibleTeamIDs
+9. WHEN a message is targeted to an age group, THE Mobile_App SHALL deliver the message to all coaches and managers linked to teams in that age group
+10. WHEN a new message is available for a user, THE Mobile_App SHALL send a push notification to the user's device
+11. WHEN a user has unread messages, THE Mobile_App SHALL display a notification badge on the messages tab icon
+12. WHEN a user opens the Mobile_App with unread messages, THE Mobile_App SHALL display a visual indicator showing the number of unread messages
+13. THE Mobile_App SHALL include a messages tab in the user interface displaying "Feature coming soon"
+14. THE Mobile_App SHALL register device tokens for push notifications during user authentication
+15. THE Senior_Coach_Site SHALL store user device tokens in Azure_Table_Storage
+16. THE Mobile_App SHALL include role-based permissions data model supporting future message sending and receiving capabilities
 
 
 ## Future Enhancements
@@ -441,27 +523,134 @@ The following features are planned for future versions and should be considered 
 - Parent view of their child's team schedule and general team information
 - Privacy controls ensuring parents only see information relevant to their child's team
 
-### Future Enhancement 4: AI-Powered Coaching Recommendations
+### Future Enhancement 4: AI-Powered Coaching Assistant
 
-**Description:** Analyze game feedback and performance data to provide intelligent lesson and session recommendations.
+**Description:** An interactive AI coaching assistant integrated into the lesson selection workflow that helps coaches quickly find appropriate training content by analyzing their verbal description of team issues.
+
+**User Workflow:**
+
+**Typical Coach Journey:**
+1. Coach opens Mobile_App on the day before practice
+2. Navigates to Lessons_Area
+3. Reviews past lessons delivered to their team
+4. Chooses one of two paths:
+   - **Path A:** Selects the next logical lesson in the progression
+   - **Path B:** Taps "AI Coach" button and describes current team challenges
+
+**AI Coach Integration:**
+
+**Voice Input:**
+- Coach taps "AI Coach" button in Lessons_Area
+- Uses voice dictation to describe team issues (e.g., "My team is struggling with passing under pressure")
+- AI processes natural language input to understand the problem
+
+**Quick Analysis:**
+- AI reviews team's training history (what lessons have been delivered)
+- Considers team's age group for age-appropriate recommendations
+- Analyzes recent game feedback if available
+- Identifies relevant skill categories and focus areas
+
+**Lesson Recommendation:**
+- AI suggests 1-3 specific lessons from the repository that address the described issue
+- Each suggestion includes:
+  - Lesson name and brief description
+  - Why this lesson is relevant to the stated problem
+  - What the team will work on in this lesson
+- Coach can preview the full lesson before selecting
+- Coach selects a lesson and proceeds with normal lesson delivery workflow
+
+**Simple Interaction Model:**
+- Single voice input from coach (no back-and-forth dialogue in Version 1)
+- Immediate lesson suggestions (no lengthy questioning)
+- Optional: Coach can refine by speaking again if suggestions aren't quite right
+- Designed for quick decision-making (under 1 minute from voice input to lesson selection)
+
+**Access Points:**
+- "AI Coach" button prominently displayed in Lessons_Area
+- Available when browsing lessons by skill
+- Integrated into lesson selection workflow
+
+**Technical Considerations:**
+- Voice-to-text conversion for coach input
+- Natural language processing to extract key issues and skills
+- Machine learning model trained on coaching terminology and common team challenges
+- Tagging system for session plans and lessons to enable AI matching
+- Recommendation engine that considers training history and age appropriateness
+- Works offline with cached lessons (voice processing requires connectivity)
+
+**Benefits:**
+- Saves time for coaches who aren't sure which lesson to select
+- Helps less experienced coaches find appropriate content
+- Ensures training addresses current team needs rather than following rigid progression
+- Reduces cognitive load on busy practice days
+- Makes lesson selection more intuitive and conversational
+
+**Future Enhancements (Beyond Version 1):**
+- Multi-turn dialogue for clarification when needed
+- Proactive suggestions based on game feedback patterns
+- Learning from which suggestions coaches actually select
+- Senior coach dashboard showing common themes across teams
+- Custom drill generation when repository doesn't have perfect match
+
+**Example Interaction:**
+1. Coach taps "AI Coach" button
+2. Coach speaks: "My U9 team keeps losing the ball when opponents press them"
+3. AI displays: "I found 3 lessons that can help with playing under pressure:
+   - **Lesson: Receiving Under Pressure** - Focuses on body positioning and first touch when marked tightly
+   - **Lesson: Quick Decision Making** - Helps players recognize when to pass vs. dribble under pressure  
+   - **Lesson: Support Play Basics** - Teaches players how to create passing options for teammates
+   
+   Based on your team's training history, I recommend starting with 'Receiving Under Pressure' since you haven't covered this recently."
+4. Coach previews lesson and selects it
+5. Proceeds with normal lesson delivery workflow
+
+### Future Enhancement 5: Game Day Match Management
+
+**Description:** Manage and communicate match details to teams, including automated notifications ahead of game day.
 
 **Considerations:**
-- Game feedback structure must capture sufficient detail for AI analysis:
-  - Specific skills that need improvement (e.g., "passing accuracy," "defensive positioning")
-  - Performance indicators (e.g., "struggled with," "excelled at," "needs work on")
-  - Context about game situations (e.g., "under pressure," "in transition," "set pieces")
-- Tagging system for session plans and lessons to enable AI matching
-- Recommendation engine that maps game feedback themes to relevant training content
-- Senior coach dashboard showing common themes across teams and suggested focus areas
-- Feedback loop where coaches rate the relevance of AI recommendations
 
-**Game Feedback Enhancement:**
-To support AI recommendations, game feedback should be structured to capture:
-- Free-text analysis (current requirement)
-- Optional structured fields for common performance areas (future addition)
-- Skill-specific ratings or observations (future addition)
+**Match Data Management:**
+- Match table with fields for match ID, team ID, opponent name, match date, match time, venue, and match type (league/friendly)
+- Senior Coach Site includes a dedicated match management section for entering weekend matches
+- Bulk entry interface for entering multiple matches at once (e.g., all weekend fixtures)
+- Senior coaches can edit match details for any team
+- When match details are updated, automatic notifications sent to affected coaches and managers
+- Match change notifications clearly indicate what changed (time, venue, opponent, etc.)
 
-### Future Enhancement 5: External System Integration
+**Match Communication:**
+- After entering matches, senior coaches can send match details to relevant team coaches and managers
+- Automated messaging to relevant team coaches and managers ahead of match day (e.g., 24-48 hours before)
+- Match notifications include date, time, venue, and opponent information
+- Update notifications sent immediately when match details change
+
+**Match Reporting:**
+- Senior Coach Site can generate a PDF report of all weekend matches
+- Report displays matches in a table format with columns: Team, Date, Time, Venue, Opponent
+- Report can be filtered by date range, age group, or specific teams
+- Copy-to-clipboard functionality for pasting match table into emails
+- Export options include PDF and formatted text for email
+
+**Mobile App Integration:**
+- Coaches and managers can view upcoming matches for their teams in the mobile app
+- Match details automatically update in the app when senior coaches make changes
+- Match history visible alongside game feedback for post-match analysis
+- Match details linked to game feedback for context
+
+**Additional Features:**
+- Integration with Friendly Manager for match schedule synchronization if available
+- Calendar integration to add matches to coach's personal calendar
+- Automatic reminders at configurable intervals (e.g., 48 hours, 24 hours, 2 hours before match)
+
+**Benefits:**
+- Streamlines weekend match communication workflow
+- Reduces manual communication overhead for senior coaches
+- Ensures coaches have timely and accurate match information
+- Provides easy distribution of match schedules via email
+- Creates connection between match schedule and game feedback
+- Foundation for match attendance tracking and player selection features
+
+### Future Enhancement 6: External System Integration
 
 **Description:** Integrate with external systems to reduce manual data entry and improve data accuracy.
 
@@ -489,10 +678,11 @@ To support AI recommendations, game feedback should be structured to capture:
 These enhancements are listed in suggested implementation order:
 1. **Phase 2:** Player/Roster Management and Friendly Manager Integration (foundation for other features)
 2. **Phase 3:** Session Attendance Tracking (builds on player management)
-3. **Phase 4:** Enhanced Game Feedback Structure (prepares data for AI)
-4. **Phase 5:** AI-Powered Recommendations (requires sufficient historical data)
-5. **Phase 6:** Parent Communication (extends messaging infrastructure)
-6. **Phase 7:** Calendar and Weather Integration (quality-of-life improvements)
+3. **Phase 4:** Game Day Match Management (automated match notifications and scheduling)
+4. **Phase 5:** Enhanced Game Feedback Structure (prepares data for AI)
+5. **Phase 6:** AI-Powered Recommendations (requires sufficient historical data)
+6. **Phase 7:** Parent Communication (extends messaging infrastructure)
+7. **Phase 8:** Calendar and Weather Integration (quality-of-life improvements)
 
 ### Architectural Considerations
 
