@@ -1,0 +1,505 @@
+# Requirements Document
+
+## Introduction
+
+The West Coast Rangers Football Club Junior Coaching App is a mobile and web-based system designed to support approximately 200 junior coaches and managers in delivering effective training sessions. Coaches and managers access the system via a mobile app on iOS and Android devices. Senior coaches have access to both the mobile app and a desktop web application that provides additional content management, reporting, and administrative capabilities.
+
+## Glossary
+
+- **Mobile_App**: The .NET MAUI application deployed to iOS and Android devices used by coaches, managers, and senior coaches
+- **Senior_Coach_Site**: The Azure Static Web App providing web-based administration and content management for senior coaches (desktop access only)
+- **Coach**: A junior coach who delivers training sessions to teams (mobile app access only)
+- **Manager**: A team manager who may access lesson plans and team information (mobile app access only)
+- **Senior_Coach**: An administrator who creates lesson content and manages users (mobile app and desktop web app access)
+- **Landing_Page**: The home screen displaying welcome text and team-specific announcements
+- **Lessons_Area**: The section where coaches browse, select, and manage lesson deliveries
+- **Games_Area**: The section where coaches provide game feedback and performance reflections
+- **Resources_Area**: The section containing general coaching information such as pitch sizes and how-to articles
+- **Session_Plan**: A 20-minute training activity stored in a searchable repository with structured content and media
+- **Lesson**: A complete one-hour training plan composed of three Session_Plans selected from the repository
+- **Session_Repository**: A searchable collection of reusable Session_Plans that Senior_Coaches use to build lessons
+- **Session_Feedback**: A coach's rating (0-5) and optional comments on a specific session plan after delivery
+- **Lesson_Feedback**: A coach's rating (0-5) and optional comments on a complete lesson after delivery
+- **Delivery_Record**: A timestamped record capturing when a coach delivered a specific lesson to a team
+- **Team_Announcement**: Time-limited team-specific text displayed on the Landing_Page that auto-expires after seven days
+- **Resource_Article**: General coaching information content created by senior coaches
+- **Team**: A youth football squad identified by age group and team name
+- **Skill**: A football skill category used to organize lessons and session plans
+- **Azure_Table_Storage**: The cloud database storing all structured application data
+- **Azure_Blob_Storage**: The cloud storage service for media assets (images and videos)
+- **Lesson_Version**: An integer tracking the revision number of a lesson's content
+- **Game_Feedback**: Coach-submitted reflections and analysis following a match
+
+## Requirements
+
+### Requirement 1: User Authentication
+
+**User Story:** As a coach, I want to securely log into the mobile app, so that I can access lesson plans and record my coaching activities.
+
+#### Acceptance Criteria
+
+1. WHEN a user enters valid email and password credentials, THE Mobile_App SHALL authenticate the user against Azure_Table_Storage
+2. WHEN authentication succeeds, THE Mobile_App SHALL cache the credentials securely on the device
+3. WHEN a user has cached credentials, THE Mobile_App SHALL authenticate automatically without requiring re-entry
+4. THE Mobile_App SHALL support authentication for up to 200 users
+5. WHEN authentication fails, THE Mobile_App SHALL display an error message and prevent access
+
+### Requirement 1a: Landing Page and App Navigation
+
+**User Story:** As a coach, I want to see a clear landing page with relevant information and easy navigation to the main app areas, so that I can quickly access the features I need.
+
+#### Acceptance Criteria
+
+1. WHEN a coach logs in, THE Mobile_App SHALL display the Landing_Page
+2. THE Landing_Page SHALL display default welcome text editable by Senior_Coach
+3. THE Landing_Page SHALL display team-specific announcements for the coach's selected team
+4. THE Mobile_App SHALL provide navigation to four main areas: Landing_Page, Lessons_Area, Games_Area, and Resources_Area
+5. THE Mobile_App SHALL allow coaches to navigate between areas using a persistent navigation menu
+
+### Requirement 1b: Team Announcements Management
+
+**User Story:** As a senior coach, I want to create time-limited team announcements that automatically expire, so that coaches see current and relevant information without manual cleanup.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL allow Senior_Coach to create team announcements with title and content
+2. WHEN creating a team announcement, THE Senior_Coach_Site SHALL allow Senior_Coach to target a specific team or group of teams
+3. WHEN a team announcement is created, THE Senior_Coach_Site SHALL store the creation timestamp in Azure_Table_Storage
+4. THE Mobile_App SHALL display team announcements on the Landing_Page for coaches whose selected team matches the announcement target
+5. WHEN a team announcement is seven days old, THE Mobile_App SHALL automatically remove it from display
+6. WHEN a Senior_Coach creates a new team announcement for the same team, THE Mobile_App SHALL replace the previous announcement regardless of age
+7. THE Senior_Coach_Site SHALL allow Senior_Coach to manually delete team announcements before expiry
+
+### Requirement 2: User Account Management
+
+**User Story:** As a senior coach, I want to create and manage user accounts, so that I can control who has access to the system.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL allow Senior_Coach to create user accounts with first name, last name, email, password, cellphone, and role
+2. THE Senior_Coach_Site SHALL support three role types: Coach, Manager, and Senior_Coach
+3. WHEN a Senior_Coach creates a user account, THE Senior_Coach_Site SHALL store the account in Azure_Table_Storage with a hashed password
+4. THE Senior_Coach_Site SHALL allow Senior_Coach to reset user passwords
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to edit user details including team associations
+6. THE Senior_Coach_Site SHALL allow Senior_Coach to remove user accounts
+
+### Requirement 3: Team Management
+
+**User Story:** As a senior coach, I want to manage team information, so that coaches can associate their lesson deliveries with the correct teams.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL allow Senior_Coach to create teams with age group, team name, training ground, and training time
+2. THE Senior_Coach_Site SHALL store team information in Azure_Table_Storage
+3. THE Senior_Coach_Site SHALL allow Senior_Coach to edit team details
+4. THE Senior_Coach_Site SHALL allow Senior_Coach to delete teams
+5. WHEN a team is created or updated, THE Senior_Coach_Site SHALL make the changes available to Mobile_App after synchronization
+
+### Requirement 4: Coach-Team Association
+
+**User Story:** As a senior coach, I want to associate coaches with teams, so that the app can pre-populate team selections for coaches.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL allow Senior_Coach to assign a default team to a coach
+2. THE Senior_Coach_Site SHALL allow Senior_Coach to assign multiple accessible teams to a coach
+3. WHEN a coach has no default team assigned, THE Mobile_App SHALL display all accessible teams without pre-selection
+4. WHEN a coach selects a team for lesson delivery, THE Mobile_App SHALL record the selected team regardless of default assignment
+5. THE Mobile_App SHALL allow coaches to select any of their accessible teams for each lesson delivery
+
+### Requirement 5: Session Plan Repository Management
+
+**User Story:** As a senior coach, I want to create and manage reusable session plans in a searchable repository, so that I can build lessons by selecting appropriate 20-minute training activities.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL provide a session plan builder interface for creating session plans
+2. WHEN a Senior_Coach creates a session plan, THE Senior_Coach_Site SHALL require an associated skill category
+3. WHEN a Senior_Coach creates a session plan, THE Senior_Coach_Site SHALL require a session title
+4. WHEN a Senior_Coach creates a session plan, THE Senior_Coach_Site SHALL require a session description
+5. WHEN a Senior_Coach creates a session plan, THE Senior_Coach_Site SHALL require a setup explanation describing how to set up the session
+6. THE Senior_Coach_Site SHALL allow Senior_Coach to upload a setup drawing showing the session layout
+7. THE Senior_Coach_Site SHALL allow Senior_Coach to optionally associate one video demonstrating how the exercise works
+8. THE Senior_Coach_Site SHALL allow Senior_Coach to enter up to five key learning objectives for the session
+9. THE Senior_Coach_Site SHALL store session plan content in Azure_Table_Storage and media files in Azure_Blob_Storage
+10. THE Senior_Coach_Site SHALL provide a searchable session plan repository interface
+11. THE Senior_Coach_Site SHALL allow Senior_Coach to search session plans by skill category, title, or learning objectives
+12. THE Senior_Coach_Site SHALL allow Senior_Coach to edit existing session plans
+13. THE Senior_Coach_Site SHALL allow Senior_Coach to delete session plans from the repository
+14. WHEN a session plan is saved, THE Senior_Coach_Site SHALL make it immediately available in the session repository
+
+### Requirement 5a: Lesson Composition from Session Plans
+
+**User Story:** As a senior coach, I want to create lessons by selecting three session plans from the repository, so that coaches have complete one-hour training programs.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL provide a lesson builder interface for composing lessons
+2. WHEN a Senior_Coach creates a lesson, THE Senior_Coach_Site SHALL require a skill category and lesson name
+3. THE Senior_Coach_Site SHALL require Senior_Coach to select exactly three session plans from the session repository
+4. THE Senior_Coach_Site SHALL display each selected session plan as a 20-minute component of the one-hour lesson
+5. WHEN a lesson is created, THE Senior_Coach_Site SHALL assign version number 1
+6. THE Senior_Coach_Site SHALL store the lesson composition in Azure_Table_Storage with references to the three selected session plans
+7. WHEN a lesson is saved, THE Senior_Coach_Site SHALL make it immediately available to Mobile_App after synchronization
+
+### Requirement 6: Lesson Content Editing and Versioning
+
+**User Story:** As a senior coach, I want to update existing lessons and track changes, so that coaches always have current content with change history.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL allow Senior_Coach to edit existing lesson content
+2. WHEN a Senior_Coach saves changes to a lesson, THE Senior_Coach_Site SHALL increment the lesson version number by 1
+3. WHEN the lesson version increments, THE Senior_Coach_Site SHALL prompt Senior_Coach to enter a changelog note
+4. THE Senior_Coach_Site SHALL store the changelog note with timestamp in Azure_Table_Storage
+5. THE Senior_Coach_Site SHALL display version history with changelog notes for each lesson
+6. THE Senior_Coach_Site SHALL allow Senior_Coach to delete lessons
+
+### Requirement 7: Lesson Browsing by Skill
+
+**User Story:** As a coach, I want to browse lessons organized by skill category, so that I can find appropriate training content for my session.
+
+#### Acceptance Criteria
+
+1. WHEN a coach selects a skill category, THE Mobile_App SHALL display all lessons associated with that skill
+2. THE Mobile_App SHALL load skill categories from Azure_Table_Storage
+3. THE Mobile_App SHALL cache skill categories and lessons locally for offline access
+4. WHEN the Mobile_App synchronizes with Azure_Table_Storage, THE Mobile_App SHALL update the local cache with new or modified lessons
+5. THE Mobile_App SHALL display lessons with their names and skill categories
+
+### Requirement 8: Lesson Content Display
+
+**User Story:** As a coach, I want to view detailed lesson content with media, so that I can understand and deliver the training session effectively.
+
+#### Acceptance Criteria
+
+1. WHEN a coach selects a lesson, THE Mobile_App SHALL display the lesson's markdown content rendered as HTML
+2. WHERE a lesson includes images, THE Mobile_App SHALL display image thumbnails with the ability to view full-screen
+3. WHERE a lesson includes videos, THE Mobile_App SHALL provide video playback controls
+4. WHEN the Mobile_App is offline, THE Mobile_App SHALL display cached lesson text content
+5. WHEN the Mobile_App is offline and media is requested, THE Mobile_App SHALL display a placeholder message indicating media requires internet connectivity
+
+### Requirement 9: Lesson Delivery Recording
+
+**User Story:** As a coach, I want to record when I deliver a lesson to a team, so that I can track my coaching activities and the team's training history.
+
+#### Acceptance Criteria
+
+1. WHILE viewing a lesson, THE Mobile_App SHALL display an option to record lesson delivery
+2. WHEN a coach chooses to record delivery, THE Mobile_App SHALL prompt for delivery date with today's date as default
+3. WHEN a coach confirms delivery recording, THE Mobile_App SHALL create a Delivery_Record in Azure_Table_Storage with coach ID, coach name, team ID, team name, lesson ID, lesson version, and delivery date
+4. WHEN a Delivery_Record is created, THE Mobile_App SHALL capture coach name and team name as text snapshots
+5. WHEN a Delivery_Record is created, THE Mobile_App SHALL prompt the coach to optionally enter delivery notes
+6. WHERE a coach enters delivery notes, THE Mobile_App SHALL store the notes in the Delivery_Record with the delivery timestamp
+
+### Requirement 10: Delivery Record Management
+
+**User Story:** As a coach, I want to view and edit my lesson delivery records, so that I can maintain accurate coaching history.
+
+#### Acceptance Criteria
+
+1. THE Mobile_App SHALL display a list of delivery records filtered by the authenticated coach
+2. THE Mobile_App SHALL display a list of delivery records filtered by selected team
+3. WHEN displaying delivery records, THE Mobile_App SHALL show skill, lesson name, coach name, team name, date delivered, lesson version, and notes
+4. THE Mobile_App SHALL allow a coach to edit delivery records they created
+5. THE Mobile_App SHALL allow a coach to delete delivery records they created
+6. WHEN a coach views team delivery records, THE Mobile_App SHALL only display records for the selected team
+7. THE Mobile_App SHALL prevent coaches from editing or deleting delivery records created by other coaches
+
+### Requirement 10a: Session Feedback Capture
+
+**User Story:** As a coach, I want to provide feedback on individual session plans after delivery, so that senior coaches can improve training content based on my experience.
+
+#### Acceptance Criteria
+
+1. WHEN a coach delivers a lesson, THE Mobile_App SHALL allow the coach to optionally rate each of the three session plans
+2. WHEN rating a session plan, THE Mobile_App SHALL require a rating from 0 to 5
+3. WHEN rating a session plan, THE Mobile_App SHALL allow the coach to optionally enter brief comments
+4. WHEN a coach submits session feedback, THE Mobile_App SHALL create a Session_Feedback record in Azure_Table_Storage with feedback ID, coach ID, coach name, session plan ID, lesson ID, team ID, delivery date, rating, comments, and timestamp
+5. THE Mobile_App SHALL allow a coach to edit Session_Feedback records they created
+6. THE Mobile_App SHALL prevent coaches from editing or deleting Session_Feedback records created by other coaches
+
+### Requirement 10b: Lesson Feedback Capture
+
+**User Story:** As a coach, I want to provide feedback on complete lessons after delivery, so that senior coaches can understand how well the overall training program worked.
+
+#### Acceptance Criteria
+
+1. WHEN a coach delivers a lesson, THE Mobile_App SHALL allow the coach to optionally rate the complete lesson
+2. WHEN rating a lesson, THE Mobile_App SHALL require a rating from 0 to 5
+3. WHEN rating a lesson, THE Mobile_App SHALL allow the coach to optionally enter brief comments
+4. WHEN a coach submits lesson feedback, THE Mobile_App SHALL create a Lesson_Feedback record in Azure_Table_Storage with feedback ID, coach ID, coach name, lesson ID, team ID, delivery date, rating, comments, and timestamp
+5. THE Mobile_App SHALL allow a coach to edit Lesson_Feedback records they created
+6. THE Mobile_App SHALL prevent coaches from editing or deleting Lesson_Feedback records created by other coaches
+
+### Requirement 10c: Session and Lesson Feedback Reporting
+
+**User Story:** As a senior coach, I want to view feedback on sessions and lessons, so that I can identify which content needs improvement and make data-driven modifications.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL display session feedback aggregated by session plan
+2. WHEN displaying session feedback, THE Senior_Coach_Site SHALL show session plan title, skill category, average rating, number of ratings, and all coach comments
+3. THE Senior_Coach_Site SHALL allow Senior_Coach to filter session feedback by date range, skill category, or rating threshold
+4. THE Senior_Coach_Site SHALL display lesson feedback aggregated by lesson
+5. WHEN displaying lesson feedback, THE Senior_Coach_Site SHALL show lesson name, skill category, average rating, number of ratings, and all coach comments
+6. THE Senior_Coach_Site SHALL allow Senior_Coach to filter lesson feedback by date range, skill category, or rating threshold
+7. THE Senior_Coach_Site SHALL allow Senior_Coach to export session and lesson feedback in CSV format
+8. THE Senior_Coach_Site SHALL retrieve feedback data from Azure_Table_Storage
+
+### Requirement 11: Configurable Text Content
+
+**User Story:** As a senior coach, I want to create and manage text content displayed in the mobile app, so that I can provide guidance and context to coaches.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL provide a text block editor for creating display content
+2. WHEN creating a text block, THE Senior_Coach_Site SHALL require page name and text content
+3. THE Senior_Coach_Site SHALL support markdown formatting in text content including bold, italic, and bullet lists
+4. THE Senior_Coach_Site SHALL provide a live preview of how markdown will render
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to create team-specific text blocks by associating a team ID
+6. THE Senior_Coach_Site SHALL store text blocks in Azure_Table_Storage
+7. WHEN the Mobile_App displays a page with configurable text, THE Mobile_App SHALL load and render the appropriate text block from Azure_Table_Storage
+8. WHERE a team-specific text block exists, THE Mobile_App SHALL display it instead of the default text block
+
+### Requirement 11a: Resources Area Content Management
+
+**User Story:** As a senior coach, I want to create and manage general coaching resources, so that coaches have access to reference materials like pitch sizes and how-to articles.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL provide a resource article editor for creating coaching reference content
+2. WHEN creating a resource article, THE Senior_Coach_Site SHALL require a title and content
+3. THE Senior_Coach_Site SHALL allow Senior_Coach to categorize resource articles by type
+4. THE Senior_Coach_Site SHALL support markdown formatting in resource article content
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to associate images with resource articles
+6. THE Senior_Coach_Site SHALL store resource articles in Azure_Table_Storage and media in Azure_Blob_Storage
+7. THE Mobile_App SHALL display resource articles in the Resources_Area
+8. THE Mobile_App SHALL allow coaches to browse resource articles by category
+9. THE Mobile_App SHALL cache resource articles locally for offline access
+10. THE Senior_Coach_Site SHALL allow Senior_Coach to edit and delete resource articles
+
+### Requirement 12: Senior Coach Reporting
+
+**User Story:** As a senior coach, I want to generate reports on lesson deliveries, so that I can monitor coaching activities across teams.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL allow Senior_Coach to generate reports showing lesson deliveries
+2. THE Senior_Coach_Site SHALL allow filtering reports by date range, team, and coach
+3. WHEN generating a report, THE Senior_Coach_Site SHALL display skill, lesson name, coach name, team name, date delivered, lesson version, and notes
+4. THE Senior_Coach_Site SHALL allow Senior_Coach to export reports in CSV format
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to export reports in PDF format
+6. THE Senior_Coach_Site SHALL retrieve report data from Azure_Table_Storage
+
+### Requirement 13: Audit Trail
+
+**User Story:** As a senior coach, I want to view audit information for delivery records, so that I can track who created, modified, or deleted coaching records.
+
+#### Acceptance Criteria
+
+1. WHEN a Delivery_Record is created, THE Mobile_App SHALL store the creating user ID and creation timestamp
+2. WHEN a Delivery_Record is edited, THE Mobile_App SHALL store the editing user ID and edit timestamp
+3. WHEN a Delivery_Record is deleted, THE Mobile_App SHALL store the deletion user ID and deletion timestamp
+4. THE Senior_Coach_Site SHALL display audit information including action type, user ID, and timestamp for all delivery records
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to view complete audit history for any delivery record
+
+### Requirement 14: Team Selection Interface
+
+**User Story:** As a coach, I want to select which team I'm coaching for each session, so that I can record deliveries for different teams I support.
+
+#### Acceptance Criteria
+
+1. THE Mobile_App SHALL display a team picker on the skill selection page
+2. WHERE a coach has a default team assigned, THE Mobile_App SHALL pre-populate the team picker with that team
+3. THE Mobile_App SHALL allow the coach to change the selected team from their accessible teams list
+4. WHEN a coach records a lesson delivery, THE Mobile_App SHALL use the currently selected team
+5. THE Mobile_App SHALL persist the selected team during the session until changed by the coach
+
+### Requirement 15: Lesson Search and Discovery
+
+**User Story:** As a senior coach, I want to search and browse all lessons in the system, so that I can manage content effectively.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL display a searchable list of all lessons
+2. THE Senior_Coach_Site SHALL allow Senior_Coach to search lessons by name, skill, or tags
+3. WHEN displaying lesson search results, THE Senior_Coach_Site SHALL show lesson name, skill, version number, and last modified date
+4. WHEN a Senior_Coach selects a lesson from search results, THE Senior_Coach_Site SHALL display the full lesson details
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to navigate from search results to edit or delete a lesson
+
+### Requirement 16: Game Feedback Capture
+
+**User Story:** As a coach, I want to record reflections after games, so that I can track team performance and identify areas for improvement.
+
+#### Acceptance Criteria
+
+1. THE Mobile_App SHALL provide an option to add game analysis from the skill selection page
+2. WHEN a coach selects game analysis, THE Mobile_App SHALL prompt for a game date with today's date as default
+3. WHEN a coach enters game analysis, THE Mobile_App SHALL display prompts: "What went well? What needs work?"
+4. WHEN a coach submits game analysis, THE Mobile_App SHALL create a Game_Feedback record in Azure_Table_Storage with feedback ID, coach ID, coach name, team ID, team name, date, notes, created by, and created at
+5. THE Mobile_App SHALL allow a coach to edit Game_Feedback records they created
+6. THE Mobile_App SHALL allow a coach to delete Game_Feedback records they created
+7. THE Mobile_App SHALL prevent coaches from editing or deleting Game_Feedback records created by other coaches
+
+### Requirement 17: Game Feedback Reporting
+
+**User Story:** As a senior coach, I want to view game feedback from coaches, so that I can understand team performance trends and coaching needs.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL display game feedback records filtered by team, coach, or date range
+2. WHEN displaying game feedback, THE Senior_Coach_Site SHALL show coach name, team name, game date, and feedback notes
+3. THE Senior_Coach_Site SHALL allow Senior_Coach to export game feedback in CSV format
+4. THE Senior_Coach_Site SHALL retrieve game feedback from Azure_Table_Storage
+5. THE Senior_Coach_Site SHALL display game feedback in chronological order with most recent first
+
+### Requirement 18: Privacy and Access Control
+
+**User Story:** As a coach, I want my delivery records and feedback to remain private from other coaches, so that my coaching activities are confidential.
+
+#### Acceptance Criteria
+
+1. WHEN a coach views their delivery history, THE Mobile_App SHALL display only records created by that coach
+2. WHEN a coach views team delivery history, THE Mobile_App SHALL display only records for the selected team without revealing which other coaches created them
+3. THE Mobile_App SHALL prevent coaches from viewing delivery records for teams they cannot access
+4. THE Mobile_App SHALL prevent coaches from viewing game feedback created by other coaches
+5. THE Senior_Coach_Site SHALL allow Senior_Coach to view all delivery records and game feedback across all coaches and teams
+
+### Requirement 19: Data Synchronization
+
+**User Story:** As a coach, I want the app to synchronize with the latest content, so that I always have current lesson plans and can submit my records.
+
+#### Acceptance Criteria
+
+1. WHEN the Mobile_App launches with internet connectivity, THE Mobile_App SHALL synchronize with Azure_Table_Storage
+2. WHEN synchronizing, THE Mobile_App SHALL download new or updated lessons, skills, teams, and text blocks
+3. WHEN synchronizing, THE Mobile_App SHALL upload pending delivery records and game feedback created offline
+4. WHEN synchronization completes, THE Mobile_App SHALL update the local cache with new data
+5. WHEN synchronization fails, THE Mobile_App SHALL retry with exponential backoff up to three attempts
+6. WHEN the Mobile_App is offline, THE Mobile_App SHALL queue delivery records and game feedback for upload when connectivity returns
+
+### Requirement 20: Offline Functionality
+
+**User Story:** As a coach, I want to access lesson content and record deliveries without internet connectivity, so that I can use the app at training grounds with poor signal.
+
+#### Acceptance Criteria
+
+1. THE Mobile_App SHALL cache all lesson text content locally after synchronization
+2. THE Mobile_App SHALL cache all skill categories and lesson metadata locally
+3. WHEN offline, THE Mobile_App SHALL allow coaches to browse cached lessons
+4. WHEN offline, THE Mobile_App SHALL allow coaches to record lesson deliveries
+5. WHEN offline, THE Mobile_App SHALL allow coaches to enter game feedback
+6. WHEN offline and a coach requests media content, THE Mobile_App SHALL display a message indicating internet connectivity is required
+7. WHEN connectivity returns, THE Mobile_App SHALL automatically upload queued delivery records and game feedback
+
+### Requirement 21: Messaging Infrastructure Preparation
+
+**User Story:** As a senior coach, I want the system prepared for future messaging capabilities, so that I can communicate with coaches when that feature is implemented.
+
+#### Acceptance Criteria
+
+1. THE Senior_Coach_Site SHALL create a Messages table in Azure_Table_Storage with fields for message ID, sender ID, recipient ID, team ID, title, body, timestamp sent, read status, and message type
+2. THE Mobile_App SHALL include a messages tab in the user interface displaying "Feature coming soon"
+3. THE Mobile_App SHALL register device tokens for push notifications during user authentication
+4. THE Senior_Coach_Site SHALL store user device tokens in Azure_Table_Storage
+5. THE Mobile_App SHALL include role-based permissions data model supporting future message sending and receiving capabilities
+
+
+## Future Enhancements
+
+The following features are planned for future versions and should be considered during the initial design to ensure the system architecture can accommodate these capabilities.
+
+### Future Enhancement 1: Player and Roster Management
+
+**Description:** Track individual players within teams to enable attendance tracking, skill progression monitoring, and personalized coaching insights.
+
+**Considerations:**
+- Player table with fields for player ID, name, age group, team association, and contact information
+- Link players to teams with support for players moving between teams
+- Foundation for tracking individual player development over time
+- Integration point with Friendly Manager system for player roster synchronization
+
+### Future Enhancement 2: Session Attendance Tracking
+
+**Description:** Record which players attended each training session to identify attendance patterns and engagement levels.
+
+**Considerations:**
+- Attendance records linked to delivery records and player IDs
+- Attendance reporting by player, team, and date range
+- Attendance trends and alerts for low participation
+- Mobile app interface for coaches to mark attendance during or after sessions
+
+### Future Enhancement 3: Parent and Guardian Communication
+
+**Description:** Extend messaging capabilities to include parent/guardian notifications and limited access to team information.
+
+**Considerations:**
+- Parent user role with restricted permissions
+- Parent accounts linked to specific players
+- Notifications for training schedules, cancellations, and team announcements
+- Parent view of their child's team schedule and general team information
+- Privacy controls ensuring parents only see information relevant to their child's team
+
+### Future Enhancement 4: AI-Powered Coaching Recommendations
+
+**Description:** Analyze game feedback and performance data to provide intelligent lesson and session recommendations.
+
+**Considerations:**
+- Game feedback structure must capture sufficient detail for AI analysis:
+  - Specific skills that need improvement (e.g., "passing accuracy," "defensive positioning")
+  - Performance indicators (e.g., "struggled with," "excelled at," "needs work on")
+  - Context about game situations (e.g., "under pressure," "in transition," "set pieces")
+- Tagging system for session plans and lessons to enable AI matching
+- Recommendation engine that maps game feedback themes to relevant training content
+- Senior coach dashboard showing common themes across teams and suggested focus areas
+- Feedback loop where coaches rate the relevance of AI recommendations
+
+**Game Feedback Enhancement:**
+To support AI recommendations, game feedback should be structured to capture:
+- Free-text analysis (current requirement)
+- Optional structured fields for common performance areas (future addition)
+- Skill-specific ratings or observations (future addition)
+
+### Future Enhancement 5: External System Integration
+
+**Description:** Integrate with external systems to reduce manual data entry and improve data accuracy.
+
+**Considerations:**
+
+**Friendly Manager Integration:**
+- API integration to synchronize team rosters, player information, and team details
+- Automatic updates when teams or players change in Friendly Manager
+- Bidirectional sync or read-only import based on system capabilities
+- Mapping between Friendly Manager team IDs and coaching app team IDs
+- Initial data migration strategy from Friendly Manager to coaching app
+
+**Calendar Integration:**
+- Export training schedules to coach's personal calendar (Google Calendar, Outlook, Apple Calendar)
+- Automatic updates when training times or locations change
+- Integration with team scheduling in Friendly Manager if available
+
+**Weather API Integration:**
+- Display weather forecasts for upcoming training sessions
+- Alerts for adverse weather conditions
+- Session planning recommendations based on weather (indoor vs outdoor drills)
+
+### Implementation Priority
+
+These enhancements are listed in suggested implementation order:
+1. **Phase 2:** Player/Roster Management and Friendly Manager Integration (foundation for other features)
+2. **Phase 3:** Session Attendance Tracking (builds on player management)
+3. **Phase 4:** Enhanced Game Feedback Structure (prepares data for AI)
+4. **Phase 5:** AI-Powered Recommendations (requires sufficient historical data)
+5. **Phase 6:** Parent Communication (extends messaging infrastructure)
+6. **Phase 7:** Calendar and Weather Integration (quality-of-life improvements)
+
+### Architectural Considerations
+
+To support these future enhancements, the initial system design should:
+- Use extensible data models that can accommodate additional fields without breaking changes
+- Design APIs with versioning support for backward compatibility
+- Implement a flexible tagging/categorization system for content
+- Build a modular architecture where new features can be added without major refactoring
+- Consider data privacy and access control patterns that can scale to additional user roles
+- Plan for external API integration points in the system architecture
