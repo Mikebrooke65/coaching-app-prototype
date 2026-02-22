@@ -12,6 +12,8 @@ graph TB
     Team[Team]
     
     Admin -.->|can also be| Coach
+    Caregiver -.->|can also be| Manager
+    Caregiver -.->|can also be| Coach
     Coach -->|assigned to| Team
     Manager -->|assigned to| Team
     Player -->|member of| Team
@@ -30,11 +32,12 @@ graph TB
 ```mermaid
 graph LR
     subgraph "Session Repository"
-        S1[Session 1<br/>20 min<br/>Dribbling]
-        S2[Session 2<br/>20 min<br/>Passing]
+        S1[Session 1<br/>20 min<br/>Passing & First Touch]
+        S2[Session 2<br/>20 min<br/>Dribbling & Ball Control]
         S3[Session 3<br/>20 min<br/>Shooting]
         S4[Session 4<br/>20 min<br/>Defending]
-        S5[Session 5<br/>20 min<br/>Transitions]
+        S5[Session 5<br/>20 min<br/>Attacking]
+        S6[Session 6<br/>20 min<br/>Transitions]
         Sn[... more sessions]
     end
     
@@ -46,7 +49,7 @@ graph LR
     
     S1 -.->|Admin selects| L1
     S3 -.->|Admin selects| L2
-    S5 -.->|Admin selects| L3
+    S6 -.->|Admin selects| L3
     
     L1 --> Lesson[Complete Lesson<br/>60 minutes]
     L2 --> Lesson
@@ -61,7 +64,7 @@ graph LR
 graph TB
     Session[Session Plan<br/>20 minutes]
     
-    Session --> Skill[Skill Category<br/>e.g., Passing]
+    Session --> Skill[Skill Category<br/>e.g., Passing & First Touch]
     Session --> Title[Session Title]
     Session --> Desc[Description]
     Session --> Setup[Setup Explanation]

@@ -30,7 +30,7 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 - **WWW**: "What Went Well" - positive observations from game performance
 - **EBI**: "Even Better If" - areas for improvement identified during game analysis
 - **Team**: A youth football squad identified by age group and team name
-- **Skill**: A football skill category used to organize lessons and session plans
+- **Skill**: A football skill category used to organize lessons and session plans. Initial skill categories include: Passing and First Touch, Dribbling and Ball Control, Shooting, Defending, Attacking, and Transitions
 - **Azure_Table_Storage**: The cloud database storing all structured application data
 - **Azure_Blob_Storage**: The cloud storage service for media assets (images and videos)
 - **Lesson_Version**: An integer tracking the revision number of a lesson's content
@@ -64,17 +64,22 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 1b: Team Announcements Management
 
-**User Story:** As a admin, I want to create time-limited team announcements that automatically expire, so that coaches see current and relevant information without manual cleanup.
+**User Story:** As an admin, I want to create general and targeted announcements that automatically expire, so that coaches see current and relevant information without manual cleanup.
 
 #### Acceptance Criteria
 
-1. THE Admin_Site SHALL allow Admin to create team announcements with title and content
-2. WHEN creating a team announcement, THE Admin_Site SHALL allow Admin to target a specific team or group of teams
-3. WHEN a team announcement is created, THE Admin_Site SHALL store the creation timestamp in Azure_Table_Storage
-4. THE Mobile_App SHALL display team announcements on the Landing_Page for coaches whose selected team matches the announcement target
-5. WHEN a team announcement is seven days old, THE Mobile_App SHALL automatically remove it from display
-6. WHEN a Admin creates a new team announcement for the same team, THE Mobile_App SHALL replace the previous announcement regardless of age
-7. THE Admin_Site SHALL allow Admin to manually delete team announcements before expiry
+1. THE Landing_Page SHALL display two announcement sections: General Announcement and Team-Specific Announcement
+2. THE Admin_Site SHALL allow Admin to create a general announcement with content that displays to all users
+3. WHEN a general announcement is created, THE Mobile_App SHALL display it in the first paragraph of the announcements section for all coaches
+4. THE Admin_Site SHALL allow Admin to create team-specific announcements with content
+5. WHEN creating a team-specific announcement, THE Admin_Site SHALL allow Admin to target specific teams by selecting team IDs
+6. WHEN creating a team-specific announcement, THE Admin_Site SHALL allow Admin to target age groups (e.g., all U9 teams, all U10 teams)
+7. THE Mobile_App SHALL display team-specific announcements in the second paragraph of the announcements section for coaches whose selected team matches the announcement target
+8. WHEN an announcement is created, THE Admin_Site SHALL store the creation timestamp in Azure_Table_Storage
+9. WHEN an announcement is seven days old, THE Mobile_App SHALL automatically remove it from display
+10. WHEN an Admin creates a new general announcement, THE Mobile_App SHALL replace the previous general announcement regardless of age
+11. WHEN an Admin creates a new team-specific announcement for the same target, THE Mobile_App SHALL replace the previous announcement for that target regardless of age
+12. THE Admin_Site SHALL allow Admin to manually delete announcements before expiry
 
 ### Requirement 2: User Account Management
 
@@ -89,6 +94,8 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 5. THE Admin_Site SHALL allow Admin to edit user details including team associations
 6. THE Admin_Site SHALL allow Admin to remove user accounts
 7. THE Admin_Site SHALL allow an Admin account to also be assigned the Coach role
+8. THE Admin_Site SHALL allow a Caregiver account to also be assigned the Manager role
+9. THE Admin_Site SHALL allow a Caregiver account to also be assigned the Coach role
 
 ### Requirement 2a: Player and Caregiver Management
 
