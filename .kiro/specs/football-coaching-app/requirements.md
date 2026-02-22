@@ -673,6 +673,120 @@ The following features are planned for future versions and should be considered 
 - Alerts for adverse weather conditions
 - Session planning recommendations based on weather (indoor vs outdoor drills)
 
+### Future Enhancement 7: Complete Team Management Platform (Heja/TeamReach Replacement)
+
+**Description:** Expand the app to become a complete team management and communication platform that replaces dedicated team messaging apps like Heja and TeamReach, providing a unified solution for coaching content, team coordination, and family communication.
+
+**Target Users:**
+- Coaches and Managers (existing users with expanded capabilities)
+- Parents/Guardians (new user type with lighter app version)
+- Players (new user type with lighter app version)
+
+**Core Team Management Features:**
+
+**Event Management:**
+- Coaches/managers can create and manage training sessions (practices)
+- Coaches/managers can create and manage match events
+- Events include date, time, location, and optional notes
+- Events automatically appear in team calendar view
+- Integration with match management system (Enhancement 5)
+
+**RSVP and Attendance:**
+- Parents/players can indicate attendance for each event (Going/Not Going/Maybe)
+- Real-time attendance tracking visible to coaches and managers
+- Attendance reminders sent to families who haven't responded
+- Attendance history linked to player records
+- Coaches can see at-a-glance who's coming to each session
+- Attendance data feeds into attendance tracking reports (Enhancement 2)
+
+**Team Group Messaging:**
+- Team-based group chat for coaches, managers, parents, and players
+- Everyone in the team can post messages to the group
+- Support for text messages, images, and attachments
+- Message notifications via push notifications
+- Message history searchable and archived
+- Optional: Direct messaging between coach and individual families
+
+**Family Communication Channels:**
+- Coaches can send announcements to all team families
+- Parents can message coaches/managers directly
+- Two-way communication for questions, updates, and coordination
+- Read receipts to confirm important messages were seen
+
+**Player and Parent Management:**
+
+**Data Source Integration:**
+- Friendly Manager as master data source for players, parents, and team associations
+- Automatic sync of player rosters and contact information
+- Updates from Friendly Manager propagate to coaching app
+
+**Flexible Family Access:**
+- Team invite codes for easy onboarding (e.g., "Join team with code: RANGERS-U9-2024")
+- Parents/guardians can join team using invite code without being in Friendly Manager
+- Support for multiple caregivers per player (grandparents, other guardians)
+- Self-service registration for additional family members via team code
+
+**Parent/Player App (Lighter Version):**
+
+**Limited Feature Set:**
+- View team calendar (practices and matches)
+- RSVP to events
+- View and participate in team group chat
+- Receive announcements from coaches
+- View basic team information (schedule, location, coach contacts)
+- No access to coaching content (lessons, sessions, feedback)
+- No access to senior coach features or reports
+
+**Mobile App Architecture:**
+- Same .NET MAUI app with role-based feature visibility
+- Parent/player users see simplified interface
+- Coaches/managers see full coaching features plus team management
+- Senior coaches see everything via both mobile and desktop
+
+**Privacy and Permissions:**
+- Parents can only see information for their child's team(s)
+- Players can only see information for their own team(s)
+- Coaches/managers see full team information for their assigned teams
+- Senior coaches have visibility across all teams
+- Configurable privacy settings for what information is shared with families
+
+**Notification System:**
+- Push notifications for new messages, event updates, and RSVP reminders
+- Configurable notification preferences per user
+- Digest mode option (daily summary instead of real-time)
+- Critical notifications (match cancellations) always delivered immediately
+
+**Benefits:**
+- Single app replaces multiple tools (coaching content + team management + communication)
+- Reduces app fatigue for coaches and families
+- Centralized communication reduces missed messages
+- Attendance tracking integrated with coaching records
+- Seamless experience from lesson planning to match day coordination
+- Lower barrier to entry for families (simple team code to join)
+
+**Technical Considerations:**
+- Role-based access control for three user types (coach/manager, parent, player)
+- Friendly Manager API integration for roster sync
+- Team invite code generation and validation system
+- Real-time messaging infrastructure (consider Azure SignalR or similar)
+- Scalable notification system for large numbers of families
+- Data privacy compliance for storing family contact information
+- Offline support for viewing team calendar and messages
+
+**Implementation Dependencies:**
+- Requires Player/Roster Management (Enhancement 1)
+- Requires Parent Communication infrastructure (Enhancement 3)
+- Requires Match Management (Enhancement 5)
+- Requires Friendly Manager Integration (Enhancement 6)
+- Builds on existing Messaging Infrastructure (Requirement 21)
+
+**Phased Rollout Approach:**
+1. **Phase 7a:** Event management and RSVP system for coaches/managers
+2. **Phase 7b:** Parent/player app with calendar view and RSVP capability
+3. **Phase 7c:** Team group messaging and announcements
+4. **Phase 7d:** Team invite codes and self-service family registration
+5. **Phase 7e:** Direct messaging and advanced communication features
+
 ### Implementation Priority
 
 These enhancements are listed in suggested implementation order:
@@ -680,8 +794,8 @@ These enhancements are listed in suggested implementation order:
 2. **Phase 3:** Session Attendance Tracking (builds on player management)
 3. **Phase 4:** Game Day Match Management (automated match notifications and scheduling)
 4. **Phase 5:** Enhanced Game Feedback Structure (prepares data for AI)
-5. **Phase 6:** AI-Powered Recommendations (requires sufficient historical data)
-6. **Phase 7:** Parent Communication (extends messaging infrastructure)
+5. **Phase 6:** AI-Powered Coaching Assistant (requires sufficient historical data)
+6. **Phase 7:** Complete Team Management Platform (event management, RSVP, team messaging, parent/player app)
 7. **Phase 8:** Calendar and Weather Integration (quality-of-life improvements)
 
 ### Architectural Considerations
