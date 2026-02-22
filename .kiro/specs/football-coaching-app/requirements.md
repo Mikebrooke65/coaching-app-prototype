@@ -2,27 +2,33 @@
 
 ## Introduction
 
-The West Coast Rangers Football Club Junior Coaching App is a mobile and web-based system designed to support approximately 200 junior coaches and managers in delivering effective training sessions. Coaches and managers access the system via a mobile app on iOS and Android devices. Senior coaches have access to both the mobile app and a desktop web application that provides additional content management, reporting, and administrative capabilities.
+The West Coast Rangers Football Club Junior Coaching App is a mobile and web-based system designed to support approximately 200 junior coaches and managers in delivering effective training sessions, while also providing players and their caregivers with access to team information and communication. Coaches and managers access the system via a mobile app on iOS and Android devices. Admins have access to both the mobile app and a desktop web application that provides additional content management, reporting, and administrative capabilities. Players and caregivers use a lighter version of the mobile app focused on team coordination and communication.
 
 ## Glossary
 
-- **Mobile_App**: The .NET MAUI application deployed to iOS and Android devices used by coaches, managers, and senior coaches
-- **Senior_Coach_Site**: The Azure Static Web App providing web-based administration and content management for senior coaches (desktop access only)
-- **Coach**: A junior coach who delivers training sessions to teams (mobile app access only)
-- **Manager**: A team manager who may access lesson plans and team information (mobile app access only)
-- **Senior_Coach**: An administrator who creates lesson content and manages users (mobile app and desktop web app access)
+- **Mobile_App**: The .NET MAUI application deployed to iOS and Android devices used by coaches, managers, admins, players, and caregivers
+- **Admin_Site**: The Azure Static Web App providing web-based administration and content management for admins (desktop access only)
+- **Coach**: A junior coach who delivers training sessions to teams (mobile app access only, may be assigned to multiple teams)
+- **Manager**: A team manager who may access lesson plans and team information (mobile app access only, may be assigned to multiple teams)
+- **Admin**: An administrator who creates lesson content, manages users, and oversees the system (mobile app and desktop web app access, may also serve as a coach)
+- **Player**: A youth football player who is a member of one or more teams (mobile app access only)
+- **Caregiver**: A parent, guardian, or other caregiver responsible for one or more players (mobile app access only)
 - **Landing_Page**: The home screen displaying welcome text and team-specific announcements
 - **Lessons_Area**: The section where coaches browse, select, and manage lesson deliveries
 - **Games_Area**: The section where coaches provide game feedback and performance reflections
 - **Resources_Area**: The section containing general coaching information such as pitch sizes and how-to articles
 - **Session_Plan**: A 20-minute training activity stored in a searchable repository with structured content and media
 - **Lesson**: A complete one-hour training plan composed of three Session_Plans selected from the repository
-- **Session_Repository**: A searchable collection of reusable Session_Plans that Senior_Coaches use to build lessons
+- **Session_Repository**: A searchable collection of reusable Session_Plans that Admines use to build lessons
 - **Session_Feedback**: A coach's rating (0-5) and optional comments on a specific session plan after delivery
 - **Lesson_Feedback**: A coach's rating (0-5) and optional comments on a complete lesson after delivery
 - **Delivery_Record**: A timestamped record capturing when a coach delivered a specific lesson to a team
 - **Team_Announcement**: Time-limited team-specific text displayed on the Landing_Page that auto-expires after seven days
-- **Resource_Article**: General coaching information content created by senior coaches
+- **Resource_Article**: General coaching information content created by admines
+- **Game_Feedback**: Structured coach reflections following a match using the 4 Moments of Football framework
+- **4_Moments_of_Football**: A coaching analysis framework covering Attacking, Attacking to Defending Transition, Defending, and Defending to Attacking Transition
+- **WWW**: "What Went Well" - positive observations from game performance
+- **EBI**: "Even Better If" - areas for improvement identified during game analysis
 - **Team**: A youth football squad identified by age group and team name
 - **Skill**: A football skill category used to organize lessons and session plans
 - **Azure_Table_Storage**: The cloud database storing all structured application data
@@ -51,109 +57,127 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 #### Acceptance Criteria
 
 1. WHEN a coach logs in, THE Mobile_App SHALL display the Landing_Page
-2. THE Landing_Page SHALL display default welcome text editable by Senior_Coach
+2. THE Landing_Page SHALL display default welcome text editable by Admin
 3. THE Landing_Page SHALL display team-specific announcements for the coach's selected team
 4. THE Mobile_App SHALL provide navigation to four main areas: Landing_Page, Lessons_Area, Games_Area, and Resources_Area
 5. THE Mobile_App SHALL allow coaches to navigate between areas using a persistent navigation menu
 
 ### Requirement 1b: Team Announcements Management
 
-**User Story:** As a senior coach, I want to create time-limited team announcements that automatically expire, so that coaches see current and relevant information without manual cleanup.
+**User Story:** As a admin, I want to create time-limited team announcements that automatically expire, so that coaches see current and relevant information without manual cleanup.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL allow Senior_Coach to create team announcements with title and content
-2. WHEN creating a team announcement, THE Senior_Coach_Site SHALL allow Senior_Coach to target a specific team or group of teams
-3. WHEN a team announcement is created, THE Senior_Coach_Site SHALL store the creation timestamp in Azure_Table_Storage
+1. THE Admin_Site SHALL allow Admin to create team announcements with title and content
+2. WHEN creating a team announcement, THE Admin_Site SHALL allow Admin to target a specific team or group of teams
+3. WHEN a team announcement is created, THE Admin_Site SHALL store the creation timestamp in Azure_Table_Storage
 4. THE Mobile_App SHALL display team announcements on the Landing_Page for coaches whose selected team matches the announcement target
 5. WHEN a team announcement is seven days old, THE Mobile_App SHALL automatically remove it from display
-6. WHEN a Senior_Coach creates a new team announcement for the same team, THE Mobile_App SHALL replace the previous announcement regardless of age
-7. THE Senior_Coach_Site SHALL allow Senior_Coach to manually delete team announcements before expiry
+6. WHEN a Admin creates a new team announcement for the same team, THE Mobile_App SHALL replace the previous announcement regardless of age
+7. THE Admin_Site SHALL allow Admin to manually delete team announcements before expiry
 
 ### Requirement 2: User Account Management
 
-**User Story:** As a senior coach, I want to create and manage user accounts, so that I can control who has access to the system.
+**User Story:** As an admin, I want to create and manage user accounts, so that I can control who has access to the system.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL allow Senior_Coach to create user accounts with first name, last name, email, password, cellphone, and role
-2. THE Senior_Coach_Site SHALL support three role types: Coach, Manager, and Senior_Coach
-3. WHEN a Senior_Coach creates a user account, THE Senior_Coach_Site SHALL store the account in Azure_Table_Storage with a hashed password
-4. THE Senior_Coach_Site SHALL allow Senior_Coach to reset user passwords
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to edit user details including team associations
-6. THE Senior_Coach_Site SHALL allow Senior_Coach to remove user accounts
+1. THE Admin_Site SHALL allow Admin to create user accounts with first name, last name, email, password, cellphone, and role
+2. THE Admin_Site SHALL support five role types: Coach, Manager, Admin, Player, and Caregiver
+3. WHEN an Admin creates a user account, THE Admin_Site SHALL store the account in Azure_Table_Storage with a hashed password
+4. THE Admin_Site SHALL allow Admin to reset user passwords
+5. THE Admin_Site SHALL allow Admin to edit user details including team associations
+6. THE Admin_Site SHALL allow Admin to remove user accounts
+7. THE Admin_Site SHALL allow an Admin account to also be assigned the Coach role
+
+### Requirement 2a: Player and Caregiver Management
+
+**User Story:** As an admin, I want to manage players and their caregivers, so that families can access team information and communication.
+
+#### Acceptance Criteria
+
+1. THE Admin_Site SHALL allow Admin to create player accounts with first name, last name, date of birth, and contact information
+2. THE Admin_Site SHALL allow Admin to associate a player with one or more teams
+3. THE Admin_Site SHALL allow Admin to create caregiver accounts with first name, last name, email, password, and cellphone
+4. THE Admin_Site SHALL allow Admin to link one or more caregivers to a player
+5. THE Admin_Site SHALL allow Admin to link one or more players to a caregiver
+6. THE Admin_Site SHALL store player-caregiver relationships in Azure_Table_Storage
+7. THE Admin_Site SHALL allow Admin to view all caregivers associated with a player
+8. THE Admin_Site SHALL allow Admin to view all players associated with a caregiver
+9. THE Admin_Site SHALL allow Admin to remove player-caregiver associations
+10. WHEN a player is associated with a team, THE Mobile_App SHALL make team information accessible to the player and their linked caregivers
 
 ### Requirement 3: Team Management
 
-**User Story:** As a senior coach, I want to manage team information, so that coaches can associate their lesson deliveries with the correct teams.
+**User Story:** As a admin, I want to manage team information, so that coaches can associate their lesson deliveries with the correct teams.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL allow Senior_Coach to create teams with age group, team name, training ground, and training time
-2. THE Senior_Coach_Site SHALL store team information in Azure_Table_Storage
-3. THE Senior_Coach_Site SHALL allow Senior_Coach to edit team details
-4. THE Senior_Coach_Site SHALL allow Senior_Coach to delete teams
-5. WHEN a team is created or updated, THE Senior_Coach_Site SHALL make the changes available to Mobile_App after synchronization
+1. THE Admin_Site SHALL allow Admin to create teams with age group, team name, training ground, and training time
+2. THE Admin_Site SHALL store team information in Azure_Table_Storage
+3. THE Admin_Site SHALL allow Admin to edit team details
+4. THE Admin_Site SHALL allow Admin to delete teams
+5. WHEN a team is created or updated, THE Admin_Site SHALL make the changes available to Mobile_App after synchronization
 
 ### Requirement 4: Coach-Team Association
 
-**User Story:** As a senior coach, I want to associate coaches with teams, so that the app can pre-populate team selections for coaches.
+**User Story:** As a admin, I want to associate coaches with teams, so that the app can pre-populate team selections for coaches.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL allow Senior_Coach to assign a default team to a coach
-2. THE Senior_Coach_Site SHALL allow Senior_Coach to assign multiple accessible teams to a coach
+1. THE Admin_Site SHALL allow Admin to assign a default team to a coach
+2. THE Admin_Site SHALL allow Admin to assign multiple accessible teams to a coach
 3. WHEN a coach has no default team assigned, THE Mobile_App SHALL display all accessible teams without pre-selection
 4. WHEN a coach selects a team for lesson delivery, THE Mobile_App SHALL record the selected team regardless of default assignment
 5. THE Mobile_App SHALL allow coaches to select any of their accessible teams for each lesson delivery
 
 ### Requirement 5: Session Plan Repository Management
 
-**User Story:** As a senior coach, I want to create and manage reusable session plans in a searchable repository, so that I can build lessons by selecting appropriate 20-minute training activities.
+**User Story:** As a admin, I want to create and manage reusable session plans in a searchable repository, so that I can build lessons by selecting appropriate 20-minute training activities.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL provide a session plan builder interface for creating session plans
-2. WHEN a Senior_Coach creates a session plan, THE Senior_Coach_Site SHALL require an associated skill category
-3. WHEN a Senior_Coach creates a session plan, THE Senior_Coach_Site SHALL require a session title
-4. WHEN a Senior_Coach creates a session plan, THE Senior_Coach_Site SHALL require a session description
-5. WHEN a Senior_Coach creates a session plan, THE Senior_Coach_Site SHALL require a setup explanation describing how to set up the session
-6. THE Senior_Coach_Site SHALL allow Senior_Coach to upload a setup drawing showing the session layout
-7. THE Senior_Coach_Site SHALL allow Senior_Coach to optionally associate one video demonstrating how the exercise works
-8. THE Senior_Coach_Site SHALL allow Senior_Coach to enter up to five key learning objectives for the session
-9. THE Senior_Coach_Site SHALL store session plan content in Azure_Table_Storage and media files in Azure_Blob_Storage
-10. THE Senior_Coach_Site SHALL provide a searchable session plan repository interface
-11. THE Senior_Coach_Site SHALL allow Senior_Coach to search session plans by skill category, title, or learning objectives
-12. THE Senior_Coach_Site SHALL allow Senior_Coach to edit existing session plans
-13. THE Senior_Coach_Site SHALL allow Senior_Coach to delete session plans from the repository
-14. WHEN a session plan is saved, THE Senior_Coach_Site SHALL make it immediately available in the session repository
+1. THE Admin_Site SHALL provide a session plan builder interface for creating session plans
+2. WHEN a Admin creates a session plan, THE Admin_Site SHALL require an associated skill category
+3. WHEN a Admin creates a session plan, THE Admin_Site SHALL require a session title
+4. WHEN a Admin creates a session plan, THE Admin_Site SHALL require a session description
+5. WHEN a Admin creates a session plan, THE Admin_Site SHALL require a setup explanation describing how to set up the session
+6. THE Admin_Site SHALL allow Admin to upload a setup drawing showing the session layout
+7. THE Admin_Site SHALL allow Admin to optionally associate one video demonstrating how the exercise works
+8. THE Admin_Site SHALL allow Admin to enter up to five key learning objectives for the session
+9. THE Admin_Site SHALL store session plan content in Azure_Table_Storage and media files in Azure_Blob_Storage
+10. THE Admin_Site SHALL provide a searchable session plan repository interface
+11. THE Admin_Site SHALL allow Admin to search session plans by skill category, title, or learning objectives
+12. THE Admin_Site SHALL allow Admin to edit existing session plans
+13. THE Admin_Site SHALL allow Admin to delete session plans from the repository
+14. WHEN a session plan is saved, THE Admin_Site SHALL make it immediately available in the session repository
 
 ### Requirement 5a: Lesson Composition from Session Plans
 
-**User Story:** As a senior coach, I want to create lessons by selecting three session plans from the repository, so that coaches have complete one-hour training programs.
+**User Story:** As a admin, I want to create lessons by selecting three session plans from the repository, so that coaches have complete one-hour training programs.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL provide a lesson builder interface for composing lessons
-2. WHEN a Senior_Coach creates a lesson, THE Senior_Coach_Site SHALL require a skill category and lesson name
-3. THE Senior_Coach_Site SHALL require Senior_Coach to select exactly three session plans from the session repository
-4. THE Senior_Coach_Site SHALL display each selected session plan as a 20-minute component of the one-hour lesson
-5. WHEN a lesson is created, THE Senior_Coach_Site SHALL assign version number 1
-6. THE Senior_Coach_Site SHALL store the lesson composition in Azure_Table_Storage with references to the three selected session plans
-7. WHEN a lesson is saved, THE Senior_Coach_Site SHALL make it immediately available to Mobile_App after synchronization
+1. THE Admin_Site SHALL provide a lesson builder interface for composing lessons
+2. WHEN a Admin creates a lesson, THE Admin_Site SHALL require a skill category and lesson name
+3. THE Admin_Site SHALL require Admin to select exactly three session plans from the session repository
+4. THE Admin_Site SHALL display each selected session plan as a 20-minute component of the one-hour lesson
+5. WHEN a lesson is created, THE Admin_Site SHALL assign version number 1
+6. THE Admin_Site SHALL store the lesson composition in Azure_Table_Storage with references to the three selected session plans
+7. WHEN a lesson is saved, THE Admin_Site SHALL make it immediately available to Mobile_App after synchronization
 
 ### Requirement 6: Lesson Content Editing and Versioning
 
-**User Story:** As a senior coach, I want to update existing lessons and track changes, so that coaches always have current content with change history.
+**User Story:** As a admin, I want to update existing lessons and track changes, so that coaches always have current content with change history.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL allow Senior_Coach to edit existing lesson content
-2. WHEN a Senior_Coach saves changes to a lesson, THE Senior_Coach_Site SHALL increment the lesson version number by 1
-3. WHEN the lesson version increments, THE Senior_Coach_Site SHALL prompt Senior_Coach to enter a changelog note
-4. THE Senior_Coach_Site SHALL store the changelog note with timestamp in Azure_Table_Storage
-5. THE Senior_Coach_Site SHALL display version history with changelog notes for each lesson
-6. THE Senior_Coach_Site SHALL allow Senior_Coach to delete lessons
+1. THE Admin_Site SHALL allow Admin to edit existing lesson content
+2. WHEN a Admin saves changes to a lesson, THE Admin_Site SHALL increment the lesson version number by 1
+3. WHEN the lesson version increments, THE Admin_Site SHALL prompt Admin to enter a changelog note
+4. THE Admin_Site SHALL store the changelog note with timestamp in Azure_Table_Storage
+5. THE Admin_Site SHALL display version history with changelog notes for each lesson
+6. THE Admin_Site SHALL allow Admin to delete lessons
 
 ### Requirement 7: Lesson Browsing by Skill
 
@@ -208,7 +232,7 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 10a: Session Feedback Capture
 
-**User Story:** As a coach, I want to provide feedback on individual session plans after delivery, so that senior coaches can improve training content based on my experience.
+**User Story:** As a coach, I want to provide feedback on individual session plans after delivery, so that admines can improve training content based on my experience.
 
 #### Acceptance Criteria
 
@@ -221,7 +245,7 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 10b: Lesson Feedback Capture
 
-**User Story:** As a coach, I want to provide feedback on complete lessons after delivery, so that senior coaches can understand how well the overall training program worked.
+**User Story:** As a coach, I want to provide feedback on complete lessons after delivery, so that admines can understand how well the overall training program worked.
 
 #### Acceptance Criteria
 
@@ -234,76 +258,76 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 10c: Session and Lesson Feedback Reporting
 
-**User Story:** As a senior coach, I want to view feedback on sessions and lessons, so that I can identify which content needs improvement and make data-driven modifications.
+**User Story:** As a admin, I want to view feedback on sessions and lessons, so that I can identify which content needs improvement and make data-driven modifications.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL display session feedback aggregated by session plan
-2. WHEN displaying session feedback, THE Senior_Coach_Site SHALL show session plan title, skill category, average rating, number of ratings, and all coach comments
-3. THE Senior_Coach_Site SHALL allow Senior_Coach to filter session feedback by date range, skill category, or rating threshold
-4. THE Senior_Coach_Site SHALL display lesson feedback aggregated by lesson
-5. WHEN displaying lesson feedback, THE Senior_Coach_Site SHALL show lesson name, skill category, average rating, number of ratings, and all coach comments
-6. THE Senior_Coach_Site SHALL allow Senior_Coach to filter lesson feedback by date range, skill category, or rating threshold
-7. THE Senior_Coach_Site SHALL allow Senior_Coach to export session and lesson feedback in CSV format
-8. THE Senior_Coach_Site SHALL retrieve feedback data from Azure_Table_Storage
+1. THE Admin_Site SHALL display session feedback aggregated by session plan
+2. WHEN displaying session feedback, THE Admin_Site SHALL show session plan title, skill category, average rating, number of ratings, and all coach comments
+3. THE Admin_Site SHALL allow Admin to filter session feedback by date range, skill category, or rating threshold
+4. THE Admin_Site SHALL display lesson feedback aggregated by lesson
+5. WHEN displaying lesson feedback, THE Admin_Site SHALL show lesson name, skill category, average rating, number of ratings, and all coach comments
+6. THE Admin_Site SHALL allow Admin to filter lesson feedback by date range, skill category, or rating threshold
+7. THE Admin_Site SHALL allow Admin to export session and lesson feedback in CSV format
+8. THE Admin_Site SHALL retrieve feedback data from Azure_Table_Storage
 
 ### Requirement 11: Configurable Text Content
 
-**User Story:** As a senior coach, I want to create and manage text content displayed in the mobile app, so that I can provide guidance and context to coaches.
+**User Story:** As a admin, I want to create and manage text content displayed in the mobile app, so that I can provide guidance and context to coaches.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL provide a text block editor for creating display content
-2. WHEN creating a text block, THE Senior_Coach_Site SHALL require page name and text content
-3. THE Senior_Coach_Site SHALL support markdown formatting in text content including bold, italic, and bullet lists
-4. THE Senior_Coach_Site SHALL provide a live preview of how markdown will render
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to create team-specific text blocks by associating a team ID
-6. THE Senior_Coach_Site SHALL store text blocks in Azure_Table_Storage
+1. THE Admin_Site SHALL provide a text block editor for creating display content
+2. WHEN creating a text block, THE Admin_Site SHALL require page name and text content
+3. THE Admin_Site SHALL support markdown formatting in text content including bold, italic, and bullet lists
+4. THE Admin_Site SHALL provide a live preview of how markdown will render
+5. THE Admin_Site SHALL allow Admin to create team-specific text blocks by associating a team ID
+6. THE Admin_Site SHALL store text blocks in Azure_Table_Storage
 7. WHEN the Mobile_App displays a page with configurable text, THE Mobile_App SHALL load and render the appropriate text block from Azure_Table_Storage
 8. WHERE a team-specific text block exists, THE Mobile_App SHALL display it instead of the default text block
 
 ### Requirement 11a: Resources Area Content Management
 
-**User Story:** As a senior coach, I want to create and manage general coaching resources, so that coaches have access to reference materials like pitch sizes and how-to articles.
+**User Story:** As a admin, I want to create and manage general coaching resources, so that coaches have access to reference materials like pitch sizes and how-to articles.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL provide a resource article editor for creating coaching reference content
-2. WHEN creating a resource article, THE Senior_Coach_Site SHALL require a title and content
-3. THE Senior_Coach_Site SHALL allow Senior_Coach to categorize resource articles by type
-4. THE Senior_Coach_Site SHALL support markdown formatting in resource article content
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to associate images with resource articles
-6. THE Senior_Coach_Site SHALL store resource articles in Azure_Table_Storage and media in Azure_Blob_Storage
+1. THE Admin_Site SHALL provide a resource article editor for creating coaching reference content
+2. WHEN creating a resource article, THE Admin_Site SHALL require a title and content
+3. THE Admin_Site SHALL allow Admin to categorize resource articles by type
+4. THE Admin_Site SHALL support markdown formatting in resource article content
+5. THE Admin_Site SHALL allow Admin to associate images with resource articles
+6. THE Admin_Site SHALL store resource articles in Azure_Table_Storage and media in Azure_Blob_Storage
 7. THE Mobile_App SHALL display resource articles in the Resources_Area
 8. THE Mobile_App SHALL allow coaches to browse resource articles by category
 9. THE Mobile_App SHALL cache resource articles locally for offline access
-10. THE Senior_Coach_Site SHALL allow Senior_Coach to edit and delete resource articles
+10. THE Admin_Site SHALL allow Admin to edit and delete resource articles
 
-### Requirement 12: Senior Coach Reporting
+### Requirement 12: admin Reporting
 
-**User Story:** As a senior coach, I want to generate reports on lesson deliveries, so that I can monitor coaching activities across teams.
+**User Story:** As a admin, I want to generate reports on lesson deliveries, so that I can monitor coaching activities across teams.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL allow Senior_Coach to generate reports showing lesson deliveries
-2. THE Senior_Coach_Site SHALL allow filtering reports by date range, team, coach, and age group
-3. THE Senior_Coach_Site SHALL support age group filtering for U8, U9, U10, U11, and U12 teams
-4. WHEN generating a report, THE Senior_Coach_Site SHALL display skill, lesson name, coach name, team name, age group, date delivered, lesson version, and notes
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to export reports in CSV format
-6. THE Senior_Coach_Site SHALL allow Senior_Coach to export reports in PDF format
-7. THE Senior_Coach_Site SHALL retrieve report data from Azure_Table_Storage
+1. THE Admin_Site SHALL allow Admin to generate reports showing lesson deliveries
+2. THE Admin_Site SHALL allow filtering reports by date range, team, coach, and age group
+3. THE Admin_Site SHALL support age group filtering for U8, U9, U10, U11, and U12 teams
+4. WHEN generating a report, THE Admin_Site SHALL display skill, lesson name, coach name, team name, age group, date delivered, lesson version, and notes
+5. THE Admin_Site SHALL allow Admin to export reports in CSV format
+6. THE Admin_Site SHALL allow Admin to export reports in PDF format
+7. THE Admin_Site SHALL retrieve report data from Azure_Table_Storage
 
 ### Requirement 13: Audit Trail
 
-**User Story:** As a senior coach, I want to view audit information for delivery records, so that I can track who created, modified, or deleted coaching records.
+**User Story:** As a admin, I want to view audit information for delivery records, so that I can track who created, modified, or deleted coaching records.
 
 #### Acceptance Criteria
 
 1. WHEN a Delivery_Record is created, THE Mobile_App SHALL store the creating user ID and creation timestamp
 2. WHEN a Delivery_Record is edited, THE Mobile_App SHALL store the editing user ID and edit timestamp
 3. WHEN a Delivery_Record is deleted, THE Mobile_App SHALL store the deletion user ID and deletion timestamp
-4. THE Senior_Coach_Site SHALL display audit information including action type, user ID, and timestamp for all delivery records
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to view complete audit history for any delivery record
+4. THE Admin_Site SHALL display audit information including action type, user ID, and timestamp for all delivery records
+5. THE Admin_Site SHALL allow Admin to view complete audit history for any delivery record
 
 ### Requirement 14: Team Selection Interface
 
@@ -319,15 +343,15 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 15: Lesson Search and Discovery
 
-**User Story:** As a senior coach, I want to search and browse all lessons in the system, so that I can manage content effectively.
+**User Story:** As a admin, I want to search and browse all lessons in the system, so that I can manage content effectively.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL display a searchable list of all lessons
-2. THE Senior_Coach_Site SHALL allow Senior_Coach to search lessons by name, skill, or tags
-3. WHEN displaying lesson search results, THE Senior_Coach_Site SHALL show lesson name, skill, version number, and last modified date
-4. WHEN a Senior_Coach selects a lesson from search results, THE Senior_Coach_Site SHALL display the full lesson details
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to navigate from search results to edit or delete a lesson
+1. THE Admin_Site SHALL display a searchable list of all lessons
+2. THE Admin_Site SHALL allow Admin to search lessons by name, skill, or tags
+3. WHEN displaying lesson search results, THE Admin_Site SHALL show lesson name, skill, version number, and last modified date
+4. WHEN a Admin selects a lesson from search results, THE Admin_Site SHALL display the full lesson details
+5. THE Admin_Site SHALL allow Admin to navigate from search results to edit or delete a lesson
 
 ### Requirement 16: Game Feedback Capture
 
@@ -337,93 +361,124 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 1. THE Mobile_App SHALL provide an option to add game analysis from the skill selection page
 2. WHEN a coach selects game analysis, THE Mobile_App SHALL prompt for a game date with today's date as default
-3. WHEN a coach enters game analysis, THE Mobile_App SHALL display prompts: "What went well? What needs work?"
-4. WHEN a coach submits game analysis, THE Mobile_App SHALL create a Game_Feedback record in Azure_Table_Storage with feedback ID, coach ID, coach name, team ID, team name, date, notes, created by, and created at
-5. THE Mobile_App SHALL allow a coach to edit Game_Feedback records they created
-6. THE Mobile_App SHALL allow a coach to delete Game_Feedback records they created
-7. THE Mobile_App SHALL prevent coaches from editing or deleting Game_Feedback records created by other coaches
+### Requirement 16: Game Feedback Capture
+
+**User Story:** As a coach, I want to record structured reflections after games using the 4 Moments of Football framework, so that I can systematically analyze team performance and identify areas for improvement.
+
+#### Acceptance Criteria
+
+1. THE Mobile_App SHALL provide an option to add game analysis from the skill selection page
+2. WHEN a coach selects game analysis, THE Mobile_App SHALL prompt for a game date with today's date as default
+3. WHEN a coach enters game analysis, THE Mobile_App SHALL guide the coach through the 4 Moments of Football framework in sequence:
+   - Moment 1: Attacking
+   - Moment 2: Attacking to Defending Transition
+   - Moment 3: Defending
+   - Moment 4: Defending to Attacking Transition
+4. FOR EACH of the 4 Moments, THE Mobile_App SHALL prompt the coach to enter:
+   - WWW (What Went Well) - free text field
+   - EBI (Even Better If) - free text field
+5. AFTER completing all 4 Moments, THE Mobile_App SHALL prompt the coach to identify 2-3 key areas the team needs to work on
+6. THE Mobile_App SHALL allow the coach to select key areas from a predefined list of skills or enter custom text
+7. WHEN a coach submits game analysis, THE Mobile_App SHALL create a Game_Feedback record in Azure_Table_Storage with:
+   - Feedback ID, coach ID, coach name, team ID, team name, date
+   - Attacking WWW and EBI
+   - Attacking to Defending Transition WWW and EBI
+   - Defending WWW and EBI
+   - Defending to Attacking Transition WWW and EBI
+   - 2-3 key areas to work on
+   - Created by and created at timestamps
+8. THE Mobile_App SHALL allow a coach to save game feedback as a draft and complete it later
+9. THE Mobile_App SHALL allow a coach to edit Game_Feedback records they created
+10. THE Mobile_App SHALL allow a coach to delete Game_Feedback records they created
+11. THE Mobile_App SHALL prevent coaches from editing or deleting Game_Feedback records created by other coaches
 
 ### Requirement 17: Game Feedback Reporting
 
-**User Story:** As a senior coach, I want to view game feedback from coaches, so that I can understand team performance trends and coaching needs.
+**User Story:** As a admin, I want to view game feedback from coaches using the 4 Moments framework, so that I can understand team performance trends and coaching needs across all moments of play.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL display game feedback records filtered by team, coach, date range, or age group
-2. THE Senior_Coach_Site SHALL support age group filtering for U8, U9, U10, U11, and U12 teams
-3. WHEN displaying game feedback, THE Senior_Coach_Site SHALL show coach name, team name, age group, game date, and feedback notes
-4. THE Senior_Coach_Site SHALL allow Senior_Coach to export game feedback in CSV format
-5. THE Senior_Coach_Site SHALL retrieve game feedback from Azure_Table_Storage
-6. THE Senior_Coach_Site SHALL display game feedback in chronological order with most recent first
+1. THE Admin_Site SHALL display game feedback records filtered by team, coach, date range, or age group
+2. THE Admin_Site SHALL support age group filtering for U8, U9, U10, U11, and U12 teams
+3. WHEN displaying game feedback, THE Admin_Site SHALL show:
+   - Coach name, team name, age group, game date
+   - WWW and EBI for each of the 4 Moments of Football
+   - Key areas identified for improvement
+4. THE Admin_Site SHALL allow Admin to filter feedback by specific moments (e.g., show only Attacking feedback)
+5. THE Admin_Site SHALL allow Admin to filter feedback by key areas identified
+6. THE Admin_Site SHALL highlight common themes across multiple game feedback entries
+7. THE Admin_Site SHALL allow Admin to export game feedback in CSV format with all 4 Moments data
+8. THE Admin_Site SHALL retrieve game feedback from Azure_Table_Storage
+9. THE Admin_Site SHALL display game feedback in chronological order with most recent first
 
 ### Requirement 17a: Coach Activity Summary Report
 
-**User Story:** As a senior coach, I want to view coach activity summaries, so that I can monitor coaching engagement and identify coaches who may need support.
+**User Story:** As a admin, I want to view coach activity summaries, so that I can monitor coaching engagement and identify coaches who may need support.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL generate coach activity summary reports
-2. THE Senior_Coach_Site SHALL allow filtering by date range, age group, or specific coaches
-3. WHEN generating a coach activity report, THE Senior_Coach_Site SHALL display coach name, number of lessons delivered, number of game feedback entries, and date range
-4. THE Senior_Coach_Site SHALL calculate and display average lessons per coach
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to export coach activity reports in CSV and PDF formats
-6. THE Senior_Coach_Site SHALL retrieve activity data from Azure_Table_Storage
+1. THE Admin_Site SHALL generate coach activity summary reports
+2. THE Admin_Site SHALL allow filtering by date range, age group, or specific coaches
+3. WHEN generating a coach activity report, THE Admin_Site SHALL display coach name, number of lessons delivered, number of game feedback entries, and date range
+4. THE Admin_Site SHALL calculate and display average lessons per coach
+5. THE Admin_Site SHALL allow Admin to export coach activity reports in CSV and PDF formats
+6. THE Admin_Site SHALL retrieve activity data from Azure_Table_Storage
 
 ### Requirement 17b: Team Training History Report
 
-**User Story:** As a senior coach, I want to view training history for each team, so that I can ensure balanced skill development and identify training gaps.
+**User Story:** As a admin, I want to view training history for each team, so that I can ensure balanced skill development and identify training gaps.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL generate team training history reports
-2. THE Senior_Coach_Site SHALL allow filtering by team, age group, or date range
-3. WHEN generating a team training history report, THE Senior_Coach_Site SHALL display team name, age group, lesson name, skill category, date delivered, and coach name
-4. THE Senior_Coach_Site SHALL group lessons by skill category to show skill coverage
-5. THE Senior_Coach_Site SHALL highlight skills that have not been trained within a specified time period
-6. THE Senior_Coach_Site SHALL allow Senior_Coach to export team training history reports in CSV and PDF formats
-7. THE Senior_Coach_Site SHALL retrieve training history from Azure_Table_Storage
+1. THE Admin_Site SHALL generate team training history reports
+2. THE Admin_Site SHALL allow filtering by team, age group, or date range
+3. WHEN generating a team training history report, THE Admin_Site SHALL display team name, age group, lesson name, skill category, date delivered, and coach name
+4. THE Admin_Site SHALL group lessons by skill category to show skill coverage
+5. THE Admin_Site SHALL highlight skills that have not been trained within a specified time period
+6. THE Admin_Site SHALL allow Admin to export team training history reports in CSV and PDF formats
+7. THE Admin_Site SHALL retrieve training history from Azure_Table_Storage
 
 ### Requirement 17c: Session and Lesson Popularity Report
 
-**User Story:** As a senior coach, I want to view which sessions and lessons are most and least popular based on feedback ratings, so that I can improve content quality.
+**User Story:** As a admin, I want to view which sessions and lessons are most and least popular based on feedback ratings, so that I can improve content quality.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL generate session and lesson popularity reports based on feedback ratings
-2. THE Senior_Coach_Site SHALL allow filtering by skill category, age group, or date range
-3. WHEN generating a popularity report, THE Senior_Coach_Site SHALL display session/lesson name, skill category, average rating, number of ratings, and number of deliveries
-4. THE Senior_Coach_Site SHALL sort sessions and lessons by average rating (highest to lowest or lowest to highest)
-5. THE Senior_Coach_Site SHALL highlight sessions and lessons with ratings below a configurable threshold (e.g., below 3.0)
-6. THE Senior_Coach_Site SHALL display coach comments alongside ratings for context
-7. THE Senior_Coach_Site SHALL allow Senior_Coach to export popularity reports in CSV and PDF formats
-8. THE Senior_Coach_Site SHALL retrieve feedback data from Azure_Table_Storage
+1. THE Admin_Site SHALL generate session and lesson popularity reports based on feedback ratings
+2. THE Admin_Site SHALL allow filtering by skill category, age group, or date range
+3. WHEN generating a popularity report, THE Admin_Site SHALL display session/lesson name, skill category, average rating, number of ratings, and number of deliveries
+4. THE Admin_Site SHALL sort sessions and lessons by average rating (highest to lowest or lowest to highest)
+5. THE Admin_Site SHALL highlight sessions and lessons with ratings below a configurable threshold (e.g., below 3.0)
+6. THE Admin_Site SHALL display coach comments alongside ratings for context
+7. THE Admin_Site SHALL allow Admin to export popularity reports in CSV and PDF formats
+8. THE Admin_Site SHALL retrieve feedback data from Azure_Table_Storage
 
 ### Requirement 17d: Skill Coverage Report
 
-**User Story:** As a senior coach, I want to view which skills are being trained most and least frequently, so that I can ensure balanced curriculum delivery across teams.
+**User Story:** As a admin, I want to view which skills are being trained most and least frequently, so that I can ensure balanced curriculum delivery across teams.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL generate skill coverage reports showing training frequency by skill category
-2. THE Senior_Coach_Site SHALL allow filtering by age group, team, or date range
-3. WHEN generating a skill coverage report, THE Senior_Coach_Site SHALL display skill category, number of lessons delivered, number of teams trained, and percentage of total training time
-4. THE Senior_Coach_Site SHALL identify skills that have not been trained within a specified time period
-5. THE Senior_Coach_Site SHALL compare skill coverage across age groups to identify imbalances
-6. THE Senior_Coach_Site SHALL allow Senior_Coach to export skill coverage reports in CSV and PDF formats
-7. THE Senior_Coach_Site SHALL retrieve lesson delivery data from Azure_Table_Storage
+1. THE Admin_Site SHALL generate skill coverage reports showing training frequency by skill category
+2. THE Admin_Site SHALL allow filtering by age group, team, or date range
+3. WHEN generating a skill coverage report, THE Admin_Site SHALL display skill category, number of lessons delivered, number of teams trained, and percentage of total training time
+4. THE Admin_Site SHALL identify skills that have not been trained within a specified time period
+5. THE Admin_Site SHALL compare skill coverage across age groups to identify imbalances
+6. THE Admin_Site SHALL allow Admin to export skill coverage reports in CSV and PDF formats
+7. THE Admin_Site SHALL retrieve lesson delivery data from Azure_Table_Storage
 
 ### Requirement 17e: Audit Trail Report
 
-**User Story:** As a senior coach, I want to view detailed audit trails for delivery records, so that I can track who created, modified, or deleted coaching records and maintain data integrity.
+**User Story:** As a admin, I want to view detailed audit trails for delivery records, so that I can track who created, modified, or deleted coaching records and maintain data integrity.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL generate audit trail reports for delivery records
-2. THE Senior_Coach_Site SHALL allow filtering by action type (create, edit, delete), user, team, or date range
-3. WHEN generating an audit trail report, THE Senior_Coach_Site SHALL display action type, user ID, user name, team name, lesson name, timestamp, and before/after values for edits
-4. THE Senior_Coach_Site SHALL display audit records in chronological order with most recent first
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to export audit trail reports in CSV and PDF formats
-6. THE Senior_Coach_Site SHALL retrieve audit data from Azure_Table_Storage
+1. THE Admin_Site SHALL generate audit trail reports for delivery records
+2. THE Admin_Site SHALL allow filtering by action type (create, edit, delete), user, team, or date range
+3. WHEN generating an audit trail report, THE Admin_Site SHALL display action type, user ID, user name, team name, lesson name, timestamp, and before/after values for edits
+4. THE Admin_Site SHALL display audit records in chronological order with most recent first
+5. THE Admin_Site SHALL allow Admin to export audit trail reports in CSV and PDF formats
+6. THE Admin_Site SHALL retrieve audit data from Azure_Table_Storage
 
 ### Requirement 18: Privacy and Access Control
 
@@ -435,7 +490,7 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 2. WHEN a coach views team delivery history, THE Mobile_App SHALL display only records for the selected team without revealing which other coaches created them
 3. THE Mobile_App SHALL prevent coaches from viewing delivery records for teams they cannot access
 4. THE Mobile_App SHALL prevent coaches from viewing game feedback created by other coaches
-5. THE Senior_Coach_Site SHALL allow Senior_Coach to view all delivery records and game feedback across all coaches and teams
+5. THE Admin_Site SHALL allow Admin to view all delivery records and game feedback across all coaches and teams
 
 ### Requirement 19: Data Synchronization
 
@@ -466,17 +521,17 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 21: Messaging Infrastructure Preparation
 
-**User Story:** As a senior coach, I want the system prepared for future messaging capabilities with flexible targeting options, so that I can communicate effectively with coaches and managers across teams and age groups.
+**User Story:** As a admin, I want the system prepared for future messaging capabilities with flexible targeting options, so that I can communicate effectively with coaches and managers across teams and age groups.
 
 #### Acceptance Criteria
 
-1. THE Senior_Coach_Site SHALL create a Messages table in Azure_Table_Storage with fields for message ID, sender ID, title, body, timestamp sent, read status, and message type
-2. THE Senior_Coach_Site SHALL create a MessageRecipients table to support flexible message targeting with fields for message ID, recipient type (Coach/Manager), recipient ID (for individual users), team ID (for team targeting), and age group (for age group targeting)
-3. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to select recipient types: Coaches, Managers, or both
-4. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to target specific individuals by selecting user IDs
-5. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to target specific teams by selecting team IDs
-6. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to target age groups (e.g., all U9 teams, all U10 teams)
-7. WHEN creating a message, THE Senior_Coach_Site SHALL allow Senior_Coach to combine targeting criteria (e.g., all coaches for U9 teams)
+1. THE Admin_Site SHALL create a Messages table in Azure_Table_Storage with fields for message ID, sender ID, title, body, timestamp sent, read status, and message type
+2. THE Admin_Site SHALL create a MessageRecipients table to support flexible message targeting with fields for message ID, recipient type (Coach/Manager), recipient ID (for individual users), team ID (for team targeting), and age group (for age group targeting)
+3. WHEN creating a message, THE Admin_Site SHALL allow Admin to select recipient types: Coaches, Managers, or both
+4. WHEN creating a message, THE Admin_Site SHALL allow Admin to target specific individuals by selecting user IDs
+5. WHEN creating a message, THE Admin_Site SHALL allow Admin to target specific teams by selecting team IDs
+6. WHEN creating a message, THE Admin_Site SHALL allow Admin to target age groups (e.g., all U9 teams, all U10 teams)
+7. WHEN creating a message, THE Admin_Site SHALL allow Admin to combine targeting criteria (e.g., all coaches for U9 teams)
 8. WHEN a message is targeted to a team, THE Mobile_App SHALL deliver the message to all coaches and managers linked to that team via their AccessibleTeamIDs
 9. WHEN a message is targeted to an age group, THE Mobile_App SHALL deliver the message to all coaches and managers linked to teams in that age group
 10. WHEN a new message is available for a user, THE Mobile_App SHALL send a push notification to the user's device
@@ -484,7 +539,7 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 12. WHEN a user opens the Mobile_App with unread messages, THE Mobile_App SHALL display a visual indicator showing the number of unread messages
 13. THE Mobile_App SHALL include a messages tab in the user interface displaying "Feature coming soon"
 14. THE Mobile_App SHALL register device tokens for push notifications during user authentication
-15. THE Senior_Coach_Site SHALL store user device tokens in Azure_Table_Storage
+15. THE Admin_Site SHALL store user device tokens in Azure_Table_Storage
 16. THE Mobile_App SHALL include role-based permissions data model supporting future message sending and receiving capabilities
 
 
@@ -589,7 +644,7 @@ The following features are planned for future versions and should be considered 
 - Multi-turn dialogue for clarification when needed
 - Proactive suggestions based on game feedback patterns
 - Learning from which suggestions coaches actually select
-- Senior coach dashboard showing common themes across teams
+- admin dashboard showing common themes across teams
 - Custom drill generation when repository doesn't have perfect match
 
 **Example Interaction:**
@@ -612,20 +667,20 @@ The following features are planned for future versions and should be considered 
 
 **Match Data Management:**
 - Match table with fields for match ID, team ID, opponent name, match date, match time, venue, and match type (league/friendly)
-- Senior Coach Site includes a dedicated match management section for entering weekend matches
+- admin Site includes a dedicated match management section for entering weekend matches
 - Bulk entry interface for entering multiple matches at once (e.g., all weekend fixtures)
-- Senior coaches can edit match details for any team
+- admines can edit match details for any team
 - When match details are updated, automatic notifications sent to affected coaches and managers
 - Match change notifications clearly indicate what changed (time, venue, opponent, etc.)
 
 **Match Communication:**
-- After entering matches, senior coaches can send match details to relevant team coaches and managers
+- After entering matches, admines can send match details to relevant team coaches and managers
 - Automated messaging to relevant team coaches and managers ahead of match day (e.g., 24-48 hours before)
 - Match notifications include date, time, venue, and opponent information
 - Update notifications sent immediately when match details change
 
 **Match Reporting:**
-- Senior Coach Site can generate a PDF report of all weekend matches
+- admin Site can generate a PDF report of all weekend matches
 - Report displays matches in a table format with columns: Team, Date, Time, Venue, Opponent
 - Report can be filtered by date range, age group, or specific teams
 - Copy-to-clipboard functionality for pasting match table into emails
@@ -633,7 +688,7 @@ The following features are planned for future versions and should be considered 
 
 **Mobile App Integration:**
 - Coaches and managers can view upcoming matches for their teams in the mobile app
-- Match details automatically update in the app when senior coaches make changes
+- Match details automatically update in the app when admines make changes
 - Match history visible alongside game feedback for post-match analysis
 - Match details linked to game feedback for context
 
@@ -644,7 +699,7 @@ The following features are planned for future versions and should be considered 
 
 **Benefits:**
 - Streamlines weekend match communication workflow
-- Reduces manual communication overhead for senior coaches
+- Reduces manual communication overhead for admines
 - Ensures coaches have timely and accurate match information
 - Provides easy distribution of match schedules via email
 - Creates connection between match schedule and game feedback
@@ -735,19 +790,19 @@ The following features are planned for future versions and should be considered 
 - Receive announcements from coaches
 - View basic team information (schedule, location, coach contacts)
 - No access to coaching content (lessons, sessions, feedback)
-- No access to senior coach features or reports
+- No access to admin features or reports
 
 **Mobile App Architecture:**
 - Same .NET MAUI app with role-based feature visibility
 - Parent/player users see simplified interface
 - Coaches/managers see full coaching features plus team management
-- Senior coaches see everything via both mobile and desktop
+- admines see everything via both mobile and desktop
 
 **Privacy and Permissions:**
 - Parents can only see information for their child's team(s)
 - Players can only see information for their own team(s)
 - Coaches/managers see full team information for their assigned teams
-- Senior coaches have visibility across all teams
+- admines have visibility across all teams
 - Configurable privacy settings for what information is shared with families
 
 **Notification System:**
