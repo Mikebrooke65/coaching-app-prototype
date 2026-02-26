@@ -591,28 +591,146 @@ The following features are planned for future versions and should be considered 
 - Privacy: Only coaches assigned to the player's team(s) can view notes and send messages
 - Message templates for common development topics (e.g., "Great progress on [skill]," "Let's focus on [area]")
 
-### Future Enhancement 2: Session Attendance Tracking
+### Future Enhancement 2: Event Management, Attendance Tracking, and Team Communication Platform
 
-**Description:** Record which players attended each training session to identify attendance patterns and engagement levels.
-
-**Considerations:**
-- Attendance records linked to delivery records and player IDs
-- Attendance reporting by player, team, and date range
-- Attendance trends and alerts for low participation
-- Mobile app interface for coaches to mark attendance during or after sessions
-
-### Future Enhancement 3: Parent and Guardian Communication
-
-**Description:** Extend messaging capabilities to include parent/guardian notifications and limited access to team information.
+**Description:** Enable admins, coaches, and managers to create and manage team events (practices, games, and other activities) with RSVP functionality, while providing players and caregivers with a lighter version of the mobile app for team schedules, communication, and coordination. This creates a complete team management platform that replaces dedicated team messaging apps like Heja and TeamReach.
 
 **Considerations:**
-- Parent user role with restricted permissions
-- Parent accounts linked to specific players
+
+**Event Creation and Management:**
+- Admins, coaches, and managers can create events for teams they manage
+- Each event requires: title, event type (Practice/Game/Other), date, location, and description
+- Event types are color-coded for visual recognition:
+  - Practice: One color (e.g., blue)
+  - Game: Another color (e.g., green)
+  - Other: Third color (e.g., gray)
+- Events stored in Azure_Table_Storage with event ID, team ID, creator ID, title, type, date, location, description, and timestamp
+- Creators can edit or delete events they created
+- Admins can edit or delete any event
+
+**Team Schedule Display:**
+- Mobile_App displays team schedule showing all events for selected team
+- Events listed in chronological order (calendar order)
+- Each event displays title, type (with color coding), date, location, and description
+- Under each event, the user sees their own RSVP status (or their player's status if viewing as caregiver)
+- Inline RSVP controls displayed directly under each event:
+  - For players and caregivers: Checkboxes for "Going" and "Not Going" next to the event
+  - User can quickly toggle their attendance without opening a separate view
+  - Current selection is visually indicated (checked box)
+- Schedule view accessible to coaches, managers, players, and caregivers associated with the team
+- Past events remain visible in schedule history
+
+**RSVP and Attendance Tracking:**
+- Users can update RSVP status inline from the schedule view using checkboxes under each event
+- When a user taps/clicks an event for details, Mobile_App displays full attendance list
+- Attendance list shows all coaches, managers, and players associated with the team
+- Each person can indicate their status: Going, Not Going, or Unanswered (default)
+- Players and caregivers can update their own RSVP status
+- Caregivers can update RSVP status for their linked players
+- Coaches and managers can view all RSVP responses but cannot change other people's status
+- Attendance reminders sent to families who haven't responded
+- Real-time attendance tracking visible to coaches and managers
+
+**Attendance List Sorting:**
+- Players list automatically sorted by status:
+  1. Going (displayed first)
+  2. Unanswered (displayed second)
+  3. Not Going (displayed last)
+- Visual indicators for each status (e.g., checkmark for Going, question mark for Unanswered, X for Not Going)
+- Count summary showing total Going, Unanswered, and Not Going
+
+**Team Group Messaging:**
+- Team-based group chat for coaches, managers, parents, and players
+- Everyone in the team can post messages to the group
+- Support for text messages, images, and attachments
+- Message notifications via push notifications
+- Message history searchable and archived
+- Optional: Direct messaging between coach and individual families
+
+**Family Communication Channels:**
+- Coaches can send announcements to all team families
+- Parents can message coaches/managers directly
+- Two-way communication for questions, updates, and coordination
+- Read receipts to confirm important messages were seen
+
+**Player/Caregiver App (Lighter Version):**
+- Same .NET MAUI app with role-based feature visibility
+- Lighter interface for players and caregivers focused on communication and coordination
+- Limited feature set for players and caregivers:
+  - View team calendar (practices and matches)
+  - RSVP to events with inline checkboxes
+  - View and participate in team group chat
+  - Receive announcements from coaches
+  - View basic team information (schedule, location, coach contacts)
+  - No access to coaching content (lessons, sessions, feedback)
+  - No access to admin features or reports
+- Coaches/managers see full coaching features plus team management
+- Admins see everything via both mobile and desktop
+
+**Flexible Family Access:**
+- Team invite codes for easy onboarding (e.g., "Join team with code: RANGERS-U9-2024")
+- Parents/guardians can join team using invite code without being in Friendly Manager
+- Support for multiple caregivers per player (grandparents, other guardians)
+- Self-service registration for additional family members via team code
+- Friendly Manager as master data source for players, parents, and team associations
+- Automatic sync of player rosters and contact information from Friendly Manager
+
+**Player and Caregiver Access:**
+- Player and Caregiver user roles with restricted permissions
+- Players and caregivers can only access information for their associated team(s)
+- Access to team schedule and event details
+- Access to team announcements and general team information
+- Cannot access coaching content (lessons, session plans, feedback)
+- Cannot access admin features or reports
+- Privacy controls ensuring users only see information relevant to their team
+
+**Notifications:**
+- Push notifications sent to team members when new events are created
+- When an admin, coach, or manager edits event details (title, date, location, description, or type), push notifications sent to all users associated with that team
+- Event edit notifications clearly indicate what changed (e.g., "Practice moved to new location: [location]" or "Game time changed to [new time]")
 - Notifications for training schedules, cancellations, and team announcements
-- Parent view of their child's team schedule and general team information
-- Privacy controls ensuring parents only see information relevant to their child's team
+- Push notifications for new messages, event updates, and RSVP reminders
+- Optional reminder notifications before events (e.g., 24 hours before)
+- Coaches receive notifications when players update their RSVP status
+- Configurable notification preferences per user
+- Digest mode option (daily summary instead of real-time)
+- Critical notifications (match cancellations) always delivered immediately
 
-### Future Enhancement 4: AI-Powered Coaching Assistant
+**Reporting:**
+- Admin_Site displays attendance reports by event, team, player, or date range
+- Reports show attendance patterns and trends over time
+- Identify players with low attendance rates
+- Export attendance reports in CSV and PDF formats
+
+**Integration with Existing Features:**
+- Events can be linked to lesson delivery records (for practice events)
+- Events can be linked to game feedback records (for game events)
+- Attendance data feeds into player development tracking (Future Enhancement 1)
+- Builds on messaging infrastructure from Requirement 21
+
+**Technical Considerations:**
+- Role-based access control for user types (coach/manager, admin, player, caregiver)
+- Friendly Manager API integration for roster sync
+- Team invite code generation and validation system
+- Real-time messaging infrastructure (consider Azure SignalR or similar)
+- Scalable notification system for large numbers of families
+- Data privacy compliance for storing family contact information
+- Offline support for viewing team calendar and messages
+
+**Benefits:**
+- Single app replaces multiple tools (coaching content + team management + communication)
+- Centralized event management for all team activities
+- Clear visibility of who's attending each event
+- Reduces manual communication about attendance
+- Reduces app fatigue for coaches and families
+- Centralized communication reduces missed messages
+- Helps coaches plan sessions based on expected attendance
+- Provides players and caregivers with easy access to team information via lighter app version
+- Seamless experience from lesson planning to match day coordination
+- Lower barrier to entry for families (simple team code to join)
+- Foundation for more advanced team coordination features
+
+### Future Enhancement 3: AI-Powered Coaching Assistant
 
 **Description:** An interactive AI coaching assistant integrated into the lesson selection workflow that helps coaches quickly find appropriate training content by analyzing their verbal description of team issues.
 
@@ -693,51 +811,42 @@ The following features are planned for future versions and should be considered 
 4. Coach previews lesson and selects it
 5. Proceeds with normal lesson delivery workflow
 
-### Future Enhancement 5: Game Day Match Management
+### Future Enhancement 5: Match Management and Reporting
 
-**Description:** Manage and communicate match details to teams, including automated notifications ahead of game day.
+**Description:** Provide admin-specific tools for bulk match entry, match reporting, and integration with game feedback analysis.
 
 **Considerations:**
 
-**Match Data Management:**
-- Match table with fields for match ID, team ID, opponent name, match date, match time, venue, and match type (league/friendly)
-- admin Site includes a dedicated match management section for entering weekend matches
-- Bulk entry interface for entering multiple matches at once (e.g., all weekend fixtures)
-- admines can edit match details for any team
-- When match details are updated, automatic notifications sent to affected coaches and managers
-- Match change notifications clearly indicate what changed (time, venue, opponent, etc.)
+**Bulk Match Entry:**
+- Admin_Site includes dedicated match management section for efficient data entry
+- Bulk entry interface for creating multiple match events at once (e.g., all weekend fixtures)
+- When creating matches, admin specifies: team, opponent name, match date, match time, venue, and match type (league/friendly)
+- Bulk-created matches automatically posted as "Game" events to respective team schedules
+- All standard event features apply (RSVP, notifications, editing)
 
-**Match Communication:**
-- After entering matches, admines can send match details to relevant team coaches and managers
-- Automated messaging to relevant team coaches and managers ahead of match day (e.g., 24-48 hours before)
-- Match notifications include date, time, venue, and opponent information
-- Update notifications sent immediately when match details change
-
-**Match Reporting:**
-- admin Site can generate a PDF report of all weekend matches
-- Report displays matches in a table format with columns: Team, Date, Time, Venue, Opponent
+**Match-Specific Reporting:**
+- Admin_Site can generate PDF reports of upcoming matches
+- Report displays matches in table format with columns: Team, Date, Time, Venue, Opponent, Match Type
 - Report can be filtered by date range, age group, or specific teams
 - Copy-to-clipboard functionality for pasting match table into emails
-- Export options include PDF and formatted text for email
+- Export options include PDF and formatted text for email distribution
 
-**Mobile App Integration:**
-- Coaches and managers can view upcoming matches for their teams in the mobile app
-- Match details automatically update in the app when admines make changes
-- Match history visible alongside game feedback for post-match analysis
-- Match details linked to game feedback for context
+**Game Feedback Integration:**
+- Match events automatically linked to game feedback records when coaches submit post-match analysis
+- Admin_Site displays match details alongside game feedback for context
+- Match history visible with associated game feedback for performance tracking over time
+- Enables trend analysis of team performance across multiple matches
 
 **Additional Features:**
 - Integration with Friendly Manager for match schedule synchronization if available
-- Calendar integration to add matches to coach's personal calendar
-- Automatic reminders at configurable intervals (e.g., 48 hours, 24 hours, 2 hours before match)
+- Automatic import of match fixtures from external systems
+- Calendar integration to add matches to personal calendars
 
 **Benefits:**
-- Streamlines weekend match communication workflow
-- Reduces manual communication overhead for admines
-- Ensures coaches have timely and accurate match information
-- Provides easy distribution of match schedules via email
-- Creates connection between match schedule and game feedback
-- Foundation for match attendance tracking and player selection features
+- Streamlines bulk match entry workflow for admins
+- Provides easy distribution of match schedules via formatted reports
+- Creates strong connection between match schedule and game feedback analysis
+- Reduces manual data entry through external system integration
 
 ### Future Enhancement 6: External System Integration
 
@@ -762,130 +871,14 @@ The following features are planned for future versions and should be considered 
 - Alerts for adverse weather conditions
 - Session planning recommendations based on weather (indoor vs outdoor drills)
 
-### Future Enhancement 7: Complete Team Management Platform (Heja/TeamReach Replacement)
-
-**Description:** Expand the app to become a complete team management and communication platform that replaces dedicated team messaging apps like Heja and TeamReach, providing a unified solution for coaching content, team coordination, and family communication.
-
-**Target Users:**
-- Coaches and Managers (existing users with expanded capabilities)
-- Parents/Guardians (new user type with lighter app version)
-- Players (new user type with lighter app version)
-
-**Core Team Management Features:**
-
-**Event Management:**
-- Coaches/managers can create and manage training sessions (practices)
-- Coaches/managers can create and manage match events
-- Events include date, time, location, and optional notes
-- Events automatically appear in team calendar view
-- Integration with match management system (Enhancement 5)
-
-**RSVP and Attendance:**
-- Parents/players can indicate attendance for each event (Going/Not Going/Maybe)
-- Real-time attendance tracking visible to coaches and managers
-- Attendance reminders sent to families who haven't responded
-- Attendance history linked to player records
-- Coaches can see at-a-glance who's coming to each session
-- Attendance data feeds into attendance tracking reports (Enhancement 2)
-
-**Team Group Messaging:**
-- Team-based group chat for coaches, managers, parents, and players
-- Everyone in the team can post messages to the group
-- Support for text messages, images, and attachments
-- Message notifications via push notifications
-- Message history searchable and archived
-- Optional: Direct messaging between coach and individual families
-
-**Family Communication Channels:**
-- Coaches can send announcements to all team families
-- Parents can message coaches/managers directly
-- Two-way communication for questions, updates, and coordination
-- Read receipts to confirm important messages were seen
-
-**Player and Parent Management:**
-
-**Data Source Integration:**
-- Friendly Manager as master data source for players, parents, and team associations
-- Automatic sync of player rosters and contact information
-- Updates from Friendly Manager propagate to coaching app
-
-**Flexible Family Access:**
-- Team invite codes for easy onboarding (e.g., "Join team with code: RANGERS-U9-2024")
-- Parents/guardians can join team using invite code without being in Friendly Manager
-- Support for multiple caregivers per player (grandparents, other guardians)
-- Self-service registration for additional family members via team code
-
-**Parent/Player App (Lighter Version):**
-
-**Limited Feature Set:**
-- View team calendar (practices and matches)
-- RSVP to events
-- View and participate in team group chat
-- Receive announcements from coaches
-- View basic team information (schedule, location, coach contacts)
-- No access to coaching content (lessons, sessions, feedback)
-- No access to admin features or reports
-
-**Mobile App Architecture:**
-- Same .NET MAUI app with role-based feature visibility
-- Parent/player users see simplified interface
-- Coaches/managers see full coaching features plus team management
-- admines see everything via both mobile and desktop
-
-**Privacy and Permissions:**
-- Parents can only see information for their child's team(s)
-- Players can only see information for their own team(s)
-- Coaches/managers see full team information for their assigned teams
-- admines have visibility across all teams
-- Configurable privacy settings for what information is shared with families
-
-**Notification System:**
-- Push notifications for new messages, event updates, and RSVP reminders
-- Configurable notification preferences per user
-- Digest mode option (daily summary instead of real-time)
-- Critical notifications (match cancellations) always delivered immediately
-
-**Benefits:**
-- Single app replaces multiple tools (coaching content + team management + communication)
-- Reduces app fatigue for coaches and families
-- Centralized communication reduces missed messages
-- Attendance tracking integrated with coaching records
-- Seamless experience from lesson planning to match day coordination
-- Lower barrier to entry for families (simple team code to join)
-
-**Technical Considerations:**
-- Role-based access control for three user types (coach/manager, parent, player)
-- Friendly Manager API integration for roster sync
-- Team invite code generation and validation system
-- Real-time messaging infrastructure (consider Azure SignalR or similar)
-- Scalable notification system for large numbers of families
-- Data privacy compliance for storing family contact information
-- Offline support for viewing team calendar and messages
-
-**Implementation Dependencies:**
-- Requires Player/Roster Management (Enhancement 1)
-- Requires Parent Communication infrastructure (Enhancement 3)
-- Requires Match Management (Enhancement 5)
-- Requires Friendly Manager Integration (Enhancement 6)
-- Builds on existing Messaging Infrastructure (Requirement 21)
-
-**Phased Rollout Approach:**
-1. **Phase 7a:** Event management and RSVP system for coaches/managers
-2. **Phase 7b:** Parent/player app with calendar view and RSVP capability
-3. **Phase 7c:** Team group messaging and announcements
-4. **Phase 7d:** Team invite codes and self-service family registration
-5. **Phase 7e:** Direct messaging and advanced communication features
-
 ### Implementation Priority
 
 These enhancements are listed in suggested implementation order:
-1. **Phase 2:** Player/Roster Management and Friendly Manager Integration (foundation for other features)
-2. **Phase 3:** Session Attendance Tracking (builds on player management)
-3. **Phase 4:** Game Day Match Management (automated match notifications and scheduling)
-4. **Phase 5:** Enhanced Game Feedback Structure (prepares data for AI)
-5. **Phase 6:** AI-Powered Coaching Assistant (requires sufficient historical data)
-6. **Phase 7:** Complete Team Management Platform (event management, RSVP, team messaging, parent/player app)
-7. **Phase 8:** Calendar and Weather Integration (quality-of-life improvements)
+1. **Phase 1:** Player/Roster Management (foundation for other features)
+2. **Phase 2:** Event Management, Attendance Tracking, and Team Communication Platform (complete team coordination)
+3. **Phase 3:** AI-Powered Coaching Assistant (requires sufficient historical data)
+4. **Phase 4:** Match Management and Reporting (bulk entry and admin tools)
+5. **Phase 5:** External System Integration (Friendly Manager, calendar, weather APIs)
 
 ### Architectural Considerations
 
