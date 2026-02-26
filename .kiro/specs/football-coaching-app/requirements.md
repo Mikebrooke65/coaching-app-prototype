@@ -372,11 +372,11 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 16: Game Feedback Capture
 
-**User Story:** As a coach, I want to record reflections after games, so that I can track team performance and identify areas for improvement.
+**User Story:** As a coach, I want to record structured reflections after games using the 4 Moments of Football framework, so that I can systematically analyze team performance and identify areas for improvement.
 
 #### Acceptance Criteria
 
-1. THE Mobile_App SHALL provide an option to add game analysis from the skill selection page
+1. THE Mobile_App SHALL provide an option to add game analysis from the Games_Area
 2. WHEN a coach selects game analysis, THE Mobile_App SHALL prompt for a game date with today's date as default
 ### Requirement 16: Game Feedback Capture
 
