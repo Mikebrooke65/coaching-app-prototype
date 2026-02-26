@@ -18,8 +18,8 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 - **Games_Area**: The section where coaches provide game feedback and performance reflections
 - **Resources_Area**: The section containing general coaching information such as pitch sizes and how-to articles
 - **Session_Plan**: A 20-minute training activity stored in a searchable repository with structured content and media
-- **Lesson**: A complete one-hour training plan composed of three Session_Plans selected from the repository
-- **Session_Repository**: A searchable collection of reusable Session_Plans that Admines use to build lessons
+- **Lesson**: A complete structured training program composed of four Session_Plans: Technical Drill, Skill Introduction, Skill Development, and Game
+- **Session_Repository**: A searchable collection of reusable Session_Plans that Admins use to build lessons
 - **Session_Feedback**: A coach's rating (0-5) and optional comments on a specific session plan after delivery
 - **Lesson_Feedback**: A coach's rating (0-5) and optional comments on a complete lesson after delivery
 - **Delivery_Record**: A timestamped record capturing when a coach delivered a specific lesson to a team
@@ -140,38 +140,48 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 5: Session Plan Repository Management
 
-**User Story:** As a admin, I want to create and manage reusable session plans in a searchable repository, so that I can build lessons by selecting appropriate 20-minute training activities.
+**User Story:** As an admin, I want to create and manage reusable session plans in a searchable repository, so that I can build lessons by selecting appropriate 20-minute training activities.
 
 #### Acceptance Criteria
 
 1. THE Admin_Site SHALL provide a session plan builder interface for creating session plans
-2. WHEN a Admin creates a session plan, THE Admin_Site SHALL require an associated skill category
-3. WHEN a Admin creates a session plan, THE Admin_Site SHALL require a session title
-4. WHEN a Admin creates a session plan, THE Admin_Site SHALL require a session description
-5. WHEN a Admin creates a session plan, THE Admin_Site SHALL require a setup explanation describing how to set up the session
-6. THE Admin_Site SHALL allow Admin to upload a setup drawing showing the session layout
-7. THE Admin_Site SHALL allow Admin to optionally associate one video demonstrating how the exercise works
-8. THE Admin_Site SHALL allow Admin to enter up to five key learning objectives for the session
-9. THE Admin_Site SHALL store session plan content in Azure_Table_Storage and media files in Azure_Blob_Storage
-10. THE Admin_Site SHALL provide a searchable session plan repository interface
-11. THE Admin_Site SHALL allow Admin to search session plans by skill category, title, or learning objectives
-12. THE Admin_Site SHALL allow Admin to edit existing session plans
-13. THE Admin_Site SHALL allow Admin to delete session plans from the repository
-14. WHEN a session plan is saved, THE Admin_Site SHALL make it immediately available in the session repository
+2. WHEN an Admin creates a session plan, THE Admin_Site SHALL require an associated skill category
+3. WHEN an Admin creates a session plan, THE Admin_Site SHALL require one or more tags for categorization and searchability
+4. THE Admin_Site SHALL support the following tag categories: Technical Level, Fun Level, Age Group, and Session Type (including "Game" for game-based sessions)
+5. WHEN an Admin creates a session plan, THE Admin_Site SHALL require a session title
+6. WHEN an Admin creates a session plan, THE Admin_Site SHALL require a session description
+7. WHEN an Admin creates a session plan, THE Admin_Site SHALL require a setup explanation describing how to set up the session
+8. THE Admin_Site SHALL allow Admin to upload a setup drawing showing the session layout
+9. THE Admin_Site SHALL allow Admin to optionally associate one video demonstrating how the exercise works
+10. THE Admin_Site SHALL allow Admin to enter up to five key learning objectives for the session
+11. THE Admin_Site SHALL store session plan content in Azure_Table_Storage and media files in Azure_Blob_Storage
+12. THE Admin_Site SHALL provide a searchable session plan repository interface
+13. THE Admin_Site SHALL allow Admin to search session plans by skill category, tags, title, or learning objectives
+14. THE Admin_Site SHALL allow Admin to edit existing session plans including updating tags
+15. THE Admin_Site SHALL allow Admin to delete session plans from the repository
+16. WHEN a session plan is saved, THE Admin_Site SHALL make it immediately available in the session repository
 
 ### Requirement 5a: Lesson Composition from Session Plans
 
-**User Story:** As a admin, I want to create lessons by selecting three session plans from the repository, so that coaches have complete one-hour training programs.
+**User Story:** As an admin, I want to create lessons at an appropriate technical level by selecting appropriate session plans from the repository, so that coaches have complete structured training programs tailored to their team's needs.
 
 #### Acceptance Criteria
 
 1. THE Admin_Site SHALL provide a lesson builder interface for composing lessons
-2. WHEN a Admin creates a lesson, THE Admin_Site SHALL require a skill category and lesson name
-3. THE Admin_Site SHALL require Admin to select exactly three session plans from the session repository
-4. THE Admin_Site SHALL display each selected session plan as a 20-minute component of the one-hour lesson
-5. WHEN a lesson is created, THE Admin_Site SHALL assign version number 1
-6. THE Admin_Site SHALL store the lesson composition in Azure_Table_Storage with references to the three selected session plans
-7. WHEN a lesson is saved, THE Admin_Site SHALL make it immediately available to Mobile_App after synchronization
+2. WHEN an Admin creates a lesson, THE Admin_Site SHALL require a skill category and lesson name
+3. THE Admin_Site SHALL require Admin to select session plans for four specific slots:
+   - Slot 1: Technical Drill session
+   - Slot 2: Skill Introduction session
+   - Slot 3: Skill Development session
+   - Slot 4: Game session
+4. THE Admin_Site SHALL allow Admin to filter session plans by skill category and tags when selecting for each slot
+5. THE Admin_Site SHALL only display sessions tagged as "Game" when selecting for Slot 4
+6. THE Admin_Site SHALL display each selected session plan in its designated slot within the lesson structure
+7. WHEN an Admin creates a lesson, THE Admin_Site SHALL allow Admin to add tags to the lesson
+8. THE Admin_Site SHALL support the same tag categories for lessons as for session plans
+9. WHEN a lesson is created, THE Admin_Site SHALL assign version number 1
+10. THE Admin_Site SHALL store the lesson composition in Azure_Table_Storage with references to the four selected session plans and lesson tags
+11. WHEN a lesson is saved, THE Admin_Site SHALL make it immediately available to Mobile_App after synchronization
 
 ### Requirement 6: Lesson Content Editing and Versioning
 
@@ -563,6 +573,23 @@ The following features are planned for future versions and should be considered 
 - Link players to teams with support for players moving between teams
 - Foundation for tracking individual player development over time
 - Integration point with Friendly Manager system for player roster synchronization
+
+**Player Development Tracking:**
+- Coaches can add private notes on individual players
+- Notes stored per player with timestamp and coach ID
+- Coaches can highlight current key focus points for each player (e.g., "Work on first touch," "Improve defensive positioning")
+- Focus points visible to all coaches assigned to the player's team(s)
+- Historical notes and focus points tracked over time to show player progression
+- Notes and focus points accessible from player profile view in mobile app
+
+**Player-Specific Communication:**
+- Coaches can send messages directly to a player and/or their linked caregivers
+- Messages can include development updates, focus areas, and encouragement
+- Conversation threads maintained per player for continuity
+- Caregivers receive notifications when coaches send player development messages
+- Players (age-appropriate) can view messages about their development
+- Privacy: Only coaches assigned to the player's team(s) can view notes and send messages
+- Message templates for common development topics (e.g., "Great progress on [skill]," "Let's focus on [area]")
 
 ### Future Enhancement 2: Session Attendance Tracking
 
