@@ -17,6 +17,8 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 - **Lessons_Area**: The section where coaches browse, select, and manage lesson deliveries
 - **Games_Area**: The section where coaches provide game feedback and performance reflections
 - **Resources_Area**: The section containing general coaching information such as pitch sizes and how-to articles
+- **Schedule_Area**: The section displaying team events (practices, games, and other activities) with RSVP functionality
+- **Messaging_Area**: The section for team group chat, announcements, and direct messaging between coaches and families
 - **Session_Plan**: A 20-minute training activity stored in a searchable repository with structured content and media
 - **Lesson**: A complete structured training program composed of four Session_Plans: Technical Drill, Skill Introduction, Skill Development, and Game
 - **Session_Repository**: A searchable collection of reusable Session_Plans that Admins use to build lessons
@@ -52,15 +54,17 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 
 ### Requirement 1a: Landing Page and App Navigation
 
-**User Story:** As a coach, I want to see a clear landing page with relevant information and easy navigation to the main app areas, so that I can quickly access the features I need.
+**User Story:** As a user, I want to see a clear landing page with relevant information and easy navigation to the main app areas, so that I can quickly access the features I need.
 
 #### Acceptance Criteria
 
-1. WHEN a coach logs in, THE Mobile_App SHALL display the Landing_Page
+1. WHEN a user logs in, THE Mobile_App SHALL display the Landing_Page
 2. THE Landing_Page SHALL display default welcome text editable by Admin
-3. THE Landing_Page SHALL display team-specific announcements for the coach's selected team
-4. THE Mobile_App SHALL provide navigation to four main areas: Landing_Page, Lessons_Area, Games_Area, and Resources_Area
-5. THE Mobile_App SHALL allow coaches to navigate between areas using a persistent navigation menu
+3. THE Landing_Page SHALL display team-specific announcements for the user's selected team
+4. THE Mobile_App SHALL provide navigation to six main areas: Landing_Page, Lessons_Area, Games_Area, Resources_Area, Schedule_Area, and Messaging_Area
+5. THE Mobile_App SHALL allow users to navigate between areas using a persistent navigation menu
+6. FOR players and caregivers (lite version), THE Mobile_App SHALL only display navigation to Landing_Page, Schedule_Area, and Messaging_Area
+7. FOR coaches, managers, and admins (full version), THE Mobile_App SHALL display navigation to all six areas
 
 ### Requirement 1b: Team Announcements Management
 
