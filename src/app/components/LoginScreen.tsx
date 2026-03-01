@@ -2,8 +2,8 @@ import { useState } from "react";
 import { User, UserRole, UserTeamRole } from "../App";
 import { LogIn } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import logo from "figma:asset/cdb7544de20d133944374bb8948c71879fef34b4.png";
-import gannetWhite from "figma:asset/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
+import logo from "../../assets/cdb7544de20d133944374bb8948c71879fef34b4.png";
+import gannetWhite from "../../assets/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
 
 interface LoginScreenProps {
   onLogin: (user: User) => void;
