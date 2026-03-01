@@ -14,7 +14,7 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 - **Player**: A youth football player who is a member of one or more teams (mobile app access only)
 - **Caregiver**: A parent, guardian, or other caregiver responsible for one or more players (mobile app access only)
 - **Landing_Page**: The home screen displaying welcome text and team-specific announcements
-- **Coaching_Area**: The section where coaches browse, select, and manage lesson deliveries
+- **Lessons_Area**: The section where coaches browse, select, and manage lesson deliveries
 - **Games_Area**: The section where coaches provide game feedback and performance reflections
 - **Resources_Area**: The section containing general coaching information such as pitch sizes and how-to articles
 - **Schedule_Area**: The section displaying team events (practices, games, and other activities) with RSVP functionality
@@ -61,7 +61,7 @@ The West Coast Rangers Football Club Junior Coaching App is a mobile and web-bas
 1. WHEN a user logs in, THE Mobile_App SHALL display the Landing_Page
 2. THE Landing_Page SHALL display default welcome text editable by Admin
 3. THE Landing_Page SHALL display team-specific announcements for the user's selected team
-4. THE Mobile_App SHALL provide navigation to six main areas: Landing_Page, Coaching_Area, Games_Area, Resources_Area, Schedule_Area, and Messaging_Area
+4. THE Mobile_App SHALL provide navigation to six main areas: Landing_Page, Lessons_Area, Games_Area, Resources_Area, Schedule_Area, and Messaging_Area
 5. THE Mobile_App SHALL allow users to navigate between areas using a persistent navigation menu
 6. FOR players and caregivers (lite version), THE Mobile_App SHALL only display navigation to Landing_Page, Schedule_Area, and Messaging_Area
 7. FOR coaches, managers, and admins (full version), THE Mobile_App SHALL display navigation to all six areas
@@ -742,7 +742,7 @@ The following features are planned for future versions and should be considered 
 
 **Typical Coach Journey:**
 1. Coach opens Mobile_App on the day before practice
-2. Navigates to Coaching_Area
+2. Navigates to Lessons_Area
 3. Reviews past lessons delivered to their team
 4. Chooses one of two paths:
    - **Path A:** Selects the next logical lesson in the progression
@@ -751,7 +751,7 @@ The following features are planned for future versions and should be considered 
 **AI Coach Integration:**
 
 **Voice Input:**
-- Coach taps "AI Coach" button in Coaching_Area
+- Coach taps "AI Coach" button in Lessons_Area
 - Uses voice dictation to describe team issues (e.g., "My team is struggling with passing under pressure")
 - AI processes natural language input to understand the problem
 
@@ -777,7 +777,7 @@ The following features are planned for future versions and should be considered 
 - Designed for quick decision-making (under 1 minute from voice input to lesson selection)
 
 **Access Points:**
-- "AI Coach" button prominently displayed in Coaching_Area
+- "AI Coach" button prominently displayed in Lessons_Area
 - Available when browsing lessons by skill
 - Integrated into lesson selection workflow
 
