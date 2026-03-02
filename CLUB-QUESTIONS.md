@@ -17,17 +17,7 @@ Document to track questions that need answers from the club before finalizing th
 - Are there different skill sets for different age groups?
 - Should skills be categorized (e.g., Technical, Tactical, Physical, Mental)?
 
----
-
-## 2. [Add next topic here]
-
----
-
-## Instructions
-- Add new question sections as they come up
-- Mark questions as ANSWERED when club responds
-- Include the answer and date received
-- Use this to track all outstanding information needs
+--
 
 ## 2. Team Structure & Tagging System
 
