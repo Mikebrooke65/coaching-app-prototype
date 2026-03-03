@@ -342,3 +342,53 @@ Document to track questions that need answers from the club before finalizing th
 - Should trial players have a different status than temporary players?
 
 ---
+
+## 10. Game Scheduling & Communication
+
+### Current Process
+- How does the club currently receive game schedules from Sport (league/competition organizer)?
+- What format does this information come in? (email, portal, API, spreadsheet, etc.)
+- How far in advance are game times and venues typically confirmed?
+- How frequently do schedules change or get updated?
+
+### Data Integration
+- Does Sport provide an API or data feed for game schedules?
+- Or is this manual data entry from emails/websites?
+- What information is included?
+  - Date and time
+  - Venue/field location
+  - Opposition team
+  - Competition/division
+  - Officials/referees
+  - Any special instructions
+
+### Distribution Process
+- Who is responsible for entering/managing game schedules?
+- How should game information be distributed through the app?
+  - Push notifications?
+  - In-app messages?
+  - Email notifications?
+  - All of the above?
+
+### Target Audience
+- Who needs to receive game notifications?
+  - Players on the team
+  - All caregivers of those players
+  - Team coaches and managers
+  - Club administrators
+  - Anyone else?
+
+### Message Content
+- What information should be included in game notifications?
+- Should there be reminders? (e.g., 24 hours before, day of game)
+- How should changes/cancellations be communicated?
+- Should players/caregivers be able to confirm attendance?
+
+### Workflow Questions
+- Should game schedules sync with Friendly Manager?
+- Or is this separate from player/team management?
+- Who has permission to add/edit game schedules?
+- Should there be approval before notifications are sent?
+- How should the app handle multiple games on the same day for different teams?
+
+---

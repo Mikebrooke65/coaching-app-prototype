@@ -4,6 +4,20 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+### Added
+- Created CLUB-QUESTIONS.md document for requirements gathering
+- Added 10 question sections covering:
+  - Skills terminology and structure
+  - Team structure and tagging system
+  - Friendly Manager API integration
+  - Data synchronization and edit management
+  - Player and team feedback management
+  - Feedback model and framework
+  - AI-powered session builder
+  - AI session adaptation and rewriting
+  - Adding caregivers and players user management
+  - Game scheduling and communication
+
 ## [2026-03-02] - Netlify Deployment Setup
 
 ### Changed
