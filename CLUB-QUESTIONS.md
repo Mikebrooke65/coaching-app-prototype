@@ -68,6 +68,14 @@ Teams are classified using the following attributes:
 
 ## 3. Friendly Manager API Integration
 
+### Known Information
+- **Club Instance**: westcoastrangers.friendlymanager.com
+- **Embeddable Forms**: Friendly Manager provides JavaScript embeds for forms that can be placed on external websites
+  - Example: `<script src="https://westcoastrangers.friendlymanager.com/js/loadform/register.js"></script>`
+  - These forms send data TO Friendly Manager (e.g., registration forms)
+  - Confirms write capability exists (external → Friendly Manager)
+- **Key Question**: Does Friendly Manager also provide APIs to READ data back out (Friendly Manager → our app)?
+
 ### API Access
 - Does Friendly Manager provide an API for external applications?
 - What authentication method is required? (API keys, OAuth, etc.)
