@@ -27,6 +27,8 @@ All notable changes to the football coaching app prototype will be documented in
 - Technical levels: Community and Academy/Development
 - Gender categories: Mixed and Female
 - Unique team identifier established as Age Group + Team Name combination
+- Clarified that sessions/lessons are tagged with Type, Technical Level, Gender, Age Group (NOT specific Team Names)
+- Sessions/lessons support multiple tags for flexibility
 - Question 10 (Game Scheduling & Communication) marked as PARTIALLY ANSWERED with current Sporty system workflow
 - Documented Friday midday lockoff process and manual distribution workflow
 - Identified automation opportunity with home field allocation check requirement

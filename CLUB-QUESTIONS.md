@@ -51,10 +51,12 @@ Teams are classified using the following attributes:
 - **Unique Identifier**: Age Group + Team Name (e.g., "U12 Lions", "U10 Eagles")
 
 ### Implementation Requirements
-- Sessions and lessons must be taggable with: Type, Technical Level, Gender, Age Group, Team Name
+- Sessions and lessons must be taggable with: Type, Technical Level, Gender, Age Group
+- **Note**: Sessions/lessons are NOT tagged with specific Team Names (too specific)
+- Support multiple tags per session/lesson (e.g., can tag for both U11 and U12, or Community and Academy)
 - Support filtering and search by all classification attributes
 - Enable AI search for complex queries (e.g., "all U12 academy passing drills for mixed teams")
-- Use Age Group + Team Name as unique team identifier throughout the system
+- Use Age Group + Team Name as unique team identifier for team management (not for content tagging)
 
 ### Outstanding Questions
 - How do you handle players moving between teams?
