@@ -90,6 +90,15 @@ This document maintains a record of all conversations, decisions, and context fo
 - Friendly Manager API documentation required
 - Feedback model confirmation from club
 
+### Project Rollout Planning
+- Created PROJECT-ROLLOUT.md document
+- Defined Version 1.0 trial strategy: 10-week trial with <20 Junior Community teams
+- Manual data import from Friendly Manager (no API integration initially)
+- No AI features in Version 1.0
+- Success criteria defined for all user roles
+- Review meetings established as critical success metric
+- Post-trial decision framework: expand users vs expand features
+
 ---
 
 ## Session: March 2, 2026 - Netlify Deployment
