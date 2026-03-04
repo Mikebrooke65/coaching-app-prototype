@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createHashRouter } from "react-router";
 import { MainLayout } from "./components/MainLayout";
 import { Landing } from "./components/pages/Landing";
 import { Lessons } from "./components/pages/Lessons";
@@ -9,7 +9,7 @@ import { Messaging } from "./components/pages/Messaging";
 import { User } from "./App";
 
 export const createRouter = (user: User, onLogout: () => void) =>
-  createBrowserRouter([
+  createHashRouter([
     {
       path: "/",
       element: <MainLayout user={user} onLogout={onLogout} />,
