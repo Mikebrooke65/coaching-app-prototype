@@ -17,6 +17,14 @@ All notable changes to the football coaching app prototype will be documented in
   - AI session adaptation and rewriting
   - Adding caregivers and players user management
   - Game scheduling and communication
+- Documented team classification structure with Type, Technical Level, Gender, Age Group, and Team Name attributes
+
+### Updated
+- Question 2 (Team Structure & Tagging System) marked as ANSWERED with complete classification details
+- Team types defined: First Kicks (U4-U6), Fun Football (U7-U8), Junior Football (U9-U12), Youth Football (U13-U17), Senior Football
+- Technical levels: Community and Academy/Development
+- Gender categories: Mixed and Female
+- Unique team identifier established as Age Group + Team Name combination
 
 ## [2026-03-02] - Netlify Deployment Setup
 

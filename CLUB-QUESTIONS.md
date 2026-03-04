@@ -19,30 +19,48 @@ Document to track questions that need answers from the club before finalizing th
 
 --
 
-## 2. Team Structure & Tagging System
+## 2. Team Structure & Tagging System ✅ ANSWERED
 
-### Team Organization in Friendly Manager
-- How are teams currently tagged/categorized in Friendly Manager?
-- What is the file/data structure used to define each team?
+### Team Classification Structure
 
-### Team Attributes Needed
-- Age groups: What are the specific age categories? (e.g., U8, U10, U12, etc.)
-- Team type: Community vs Academy - are there other categories?
-- Division/Level: Is there a competitive level classification?
-- Gender: Mixed, Boys, Girls teams?
-- Season/Year: How are teams tracked across seasons?
+Teams are classified using the following attributes:
 
-### Tagging Requirements
-- Sessions and lessons need to be linked to specific teams
-- Need to support AI search for complex queries (e.g., "all U12 academy passing drills")
-- What metadata/tags are essential for each session/lesson?
-- Should tags be hierarchical? (e.g., Academy > U12 > Team A)
+**Type** (based on age group):
+- First Kicks: U4, U5, U6
+- Fun Football: U7, U8
+- Junior Football: U9, U10, U11, U12
+- Youth Football: U13, U14, U15, U16, U17
+- Senior Football
 
-### Data Structure Questions
-- Can you provide an example of how a team is currently defined in Friendly Manager?
-- What fields/properties does each team have?
-- Are there team IDs or codes we should use?
+**Technical Level**:
+- Community
+- Academy/Development
+
+**Gender**:
+- Mixed
+- Female
+
+**Age Group**:
+- U4, U5, U6 (First Kicks)
+- U7, U8 (Fun Football)
+- U9, U10, U11, U12 (Junior Football)
+- U13, U14, U15, U16, U17 (Youth Football)
+
+**Team Name**:
+- Can be anything
+- **Unique Identifier**: Age Group + Team Name (e.g., "U12 Lions", "U10 Eagles")
+
+### Implementation Requirements
+- Sessions and lessons must be taggable with: Type, Technical Level, Gender, Age Group, Team Name
+- Support filtering and search by all classification attributes
+- Enable AI search for complex queries (e.g., "all U12 academy passing drills for mixed teams")
+- Use Age Group + Team Name as unique team identifier throughout the system
+
+### Outstanding Questions
 - How do you handle players moving between teams?
+- Are there team IDs or codes in Friendly Manager we should use?
+- How are teams tracked across seasons?
+- Should tags be hierarchical for AI search? (e.g., Academy > U12 > Team A)
 
 ---
 
