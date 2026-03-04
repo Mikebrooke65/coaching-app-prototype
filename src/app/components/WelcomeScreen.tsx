@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { Smartphone, Monitor } from "lucide-react";
 import { Button } from "./ui/button";
-import gannetWhite from "figma:asset/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
+import gannetWhite from "../../assets/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
 
 export function WelcomeScreen() {
   return (

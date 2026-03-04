@@ -1,8 +1,8 @@
 import { Outlet, Link, useLocation } from "react-router";
 import { Home, BookOpen, Trophy, FolderOpen, Calendar, MessageSquare, LogOut } from "lucide-react";
 import { User } from "../App";
-import logo from "figma:asset/cdb7544de20d133944374bb8948c71879fef34b4.png";
-import gannetWhite from "figma:asset/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
+import logo from "../../assets/cdb7544de20d133944374bb8948c71879fef34b4.png";
+import gannetWhite from "../../assets/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
 
 interface MainLayoutProps {
   user: User;

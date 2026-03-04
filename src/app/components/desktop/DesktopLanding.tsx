@@ -1,7 +1,7 @@
 import { User } from "../../App";
 import { Calendar, MessageSquare, Trophy, BookOpen, TrendingUp, Bell } from "lucide-react";
 import { Button } from "../ui/button";
-import gannetBlue from "figma:asset/26aba82ad8cef7a800d00e3c7f31a52dfc18b8b4.png";
+import gannetBlue from "../../../assets/cdb7544de20d133944374bb8948c71879fef34b4.png";
 
 interface DesktopLandingProps {
   user: User;
