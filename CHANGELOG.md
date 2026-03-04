@@ -16,6 +16,8 @@ All notable changes to the football coaching app prototype will be documented in
   - Created database migration files (001_initial_schema.sql, 002_rls_policies.sql)
   - Database schema includes 13 tables with relationships, indexes, and initial data
   - Row-Level Security policies enforce role-based access control
+  - Executed migration files in Supabase SQL Editor to create complete database schema
+  - All tables, indexes, RLS policies, and initial skill categories now live in production database
 - Created CLUB-QUESTIONS.md document for requirements gathering
 - Added 10 question sections covering:
   - Skills terminology and structure
