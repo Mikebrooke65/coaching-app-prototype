@@ -20,6 +20,10 @@ All notable changes to the football coaching app prototype will be documented in
 - Documented team classification structure with Type, Technical Level, Gender, Age Group, and Team Name attributes
 - Added casual competition scenario with proposed "Lite" user model (CoachLite, ManagerLite, PlayerLite, CaregiverLite)
 - Proposed email-based invitation system for self-managed teams
+- Created PROJECT-ROLLOUT.md document outlining phased rollout strategy
+- Documented Version 1.0 trial plan: 10-week trial with <20 Junior Community teams
+- Defined success criteria for all user roles and features
+- Outlined post-trial decision points and risk management strategy
 
 ### Updated
 - Question 2 (Team Structure & Tagging System) marked as ANSWERED with complete classification details
