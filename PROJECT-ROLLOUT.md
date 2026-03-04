@@ -57,6 +57,22 @@ This document outlines the phased rollout strategy for the football coaching app
 
 ## Success Criteria
 
+### Review Meetings - Critical Success Metric
+
+**All features and user roles will be evaluated through structured review meetings**:
+
+- **Format**: Individual meetings or group sessions by user type
+- **Participants**: Coaches, Managers, Players, Caregivers, Admins
+- **Focus Areas**:
+  - Usability: How easy is the system to use?
+  - Value: What benefit does it provide to them?
+  - Improvements: What could be better?
+  - Issues: Any obvious problems or pain points?
+  - Adoption barriers: What would make it easier to use fully?
+
+- **Timing**: Must occur before the 10 weeks of lessons are exhausted
+- **Outcome**: Feedback will inform post-trial decisions and future development priorities
+
 ### Mobile App Validation
 
 #### Coach Role
@@ -90,8 +106,9 @@ This document outlines the phased rollout strategy for the football coaching app
 ### Overall Success Indicators
 - Coaches want to continue using the app beyond trial
 - No disruption to team operations
-- Positive feedback from all user types
+- Positive feedback from all user types in review meetings
 - System stability and reliability
+- Clear understanding of improvements needed for wider rollout
 
 ---
 
