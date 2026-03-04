@@ -10,6 +10,12 @@ All notable changes to the football coaching app prototype will be documented in
   - Created requirements document with 27 requirements derived from the technical design
   - Mapped all 17 correctness properties to specific requirements for validation
   - Established 12-week implementation roadmap
+- Set up Supabase project and database
+  - Created Supabase account and project (pikrxkxpizdezazlwxhb.supabase.co)
+  - Added environment configuration files (.env.development, .env.production)
+  - Created database migration files (001_initial_schema.sql, 002_rls_policies.sql)
+  - Database schema includes 13 tables with relationships, indexes, and initial data
+  - Row-Level Security policies enforce role-based access control
 - Created CLUB-QUESTIONS.md document for requirements gathering
 - Added 10 question sections covering:
   - Skills terminology and structure
