@@ -99,6 +99,16 @@ This document maintains a record of all conversations, decisions, and context fo
 - Review meetings established as critical success metric
 - Post-trial decision framework: expand users vs expand features
 
+### Figma Integration & Requirements Alignment
+- Received KIRO_HANDOVER.md from Figma with complete UI/UX specifications (1,429 lines)
+- Fixed Figma asset import issues (figma:asset URLs → actual file paths)
+- Added Netlify redirects for SPA routing
+- Created ALIGNMENT-ANALYSIS.md comparing requirements vs Figma handover
+- Resolved technology stack decision: Continue with React/Netlify
+- Confirmed AI Coach deferred to future release (not in Version 1.0)
+- Added Requirement 22: Admin Reporting Dashboard to requirements document
+- Confirmed 4 Moments framework for Games area (awaiting club details)
+
 ---
 
 ## Session: March 2, 2026 - Netlify Deployment
