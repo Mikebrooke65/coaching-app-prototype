@@ -25,6 +25,9 @@ All notable changes to the football coaching app prototype will be documented in
 - Technical levels: Community and Academy/Development
 - Gender categories: Mixed and Female
 - Unique team identifier established as Age Group + Team Name combination
+- Question 10 (Game Scheduling & Communication) marked as PARTIALLY ANSWERED with current Sporty system workflow
+- Documented Friday midday lockoff process and manual distribution workflow
+- Identified automation opportunity with home field allocation check requirement
 
 ## [2026-03-02] - Netlify Deployment Setup
 

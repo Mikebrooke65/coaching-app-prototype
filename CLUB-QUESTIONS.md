@@ -353,16 +353,42 @@ Teams are classified using the following attributes:
 
 ## 10. Game Scheduling & Communication
 
-### Current Process
-- How does the club currently receive game schedules from Sport (league/competition organizer)?
-- What format does this information come in? (email, portal, API, spreadsheet, etc.)
-- How far in advance are game times and venues typically confirmed?
-- How frequently do schedules change or get updated?
+### ✅ PARTIALLY ANSWERED - Current Process
+
+**Source System**: New Zealand Football 'Sporty' system
+
+**Timeline**:
+- Initial draw published at beginning of season in Sporty
+- Changes are very common up until Friday midday (lockoff time) before weekend games
+- Club Administrator reviews at lockoff time
+
+**Current Workflow**:
+1. Friday midday: Administrator prints report from Sporty system
+2. Administrator checks for home ground allocation issues
+3. Additional changes often made at this point by Administrator
+4. Administrator sends amended complete file to all relevant contacts
+
+**Pain Points & Automation Opportunity**:
+- Manual process of printing, checking, and distributing
+- Ideally could be automated except for home field allocation check by Club Administrator
+- Need to handle frequent changes up to Friday midday deadline
+
+### Outstanding Questions
+
+#### Sporty System Integration
+- Does Sporty provide an API or data feed for game schedules?
+- Can we automatically pull schedule data instead of manual export?
+- What format is the current report? (PDF, Excel, CSV, etc.)
+- Is there a way to get real-time updates or only manual exports?
+
+#### Home Ground Allocation
+- What specific checks does the Administrator perform on home grounds?
+- What issues commonly arise? (double-bookings, field availability, etc.)
+- Could these checks be automated or do they require human judgment?
+- Is there a separate system for managing field/ground availability?
 
 ### Data Integration
-- Does Sport provide an API or data feed for game schedules?
-- Or is this manual data entry from emails/websites?
-- What information is included?
+- What information is included in Sporty schedules?
   - Date and time
   - Venue/field location
   - Opposition team
