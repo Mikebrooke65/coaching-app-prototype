@@ -351,6 +351,69 @@ Teams are classified using the following attributes:
 
 ---
 
+### Casual Competitions & Self-Managed Teams
+
+#### Scenario: Summer Football & Casual Competitions
+- Teams register for casual competitions (e.g., summer football)
+- Club doesn't manage players through Friendly Manager system
+- Teams are self-organized with their own managers/coaches
+- Need to provide app benefits without full club administration
+
+#### Proposed "Lite" User Model
+**Concept**: Create simplified user roles for self-managed teams:
+- **CoachLite**: Limited coaching features for casual team coaches
+- **ManagerLite**: Basic team management for casual team managers
+- **PlayerLite**: Player access without full club registration
+- **CaregiverLite**: Parent/guardian access for casual competition players
+
+**Registration Workflow**:
+1. Team registers for casual competition
+2. Club sets up team in system with designated Manager
+3. Manager receives unique link/access
+4. Manager can invite Coach, Players, and Caregivers via email
+5. Each receives unique link to join team and access mobile app
+6. Users get app benefits for their specific team only
+
+#### Questions for Club
+
+**Scope & Permissions**:
+- What features should "Lite" users have access to?
+- What should they NOT have access to compared to full users?
+- Should they see only their team or have broader club visibility?
+- Can they access lesson library, resources, messaging?
+
+**Data Management**:
+- Should casual competition data be kept separate from main club data?
+- What happens to team/user data after competition ends?
+- Should there be an option to "upgrade" to full registration?
+- How long should casual team data be retained?
+
+**Team Setup**:
+- Who creates the initial team? (Club admin, or self-service registration?)
+- What information is required to set up a casual team?
+- Should there be limits on team size or number of coaches/managers?
+- How are team names managed to avoid conflicts?
+
+**Access Control**:
+- Should Manager have full control to add/remove team members?
+- Or should there be club oversight/approval?
+- Can users be part of both casual and registered teams?
+- What happens if someone is already in the system?
+
+**Communication & Isolation**:
+- Should casual teams be able to message other teams/club?
+- Or should messaging be isolated to their team only?
+- Should they receive club-wide announcements?
+- Can they see other teams' schedules or information?
+
+**Liability & Compliance**:
+- Are there different insurance/liability considerations for casual competitions?
+- What safeguarding requirements apply?
+- Should there be terms & conditions specific to casual users?
+- Are there age verification requirements?
+
+---
+
 ## 10. Game Scheduling & Communication
 
 ### ✅ PARTIALLY ANSWERED - Current Process

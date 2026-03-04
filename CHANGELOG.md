@@ -18,6 +18,8 @@ All notable changes to the football coaching app prototype will be documented in
   - Adding caregivers and players user management
   - Game scheduling and communication
 - Documented team classification structure with Type, Technical Level, Gender, Age Group, and Team Name attributes
+- Added casual competition scenario with proposed "Lite" user model (CoachLite, ManagerLite, PlayerLite, CaregiverLite)
+- Proposed email-based invitation system for self-managed teams
 
 ### Updated
 - Question 2 (Team Structure & Tagging System) marked as ANSWERED with complete classification details
