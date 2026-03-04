@@ -24,6 +24,15 @@ All notable changes to the football coaching app prototype will be documented in
 - Documented Version 1.0 trial plan: 10-week trial with <20 Junior Community teams
 - Defined success criteria for all user roles and features
 - Outlined post-trial decision points and risk management strategy
+- Created KIRO_HANDOVER.md from Figma export with complete UI/UX specifications
+- Created ALIGNMENT-ANALYSIS.md comparing requirements vs Figma handover
+- Added Requirement 22: Admin Reporting Dashboard to requirements document
+  - Usage statistics by role and feature
+  - Lesson delivery tracking and trends
+  - Coach activity reports
+  - Player/team participation metrics
+  - Feedback summaries and ratings
+  - Filtering and export capabilities
 
 ### Updated
 - Question 2 (Team Structure & Tagging System) marked as ANSWERED with complete classification details

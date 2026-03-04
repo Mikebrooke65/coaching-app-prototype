@@ -893,3 +893,49 @@ To support these future enhancements, the initial system design should:
 - Build a modular architecture where new features can be added without major refactoring
 - Consider data privacy and access control patterns that can scale to additional user roles
 - Plan for external API integration points in the system architecture
+
+
+### Requirement 22: Admin Reporting Dashboard
+
+**User Story:** As an admin, I want to view comprehensive reports on system usage and coaching activities, so that I can monitor the effectiveness of the coaching program and identify areas for improvement.
+
+#### Acceptance Criteria
+
+1. THE Admin_Site SHALL provide a Reporting dashboard accessible only to Admin users
+2. THE Admin_Site SHALL display usage statistics including:
+   - Total number of active users by role (Coach, Manager, Player, Caregiver)
+   - Login frequency and last login dates
+   - Feature usage metrics (which areas are being accessed most)
+3. THE Admin_Site SHALL display lesson delivery tracking including:
+   - Total lessons delivered by time period (week, month, season)
+   - Lessons delivered by coach
+   - Lessons delivered by team
+   - Most frequently delivered lessons
+   - Lesson delivery trends over time
+4. THE Admin_Site SHALL display coach activity reports including:
+   - Number of lessons delivered per coach
+   - Feedback submission rates
+   - Game feedback completion rates
+   - Active vs inactive coaches
+5. THE Admin_Site SHALL display player and team participation including:
+   - Teams with most/least training activity
+   - Player attendance tracking (when implemented)
+   - Team engagement metrics
+6. THE Admin_Site SHALL display feedback summaries including:
+   - Average lesson ratings
+   - Average session ratings
+   - Common feedback themes
+   - Lessons with highest/lowest ratings
+7. THE Admin_Site SHALL allow Admin to filter reports by:
+   - Date range
+   - Team
+   - Age group
+   - Coach
+   - Skill category
+8. THE Admin_Site SHALL allow Admin to export reports as CSV or PDF
+9. THE Admin_Site SHALL display visual charts and graphs for key metrics
+10. THE Admin_Site SHALL retrieve all report data from Azure_Table_Storage
+11. THE Admin_Site SHALL calculate metrics in real-time based on current data
+12. THE Admin_Site SHALL display report generation timestamp
+
+---
