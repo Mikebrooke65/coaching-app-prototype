@@ -47,6 +47,11 @@ All notable changes to the football coaching app prototype will be documented in
 - Identified automation opportunity with home field allocation check requirement
 - Documented field allocation issue: Sporty defaults to Field #1, requires manual reallocation
 - Proposed automated workflow: Pull from Sporty → Manual review/edit → Post button → Targeted messaging
+- Added Requirement 22 (Admin Reporting Dashboard) to requirements document with comprehensive metrics and filtering
+
+### Fixed
+- Figma asset import paths (changed from figma:asset URLs to actual file paths)
+- Netlify SPA routing (added _redirects file)
 
 ## [2026-03-02] - Netlify Deployment Setup
 

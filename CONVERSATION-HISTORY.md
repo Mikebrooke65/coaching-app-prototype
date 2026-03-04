@@ -109,6 +109,25 @@ This document maintains a record of all conversations, decisions, and context fo
 - Added Requirement 22: Admin Reporting Dashboard to requirements document
 - Confirmed 4 Moments framework for Games area (awaiting club details)
 
+### Development Strategy Decision
+- **Decision**: Start technical foundation in parallel with requirements gathering
+- **Can Build Now** (fully specified):
+  - Authentication & User Roles
+  - Landing Page basic structure
+  - Schedule core functionality
+  - Messaging infrastructure
+  - Resources library
+  - Session Builder (admin)
+  - Lesson Builder (admin)
+  - Teams Management (admin)
+  - User Management (admin)
+- **Needs Club Answers First**:
+  - Skills terminology (Question 1)
+  - Friendly Manager API details (Question 3)
+  - Game Feedback Model specifics (Question 6)
+  - Sporty integration details (Question 10)
+- **Approach**: Build 60-70% foundation with known requirements, iterate as club answers arrive
+
 ---
 
 ## Session: March 2, 2026 - Netlify Deployment
