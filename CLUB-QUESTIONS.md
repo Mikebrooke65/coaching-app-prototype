@@ -383,11 +383,27 @@ Teams are classified using the following attributes:
 
 #### Home Ground Allocation
 - What specific checks does the Administrator perform on home grounds?
-- What issues commonly arise? (double-bookings, field availability, etc.)
-- Could these checks be automated or do they require human judgment?
+- **ANSWERED**: Sporty often allocates all games at a park to Field #1 (seeing it as unused)
+- **Issue**: Clubs sometimes deliberately don't use certain fields, requiring manual reallocation to appropriate fields
+- **Cannot be automated**: Requires human judgment about which fields are actually available/appropriate
 - Is there a separate system for managing field/ground availability?
 
-### Data Integration
+### Proposed Automated Workflow
+**Ideal Solution**:
+1. **Automated Pull**: System automatically pulls schedule data from Sporty (API or scheduled import)
+2. **Manual Review**: Club Administrator reviews and edits field allocations as needed
+3. **Post Button**: Administrator clicks "Post/Send" to distribute via app messenger
+4. **Targeted Distribution**: Messages sent automatically to all users based on their team assignments
+
+**Benefits**:
+- Eliminates manual printing and file distribution
+- Maintains critical human oversight for field allocation
+- Automated, targeted messaging to relevant users only
+- Reduces administrator workload while keeping control
+
+### Outstanding Questions
+
+#### Sporty System Integration
 - What information is included in Sporty schedules?
   - Date and time
   - Venue/field location

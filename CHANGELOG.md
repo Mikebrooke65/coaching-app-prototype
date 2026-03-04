@@ -28,6 +28,8 @@ All notable changes to the football coaching app prototype will be documented in
 - Question 10 (Game Scheduling & Communication) marked as PARTIALLY ANSWERED with current Sporty system workflow
 - Documented Friday midday lockoff process and manual distribution workflow
 - Identified automation opportunity with home field allocation check requirement
+- Documented field allocation issue: Sporty defaults to Field #1, requires manual reallocation
+- Proposed automated workflow: Pull from Sporty → Manual review/edit → Post button → Targeted messaging
 
 ## [2026-03-02] - Netlify Deployment Setup
 
