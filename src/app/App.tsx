@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RouterProvider } from 'react-router';
+import { RouterProvider, createBrowserRouter, Navigate } from 'react-router';
 import { LoginScreen } from './components/LoginScreen';
 import { createRouter } from './routes';
 
@@ -37,6 +37,11 @@ export default function App() {
   }
 
   const router = createRouter(currentUser, handleLogout);
+
+  // Redirect admins to desktop version
+  if (currentUser.role === 'admin' && window.location.pathname === '/') {
+    window.location.pathname = '/desktop';
+  }
 
   return <RouterProvider router={router} />;
 }

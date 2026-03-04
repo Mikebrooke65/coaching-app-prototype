@@ -2,8 +2,8 @@ import { useState } from "react";
 import { User, UserRole, UserTeamRole } from "../App";
 import { LogIn } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import logo from "../../assets/cdb7544de20d133944374bb8948c71879fef34b4.png";
-import gannetWhite from "../../assets/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
+import logo from "figma:asset/cdb7544de20d133944374bb8948c71879fef34b4.png";
+import gannetWhite from "figma:asset/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
 
 interface LoginScreenProps {
   onLogin: (user: User) => void;
@@ -57,6 +57,16 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0091f3]">
+      {/* Developer Note - Obvious and Not Part of Design */}
+      <div className="bg-yellow-300 border-4 border-yellow-500 p-4 m-4 rounded-lg shadow-lg">
+        <p className="text-black font-bold text-center text-sm mb-2">🔧 DEVELOPER NOTE - TEST CREDENTIALS 🔧</p>
+        <div className="text-black text-xs space-y-1">
+          <p className="font-semibold">• Use <span className="bg-yellow-400 px-1 rounded">admin@wcr.com</span> to access Desktop version</p>
+          <p className="font-semibold">• Use <span className="bg-yellow-400 px-1 rounded">coach@wcr.com</span> for Mobile App</p>
+          <p className="text-gray-700 italic mt-2">(Password: anything works for demo)</p>
+        </div>
+      </div>
+
       {/* Mobile App Login - Full Screen */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Branding with Gannet Silhouette */}

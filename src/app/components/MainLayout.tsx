@@ -1,8 +1,8 @@
 import { Outlet, Link, useLocation } from "react-router";
 import { Home, BookOpen, Trophy, FolderOpen, Calendar, MessageSquare, LogOut } from "lucide-react";
 import { User } from "../App";
-import logo from "../../assets/cdb7544de20d133944374bb8948c71879fef34b4.png";
-import gannetWhite from "../../assets/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
+import logo from "figma:asset/cdb7544de20d133944374bb8948c71879fef34b4.png";
+import gannetWhite from "figma:asset/e2b3da3f33b0748e111b306a15bee82b12f28232.png";
 
 interface MainLayoutProps {
   user: User;
@@ -16,12 +16,12 @@ export function MainLayout({ user, onLogout }: MainLayoutProps) {
   const hasFullAccess = ['coach', 'manager', 'admin'].includes(user.role);
 
   const navigation = [
-    { name: 'Home', href: '/', icon: Home, available: true, bgColor: '#0091f3', hoverColor: '#0081d8' },
-    { name: 'Coaching', href: '/lessons', icon: BookOpen, available: hasFullAccess, bgColor: '#22c55e', hoverColor: '#16a34a' },
-    { name: 'Games', href: '/games', icon: Trophy, available: hasFullAccess, bgColor: '#ea7800', hoverColor: '#d66d00' },
-    { name: 'Resources', href: '/resources', icon: FolderOpen, available: hasFullAccess, bgColor: '#8b5cf6', hoverColor: '#7c3aed' },
-    { name: 'Schedule', href: '/schedule', icon: Calendar, available: true, bgColor: '#06b6d4', hoverColor: '#0891b2' },
-    { name: 'Messaging', href: '/messaging', icon: MessageSquare, available: true, bgColor: '#545859', hoverColor: '#3e4142' },
+    { name: 'Home', href: '/', icon: Home, available: true, bgColor: '#0091f3', hoverColor: '#0081d8', devProgress: 80 },
+    { name: 'Coaching', href: '/lessons', icon: BookOpen, available: hasFullAccess, bgColor: '#22c55e', hoverColor: '#16a34a', devProgress: 80 },
+    { name: 'Games', href: '/games', icon: Trophy, available: hasFullAccess, bgColor: '#ea7800', hoverColor: '#d66d00', devProgress: 70 },
+    { name: 'Resources', href: '/resources', icon: FolderOpen, available: hasFullAccess, bgColor: '#8b5cf6', hoverColor: '#7c3aed', devProgress: 70 },
+    { name: 'Schedule', href: '/schedule', icon: Calendar, available: true, bgColor: '#06b6d4', hoverColor: '#0891b2', devProgress: 80 },
+    { name: 'Messaging', href: '/messaging', icon: MessageSquare, available: true, bgColor: '#545859', hoverColor: '#3e4142', devProgress: 60 },
   ].filter(item => item.available);
 
   return (
@@ -71,11 +71,22 @@ export function MainLayout({ user, onLogout }: MainLayoutProps) {
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             const Icon = item.icon;
+            
+            // Determine color based on progress
+            let progressColor = '';
+            if (item.devProgress >= 60) {
+              progressColor = 'text-green-600';
+            } else if (item.devProgress >= 20) {
+              progressColor = 'text-orange-500';
+            } else {
+              progressColor = 'text-red-500';
+            }
+            
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                className="flex flex-col items-center justify-center py-3 px-2 rounded-xl text-white transition-colors"
+                className="flex flex-col items-center justify-center py-3 px-2 rounded-xl text-white transition-colors relative"
                 style={{ 
                   backgroundColor: item.bgColor,
                   opacity: isActive ? 1 : 0.7
@@ -86,6 +97,9 @@ export function MainLayout({ user, onLogout }: MainLayoutProps) {
                 <Icon className={`w-5 h-5 mb-1 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
                 <span className={`text-[10px] ${isActive ? 'font-semibold' : 'font-normal'} leading-tight`}>
                   {item.name}
+                </span>
+                <span className={`text-[9px] font-bold ${progressColor} bg-white px-1 rounded absolute top-1 right-1`}>
+                  {item.devProgress}%
                 </span>
               </Link>
             );
