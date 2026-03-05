@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import type { User, UserProfile, UserTeam, Team } from '../types/database';
@@ -27,29 +27,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading: true,
   });
   
-  // Flag to prevent auth state listener from interfering during manual login
-  const [isManualLogin, setIsManualLogin] = React.useRef(false);
+  // Track if we're currently fetching to prevent duplicate fetches
+  const isFetchingProfile = useRef(false);
 
   // Fetch user profile with team assignments
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    // Prevent duplicate fetches
+    if (isFetchingProfile.current) {
+      console.log('Profile fetch already in progress, skipping...');
+      return null;
+    }
+
+    isFetchingProfile.current = true;
+    
     try {
       console.log('Fetching user profile for:', userId);
       
-      // Fetch user details with timeout
-      const userPromise = supabase
+      // Fetch user details
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single();
-      
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('User fetch timeout')), 5000)
-      );
-      
-      const { data: userData, error: userError } = await Promise.race([
-        userPromise,
-        timeoutPromise
-      ]) as any;
 
       if (userError) {
         console.error('Error fetching user:', userError);
@@ -58,27 +57,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('User data fetched:', userData);
 
-      // Fetch user teams with team details (with timeout)
-      const teamsPromise = supabase
+      // Fetch user teams with team details
+      const { data: userTeams, error: teamsError } = await supabase
         .from('user_teams')
         .select(`
           *,
           team:teams(*)
         `)
         .eq('user_id', userId);
-      
-      const teamsTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Teams fetch timeout')), 5000)
-      );
-      
-      const { data: userTeams, error: teamsError } = await Promise.race([
-        teamsPromise,
-        teamsTimeoutPromise
-      ]) as any;
 
       if (teamsError) {
         console.warn('Error fetching teams (continuing anyway):', teamsError);
-        // Don't throw - continue without teams
       }
 
       console.log('Teams fetched:', userTeams?.length || 0);
@@ -97,6 +86,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
+    } finally {
+      isFetchingProfile.current = false;
     }
   };
 
@@ -169,31 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, !!session);
       
-      // Skip if this is from a manual login (we handle it in the login function)
-      if (isManualLogin.current && event === 'SIGNED_IN') {
-        console.log('Skipping auth state change - manual login in progress');
-        isManualLogin.current = false;
-        return;
-      }
-      
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Set authenticated immediately with session, fetch profile in background
-        setState({
-          user: null, // Will be populated shortly
-          session,
-          isAuthenticated: true, // Set true immediately
-          isLoading: false,
-        });
-        
-        // Fetch profile in background
-        const profile = await fetchUserProfile(session.user.id);
-        setState({
-          user: profile,
-          session,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-      } else if (event === 'SIGNED_OUT') {
+      // Only handle SIGNED_OUT events - SIGNED_IN is handled by getSession above
+      if (event === 'SIGNED_OUT') {
         setState({
           user: null,
           session: null,
@@ -201,6 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isLoading: false,
         });
       }
+      // Ignore SIGNED_IN and INITIAL_SESSION - already handled by getSession
     });
 
     return () => {
@@ -212,9 +181,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Login function
   const login = async (email: string, password: string) => {
     console.log('Login function called with email:', email);
-    
-    // Set flag to prevent auth listener from interfering
-    isManualLogin.current = true;
 
     try {
       console.log('Calling Supabase signInWithPassword...');
@@ -228,14 +194,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Supabase error:', error);
-        isManualLogin.current = false;
         throw error;
       }
 
       if (data.user && data.session) {
         console.log('User authenticated, setting state immediately...');
         
-        // Set authenticated state immediately
+        // Set authenticated state immediately - no loading spinner
         setState({
           user: null, // Will be populated by profile fetch
           session: data.session,
@@ -246,11 +211,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Fetch profile in background
         const profile = await fetchUserProfile(data.user.id);
         
-        // Update last login timestamp
-        await supabase
+        // Update last login timestamp (don't await - fire and forget)
+        supabase
           .from('users')
           .update({ last_login: new Date().toISOString() })
-          .eq('id', data.user.id);
+          .eq('id', data.user.id)
+          .catch(err => console.warn('Failed to update last login:', err));
 
         console.log('Login successful, updating with profile');
         setState({
@@ -262,7 +228,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Login error:', error);
-      isManualLogin.current = false;
       setState((prev) => ({ ...prev, isLoading: false }));
       throw error;
     }
