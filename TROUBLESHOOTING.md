@@ -211,3 +211,31 @@ If issues persist:
 3. Review Supabase documentation
 4. Check React Router documentation
 5. Review Vite build documentation
+
+
+---
+
+## Update: March 6, 2026 - Partial Resolution
+
+### Desktop Navigation Issue - RESOLVED
+- **Fix**: Added `key={location.pathname}` to `<Outlet />` in DesktopLayout.tsx
+- **Result**: Session Builder, Lesson Builder, Teams, Users, Coaching now work correctly
+
+### Reporting and Announcements Still Not Loading
+- **Symptom**: URL changes correctly but pages don't render
+- **Console**: No error messages, no component rendering logs
+- **Tested**: Cache clearing, redeployment, incognito mode - no change
+- **Current deployed bundle**: index-7sEEw2xR.js
+- **Status**: UNRESOLVED - needs further investigation
+
+**Possible causes to investigate**:
+1. Build optimization removing these specific components
+2. Route configuration issue specific to these two pages
+3. Component code issue causing silent failure
+4. Deployment not picking up latest changes for these files
+
+**Next steps**:
+1. Check if components are in the deployed bundle
+2. Try accessing via direct URL after fresh login
+3. Compare working pages (Teams, Users) with non-working (Reporting, Announcements)
+4. Check if issue exists in local dev server
