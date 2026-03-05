@@ -1,13 +1,27 @@
 import { RouterProvider } from 'react-router';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { router } from './routes';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { useResponsive } from './hooks/useResponsive';
 
 function AppInitializer() {
+  const { isLoading } = useAuth();
+  
   // Initialize hooks that need to run at app level
   useOnlineStatus();
   useResponsive();
+
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#0091f3]"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <RouterProvider router={router} />;
 }
