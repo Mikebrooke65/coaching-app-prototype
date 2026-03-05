@@ -19,22 +19,14 @@ export function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('handleLogin called');
     setError('');
     setIsLoading(true);
 
     try {
-      console.log('About to call login...');
       await login(email, password);
-      console.log('Login successful, waiting for auth state to settle...');
-      
-      // Small delay to let auth state change event fire
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Check if user is admin and on desktop, redirect to desktop view
+      // Auth state is now updated, navigate immediately
       const isDesktop = window.innerWidth >= 768;
       const redirectPath = from !== '/' ? from : (isDesktop ? '/desktop' : '/');
-      
       navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error('Login error:', err);

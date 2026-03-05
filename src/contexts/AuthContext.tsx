@@ -202,12 +202,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Login function
   const login = async (email: string, password: string) => {
     console.log('Login function called with email:', email);
-    setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
       console.log('Calling Supabase signInWithPassword...');
-      console.log('Supabase client exists:', !!supabase);
-      console.log('Supabase auth exists:', !!supabase.auth);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -221,11 +218,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
-      if (data.user) {
-        console.log('User authenticated, fetching profile...');
-        const profile = await fetchUserProfile(data.user.id);
+      if (data.user && data.session) {
+        console.log('User authenticated, setting state immediately...');
         
-        console.log('Profile fetched:', profile);
+        // Set authenticated state immediately
+        setState({
+          user: null, // Will be populated by profile fetch
+          session: data.session,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+        
+        // Fetch profile in background
+        const profile = await fetchUserProfile(data.user.id);
         
         // Update last login timestamp
         await supabase
@@ -233,11 +238,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .update({ last_login: new Date().toISOString() })
           .eq('id', data.user.id);
 
-        console.log('Login successful!');
+        console.log('Login successful, updating with profile');
         setState({
           user: profile,
           session: data.session,
-          isAuthenticated: !!profile,
+          isAuthenticated: true,
           isLoading: false,
         });
       }
