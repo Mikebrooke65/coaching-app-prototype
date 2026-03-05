@@ -1,4 +1,6 @@
 export function DesktopGames() {
+  console.log('DesktopGames rendering');
+  
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Games Management</h1>
