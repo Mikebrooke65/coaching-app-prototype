@@ -100,78 +100,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize auth state
   useEffect(() => {
     let mounted = true;
-    
-    // Set a timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      if (mounted) {
-        console.warn('Auth initialization timeout - attempting recovery from localStorage');
-        
-        // Try to recover session from localStorage
-        const storageKey = `sb-pikrxkxpizdezazlwxhb-auth-token`;
-        const storedSession = localStorage.getItem(storageKey);
-        
-        console.log('Stored session exists:', !!storedSession);
-        
-        if (storedSession) {
-          try {
-            const sessionData = JSON.parse(storedSession);
-            console.log('Parsed session data:', { 
-              hasAccessToken: !!sessionData?.access_token,
-              hasRefreshToken: !!sessionData?.refresh_token,
-              hasUser: !!sessionData?.user 
-            });
-            
-            if (sessionData?.access_token && sessionData?.refresh_token) {
-              console.log('Attempting to restore session...');
-              // Set the session manually
-              supabase.auth.setSession({
-                access_token: sessionData.access_token,
-                refresh_token: sessionData.refresh_token,
-              }).then(({ data, error }) => {
-                console.log('setSession result:', { hasData: !!data, hasError: !!error });
-                
-                if (!error && data.user) {
-                  console.log('Session restored successfully, fetching profile...');
-                  fetchUserProfile(data.user.id).then((profile) => {
-                    if (mounted) {
-                      console.log('Profile fetched, setting authenticated state');
-                      setState({
-                        user: profile,
-                        session: data.session,
-                        isAuthenticated: !!profile,
-                        isLoading: false,
-                      });
-                    }
-                  });
-                } else {
-                  console.error('Failed to restore session:', error);
-                  setState(prev => ({ ...prev, isLoading: false }));
-                }
-              }).catch((err) => {
-                console.error('setSession error:', err);
-                setState(prev => ({ ...prev, isLoading: false }));
-              });
-              return;
-            } else {
-              console.warn('Session data missing required fields');
-            }
-          } catch (e) {
-            console.error('Failed to parse stored session:', e);
-          }
-        } else {
-          console.log('No stored session found');
-        }
-        
-        setState(prev => ({ ...prev, isLoading: false }));
-      }
-    }, 3000); // Reduced to 3 seconds
 
-    // Check active session
+    // Check active session - simplified without timeout
     supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
         if (!mounted) return;
-        
-        clearTimeout(timeout);
         
         if (error) {
           console.error('Error getting session:', error);
@@ -185,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         if (session?.user) {
+          console.log('Session found, fetching profile...');
           fetchUserProfile(session.user.id).then((profile) => {
             if (!mounted) return;
             setState({
@@ -193,11 +127,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               isAuthenticated: !!profile,
               isLoading: false,
             });
-          });
-        } else {
-          setState({
-            user: null,
-            session: null,
+          }).catch(() => {
+            if (!mounted) return;
+            setState({
+              user: null,
+              session: null,
             isAuthenticated: false,
             isLoading: false,
           });
