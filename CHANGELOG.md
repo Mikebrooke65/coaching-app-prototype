@@ -68,6 +68,10 @@ All notable changes to the football coaching app prototype will be documented in
 - Build syntax errors in Reporting.tsx (className typos, variable name typo)
 - Session persistence issue - simplified auth initialization logic
 - Removed complex timeout recovery mechanism that was causing "navigating..." hang
+- **Desktop navigation not working** - Added `key={location.pathname}` to `<Outlet />` in DesktopLayout to force re-render on route changes
+  - Pages were accessible via direct URL but not via navigation links
+  - React Router wasn't re-rendering the Outlet component when route changed
+  - Solution forces React to treat each route as a new component instance
 
 ### Known Issues
 - **Session Persistence Not Working** - User gets logged out on page refresh

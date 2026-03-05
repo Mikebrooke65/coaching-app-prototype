@@ -37,13 +37,32 @@
 
 ### Issue 2: Admin Pages Not Loading After Build
 
-**Symptom**: After clean build and deployment, newly created admin pages don't load
+**Symptom**: After clean build and deployment, newly created admin pages don't load when clicking navigation links
 
 **What We Know**:
 - All 12 admin page files exist in repository
 - Build completes successfully (no errors)
 - Files are in correct location: `src/pages/desktop/*.tsx`
 - Routes are configured in `src/routes/index.tsx`
+- Pages work when accessed directly via URL
+- URL changes when clicking navigation but page doesn't render
+
+**Root Cause**: React Router's `<Outlet />` component wasn't re-rendering when route changed because React thought it was the same component instance.
+
+**Solution**: Added `key={location.pathname}` to the `<Outlet />` in DesktopLayout.tsx to force React to unmount and remount the child component on route changes.
+
+**Fix Applied**:
+```tsx
+// Before
+<Outlet />
+
+// After  
+<Outlet key={location.pathname} />
+```
+
+**Current Status**: ✅ RESOLVED - All desktop admin pages now load correctly
+
+---
 
 **Pages Affected**:
 - Session Builder (/desktop/session-builder)
