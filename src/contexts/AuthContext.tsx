@@ -30,34 +30,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch user profile with team assignments
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      // Fetch user details
-      const { data: userData, error: userError } = await supabase
+      console.log('Fetching user profile for:', userId);
+      
+      // Fetch user details with timeout
+      const userPromise = supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single();
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('User fetch timeout')), 5000)
+      );
+      
+      const { data: userData, error: userError } = await Promise.race([
+        userPromise,
+        timeoutPromise
+      ]) as any;
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error('Error fetching user:', userError);
+        throw userError;
+      }
 
-      // Fetch user teams with team details
-      const { data: userTeams, error: teamsError } = await supabase
+      console.log('User data fetched:', userData);
+
+      // Fetch user teams with team details (with timeout)
+      const teamsPromise = supabase
         .from('user_teams')
         .select(`
           *,
           team:teams(*)
         `)
         .eq('user_id', userId);
+      
+      const teamsTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Teams fetch timeout')), 5000)
+      );
+      
+      const { data: userTeams, error: teamsError } = await Promise.race([
+        teamsPromise,
+        teamsTimeoutPromise
+      ]) as any;
 
-      if (teamsError) throw teamsError;
+      if (teamsError) {
+        console.warn('Error fetching teams (continuing anyway):', teamsError);
+        // Don't throw - continue without teams
+      }
+
+      console.log('Teams fetched:', userTeams?.length || 0);
 
       // Find default team
-      const defaultTeam = userTeams?.find((ut) => ut.is_default)?.team;
+      const defaultTeam = userTeams?.find((ut: any) => ut.is_default)?.team;
 
-      return {
+      const profile = {
         ...userData,
         teams: userTeams || [],
         defaultTeam,
       } as UserProfile;
+      
+      console.log('Profile complete:', profile);
+      return profile;
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
@@ -77,19 +110,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storageKey = `sb-pikrxkxpizdezazlwxhb-auth-token`;
         const storedSession = localStorage.getItem(storageKey);
         
+        console.log('Stored session exists:', !!storedSession);
+        
         if (storedSession) {
           try {
             const sessionData = JSON.parse(storedSession);
-            if (sessionData?.access_token && sessionData?.user) {
-              console.log('Recovered session from localStorage');
+            console.log('Parsed session data:', { 
+              hasAccessToken: !!sessionData?.access_token,
+              hasRefreshToken: !!sessionData?.refresh_token,
+              hasUser: !!sessionData?.user 
+            });
+            
+            if (sessionData?.access_token && sessionData?.refresh_token) {
+              console.log('Attempting to restore session...');
               // Set the session manually
               supabase.auth.setSession({
                 access_token: sessionData.access_token,
                 refresh_token: sessionData.refresh_token,
               }).then(({ data, error }) => {
+                console.log('setSession result:', { hasData: !!data, hasError: !!error });
+                
                 if (!error && data.user) {
+                  console.log('Session restored successfully, fetching profile...');
                   fetchUserProfile(data.user.id).then((profile) => {
                     if (mounted) {
+                      console.log('Profile fetched, setting authenticated state');
                       setState({
                         user: profile,
                         session: data.session,
@@ -99,14 +144,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     }
                   });
                 } else {
+                  console.error('Failed to restore session:', error);
                   setState(prev => ({ ...prev, isLoading: false }));
                 }
+              }).catch((err) => {
+                console.error('setSession error:', err);
+                setState(prev => ({ ...prev, isLoading: false }));
               });
               return;
+            } else {
+              console.warn('Session data missing required fields');
             }
           } catch (e) {
             console.error('Failed to parse stored session:', e);
           }
+        } else {
+          console.log('No stored session found');
         }
         
         setState(prev => ({ ...prev, isLoading: false }));
