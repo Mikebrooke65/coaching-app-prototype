@@ -26,6 +26,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false,
     isLoading: true,
   });
+  
+  // Flag to prevent auth state listener from interfering during manual login
+  const [isManualLogin, setIsManualLogin] = React.useRef(false);
 
   // Fetch user profile with team assignments
   const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -166,6 +169,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, !!session);
       
+      // Skip if this is from a manual login (we handle it in the login function)
+      if (isManualLogin.current && event === 'SIGNED_IN') {
+        console.log('Skipping auth state change - manual login in progress');
+        isManualLogin.current = false;
+        return;
+      }
+      
       if (event === 'SIGNED_IN' && session?.user) {
         // Set authenticated immediately with session, fetch profile in background
         setState({
@@ -202,6 +212,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Login function
   const login = async (email: string, password: string) => {
     console.log('Login function called with email:', email);
+    
+    // Set flag to prevent auth listener from interfering
+    isManualLogin.current = true;
 
     try {
       console.log('Calling Supabase signInWithPassword...');
@@ -215,6 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Supabase error:', error);
+        isManualLogin.current = false;
         throw error;
       }
 
@@ -248,6 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Login error:', error);
+      isManualLogin.current = false;
       setState((prev) => ({ ...prev, isLoading: false }));
       throw error;
     }
