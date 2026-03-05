@@ -18,6 +18,25 @@ All notable changes to the football coaching app prototype will be documented in
   - Row-Level Security policies enforce role-based access control
   - Executed migration files in Supabase SQL Editor to create complete database schema
   - All tables, indexes, RLS policies, and initial skill categories now live in production database
+- Implemented Phase 1: Core Infrastructure
+  - Installed and configured Supabase JavaScript client (@supabase/supabase-js)
+  - Created base API client with type-safe CRUD operations (src/lib/api-client.ts)
+  - Defined complete TypeScript type definitions for all database models (src/types/database.ts)
+  - Implemented authentication system with AuthContext and AuthProvider
+  - Created login page with password reset functionality
+  - Built ProtectedRoute component with role-based access control
+  - Created usePermissions hook for permission checking throughout app
+  - Implemented state management with Zustand (3 stores: app, offline, content)
+  - Created online/offline status monitoring hook
+  - Created responsive layout detection hook
+  - Built sync status indicator component
+  - Configured React Router with role-based protected routes
+  - Created MainLayout for mobile with bottom navigation (full and lite versions)
+  - Created DesktopLayout for admin with collapsible sidebar
+  - Created placeholder pages for all routes (mobile and desktop)
+  - Integrated all components in App.tsx with AuthProvider
+  - Updated main.tsx entry point
+  - ✅ Phase 1 complete and tested - authentication working, app rendering
 - Created CLUB-QUESTIONS.md document for requirements gathering
 - Added 10 question sections covering:
   - Skills terminology and structure
@@ -65,6 +84,15 @@ All notable changes to the football coaching app prototype will be documented in
 ### Fixed
 - Figma asset import paths (changed from figma:asset URLs to actual file paths)
 - Netlify SPA routing (added _redirects file)
+- RLS policy circular dependencies (migration 003 and 004)
+  - Removed recursive policy checks that caused 500 errors
+  - Simplified to allow all authenticated users to view users table
+  - Fixed user profile fetching after authentication
+- Supabase client multiple instance issue
+  - Implemented singleton pattern to prevent lock timeouts
+  - Added PKCE flow type and explicit storage configuration
+  - Resolved "Lock was not released within 5000ms" errors
+  - Login now works reliably in browser environment
 
 ## [2026-03-02] - Netlify Deployment Setup
 

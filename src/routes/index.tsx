@@ -1,0 +1,182 @@
+import { createBrowserRouter, Navigate } from 'react-router';
+import { ProtectedRoute } from '../components/ProtectedRoute';
+import { UserRole } from '../types/database';
+
+// Layouts
+import { MainLayout } from '../layouts/MainLayout';
+import { DesktopLayout } from '../layouts/DesktopLayout';
+
+// Auth pages
+import { Login } from '../pages/Login';
+
+// Mobile pages
+import { Landing } from '../pages/Landing';
+import { Lessons } from '../pages/Lessons';
+import { LessonDetail } from '../pages/LessonDetail';
+import { Games } from '../pages/Games';
+import { Resources } from '../pages/Resources';
+import { Schedule } from '../pages/Schedule';
+import { Messaging } from '../pages/Messaging';
+import { AICoach } from '../pages/AICoach';
+
+// Desktop admin pages
+import { DesktopLanding } from '../pages/desktop/DesktopLanding';
+import { DesktopCoaching } from '../pages/desktop/DesktopCoaching';
+import { DesktopGames } from '../pages/desktop/DesktopGames';
+import { DesktopResources } from '../pages/desktop/DesktopResources';
+import { DesktopSchedule } from '../pages/desktop/DesktopSchedule';
+import { DesktopMessaging } from '../pages/desktop/DesktopMessaging';
+import { TeamsManagement } from '../pages/desktop/TeamsManagement';
+import { UserManagement } from '../pages/desktop/UserManagement';
+import { Reporting } from '../pages/desktop/Reporting';
+import { Announcements } from '../pages/desktop/Announcements';
+import { LessonBuilder } from '../pages/desktop/LessonBuilder';
+import { SessionBuilder } from '../pages/desktop/SessionBuilder';
+
+export const router = createBrowserRouter([
+  // Public routes
+  {
+    path: '/login',
+    element: <Login />,
+  },
+
+  // Mobile routes (all authenticated users)
+  {
+    path: '/',
+    element: (
+      <ProtectedRoute>
+        <MainLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Landing />,
+      },
+      {
+        path: 'lessons',
+        element: (
+          <ProtectedRoute
+            allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH]}
+          >
+            <Lessons />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'lessons/:id',
+        element: (
+          <ProtectedRoute
+            allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH]}
+          >
+            <LessonDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'games',
+        element: (
+          <ProtectedRoute
+            allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH]}
+          >
+            <Games />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'resources',
+        element: (
+          <ProtectedRoute
+            allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH]}
+          >
+            <Resources />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'schedule',
+        element: <Schedule />,
+      },
+      {
+        path: 'messaging',
+        element: <Messaging />,
+      },
+      {
+        path: 'ai-coach',
+        element: (
+          <ProtectedRoute
+            allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH]}
+          >
+            <AICoach />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
+
+  // Desktop routes (admin only)
+  {
+    path: '/desktop',
+    element: (
+      <ProtectedRoute allowedRoles={[UserRole.ADMIN]} requireDesktop>
+        <DesktopLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <DesktopLanding />,
+      },
+      {
+        path: 'coaching',
+        element: <DesktopCoaching />,
+      },
+      {
+        path: 'games',
+        element: <DesktopGames />,
+      },
+      {
+        path: 'resources',
+        element: <DesktopResources />,
+      },
+      {
+        path: 'schedule',
+        element: <DesktopSchedule />,
+      },
+      {
+        path: 'messaging',
+        element: <DesktopMessaging />,
+      },
+      {
+        path: 'teams',
+        element: <TeamsManagement />,
+      },
+      {
+        path: 'users',
+        element: <UserManagement />,
+      },
+      {
+        path: 'reporting',
+        element: <Reporting />,
+      },
+      {
+        path: 'announcements',
+        element: <Announcements />,
+      },
+      {
+        path: 'lesson-builder',
+        element: <LessonBuilder />,
+      },
+      {
+        path: 'session-builder',
+        element: <SessionBuilder />,
+      },
+    ],
+  },
+
+  // Catch all - redirect to home
+  {
+    path: '*',
+    element: <Navigate to="/" replace />,
+  },
+]);
