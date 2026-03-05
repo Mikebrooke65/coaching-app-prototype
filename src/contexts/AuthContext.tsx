@@ -71,10 +71,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set a timeout to prevent infinite loading
     const timeout = setTimeout(() => {
       if (mounted) {
-        console.warn('Auth initialization timeout - setting loading to false');
+        console.warn('Auth initialization timeout - attempting recovery from localStorage');
+        
+        // Try to recover session from localStorage
+        const storageKey = `sb-pikrxkxpizdezazlwxhb-auth-token`;
+        const storedSession = localStorage.getItem(storageKey);
+        
+        if (storedSession) {
+          try {
+            const sessionData = JSON.parse(storedSession);
+            if (sessionData?.access_token && sessionData?.user) {
+              console.log('Recovered session from localStorage');
+              // Set the session manually
+              supabase.auth.setSession({
+                access_token: sessionData.access_token,
+                refresh_token: sessionData.refresh_token,
+              }).then(({ data, error }) => {
+                if (!error && data.user) {
+                  fetchUserProfile(data.user.id).then((profile) => {
+                    if (mounted) {
+                      setState({
+                        user: profile,
+                        session: data.session,
+                        isAuthenticated: !!profile,
+                        isLoading: false,
+                      });
+                    }
+                  });
+                } else {
+                  setState(prev => ({ ...prev, isLoading: false }));
+                }
+              });
+              return;
+            }
+          } catch (e) {
+            console.error('Failed to parse stored session:', e);
+          }
+        }
+        
         setState(prev => ({ ...prev, isLoading: false }));
       }
-    }, 5000);
+    }, 3000); // Reduced to 3 seconds
 
     // Check active session
     supabase.auth.getSession()
