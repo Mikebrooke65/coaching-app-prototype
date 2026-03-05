@@ -1,121 +1,194 @@
-# Troubleshooting Log
+# Troubleshooting Guide
 
-## Issue: Login Hangs on "Signing in..."
+## Critical Issues
 
-**Date:** March 5, 2026
+### Issue 1: Session Persistence Not Working
 
-**Status:** ✅ RESOLVED
+**Symptom**: User gets logged out on page refresh, app stuck on "navigating..." or "Loading..."
 
-### Root Cause
-Multiple Supabase client instances were being created due to module hot-reloading in development, causing lock timeouts on the authentication storage. The `signInWithPassword()` call was waiting for a lock that was held by an orphaned client instance.
+**What We Know**:
+- Login works successfully - user can authenticate
+- Session IS being saved to localStorage (key: `sb-pikrxkxpizdezazlwxhb-auth-token`)
+- `supabase.auth.getSession()` times out or hangs when trying to read session
+- User must log in again after every page refresh
 
-### Solution
-Implemented singleton pattern in `src/lib/supabase.ts` to ensure only one Supabase client instance exists throughout the application lifecycle. Added explicit storage configuration with PKCE flow type.
+**Attempted Fixes**:
+1. Added timeout recovery mechanism (3 seconds) - didn't work
+2. Tried to manually restore session from localStorage - didn't work
+3. Simplified Supabase client configuration - didn't work
+4. Removed timeout recovery logic entirely - still not working
 
-### Evidence
-Console logs show:
-```
-handleLogin called
-About to call login...
-Login function called with email: mikerbrooke@outlook.com
-Calling Supabase signInWithPassword...
-[HANGS HERE - no response from Supabase]
-```
+**Current Status**: UNRESOLVED
 
-### What We've Done
-1. ✅ Created Supabase project and database
-2. ✅ Ran all migration files (001, 002, 003)
-3. ✅ Created test user with admin role
-4. ✅ Fixed RLS circular dependency issue (migration 003)
-5. ✅ Installed all npm dependencies
-6. ✅ Restarted dev server multiple times
-7. ✅ Added debug logging to AuthContext.tsx and Login.tsx
-8. ✅ Verified environment variables are loading correctly
-9. ✅ Removed React StrictMode to prevent multiple client instances
+**Next Steps to Try**:
+1. Check Supabase project auth settings in dashboard
+2. Verify Supabase URL configuration in Netlify environment variables
+3. Test with different browsers (Chrome, Firefox, Edge)
+4. Check browser console for specific error messages
+5. Try clearing all browser cache and localStorage
+6. Check if issue exists in local development vs production
+7. Review Supabase auth documentation for session management best practices
+8. Consider using `supabase.auth.onAuthStateChange()` as primary session detection
+9. Check network tab for failed API calls to Supabase
 
-### Solution to Try
-The Supabase API call is timing out. Need to check:
-1. **Network tab** - Look for the actual HTTP request to supabase.co/auth/v1/token
-2. **CORS settings** in Supabase dashboard
-3. **API settings** in Supabase project settings
-4. Try a simple test with curl or Postman to verify Supabase auth is working
-
-### Quick Test Command
-Test Supabase auth directly:
-```bash
-curl -X POST 'https://pikrxkxpizdezazlwxhb.supabase.co/auth/v1/token?grant_type=password' \
-  -H 'apikey: YOUR_ANON_KEY' \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"mikerbrooke@outlook.com","password":"Linda2024!"}'
-```
-
-### Recommendation
-Due to context limits, recommend:
-1. Check Supabase project settings for any API restrictions
-2. Verify the project is not paused or has billing issues
-3. Check browser Network tab for the actual HTTP request status
-4. Consider creating a fresh Supabase project if issue persists
-
-### Current Test User
-- Email: mikerbrooke@outlook.com
-- Password: Linda2024!
-- Role: admin
-- User ID: ad7b7dfa-3549-468f-b369-3ca1e705e4fa
-
-### Environment Variables
-Located in `.env.development`:
-```
-VITE_SUPABASE_URL=https://pikrxkxpizdezazlwxhb.supabase.co
-VITE_SUPABASE_ANON_KEY=<your-anon-key>
-SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
-```
-
-### Next Steps to Try
-1. Check browser Console for debug logs after refresh
-2. Verify environment variables are loading (check `import.meta.env` in console)
-3. Check if there's a JavaScript error preventing the async function from running
-4. Try adding console.log directly in Login.tsx handleLogin function
-5. Check if form submission is being prevented by browser
-
-### Files Modified
-- `src/contexts/AuthContext.tsx` - Added debug logging
-- `supabase/migrations/003_fix_users_rls.sql` - Fixed RLS policies
-- `scripts/recreate-test-user.ts` - Script to create test user
-
-### Dev Server
-Running on: http://localhost:5173/
-Command: `npm run dev`
-
+**Workaround**: User must log in after every page refresh
 
 ---
 
-## Resolution Summary
+### Issue 2: Admin Pages Not Loading After Build
 
-**Final Status:** Login working successfully ✅
+**Symptom**: After clean build and deployment, newly created admin pages don't load
 
-### What Was Fixed
-1. Created migration 004 to fix RLS policies (removed circular dependencies)
-2. Implemented singleton pattern for Supabase client to prevent multiple instances
-3. Added PKCE flow type and explicit storage configuration
-4. Removed React StrictMode to prevent double-mounting issues
+**What We Know**:
+- All 12 admin page files exist in repository
+- Build completes successfully (no errors)
+- Files are in correct location: `src/pages/desktop/*.tsx`
+- Routes are configured in `src/routes/index.tsx`
 
-### Verification
-- Test user can successfully log in with credentials
-- User profile is fetched from database
-- Navigation to landing page works
-- Basic UI renders with header, navigation, and user info
+**Pages Affected**:
+- Session Builder (/desktop/session-builder)
+- Lesson Builder (/desktop/lesson-builder)
+- Teams Management (/desktop/teams)
+- User Management (/desktop/users)
+- Reporting (/desktop/reporting)
+- Announcements (/desktop/announcements)
 
-### Test Credentials
+**What Happens**:
+- User clicks on navigation item
+- Page doesn't load or shows blank screen
+- May show "navigating..." indefinitely
+- Console may show errors
+
+**Possible Causes**:
+1. Session persistence issue preventing navigation
+2. Route configuration mismatch
+3. Import errors in route file
+4. Build optimization removing unused code
+5. Netlify caching old build
+6. Missing environment variables in Netlify
+
+**Debugging Steps**:
+1. Check browser console (F12) for errors
+2. Check Network tab for failed requests
+3. Verify URL in address bar matches route configuration
+4. Check if user is authenticated (session issue)
+5. Try accessing pages directly via URL
+6. Check Netlify build logs for warnings
+7. Verify all imports in routes/index.tsx are correct
+
+**Files to Check**:
+- `src/routes/index.tsx` - Route configuration
+- `src/layouts/DesktopLayout.tsx` - Navigation links
+- `src/pages/desktop/*.tsx` - Page components
+- `netlify.toml` - Redirect configuration
+- `.env.development` - Environment variables
+
+**Current Status**: UNRESOLVED - Pages built successfully but not loading in production
+
+**Next Steps**:
+1. Test locally with `npm run dev` to see if pages work
+2. Check if issue is specific to production/Netlify
+3. Review Netlify deployment logs for any warnings
+4. Verify all page imports are correct
+5. Check if session issue is blocking navigation
+6. Try hard refresh (Ctrl+Shift+R) in browser
+7. Check if pages work when accessed directly via URL
+
+---
+
+## Environment Information
+
+**Supabase Project**:
+- URL: https://pikrxkxpizdezazlwxhb.supabase.co
+- Project ID: pikrxkxpizdezazlwxhb
+
+**Netlify Deployment**:
+- URL: https://wcrfootball.netlify.app
+- Repository: https://github.com/Mikebrooke65/coaching-app-prototype
+- Branch: main
+- Build Command: `npm run build`
+- Publish Directory: `dist`
+
+**Test User**:
 - Email: mikerbrooke@outlook.com
 - Password: Linda2024!
 - Role: admin
 
-### Current State
-Phase 1 (Core Infrastructure) is complete and functional:
-- ✅ Authentication system working
-- ✅ Database connected with RLS policies
-- ✅ Routing and navigation working
-- ✅ Basic layouts rendering
-- ⏳ Phase 2 (Figma UI implementation) not started yet
+**Local Environment**:
+- OS: Windows
+- Shell: bash
+- Node.js: (check with `node --version`)
+- npm: (check with `npm --version`)
+- Free Disk Space: ~2.3GB (LOW - may cause issues)
 
-The app currently shows basic placeholder UI. Figma designs will be implemented in Phase 2.
+---
+
+## Common Issues & Solutions
+
+### Issue: "Loading..." Spinner Never Stops
+
+**Cause**: Auth initialization hanging
+**Solution**: Check AuthContext.tsx for timeout issues, verify Supabase connection
+
+### Issue: Blank White Screen
+
+**Cause**: JavaScript error preventing render
+**Solution**: Check browser console for errors, verify all imports
+
+### Issue: 404 Not Found
+
+**Cause**: Route not configured or SPA routing not working
+**Solution**: Check `public/_redirects` file exists with `/* /index.html 200`
+
+### Issue: Build Fails with Syntax Error
+
+**Cause**: TypeScript/JSX syntax errors
+**Solution**: Run `npm run build` locally to see errors, fix syntax issues
+
+### Issue: Environment Variables Not Working
+
+**Cause**: Variables not set in Netlify or wrong prefix
+**Solution**: Verify all `VITE_*` variables are set in Netlify dashboard
+
+---
+
+## Diagnostic Commands
+
+Run these locally to diagnose issues:
+
+```bash
+# Check if build works
+npm run build
+
+# Check for TypeScript errors
+npx tsc --noEmit
+
+# Check for linting issues
+npm run lint
+
+# List all desktop page files
+ls src/pages/desktop/*.tsx
+
+# Check git status
+git status
+
+# Check current branch
+git branch
+
+# Check recent commits
+git log --oneline -10
+
+# Verify files in repository
+git ls-tree -r HEAD --name-only | grep desktop
+```
+
+---
+
+## Contact & Support
+
+If issues persist:
+1. Check Supabase status page
+2. Check Netlify status page
+3. Review Supabase documentation
+4. Check React Router documentation
+5. Review Vite build documentation

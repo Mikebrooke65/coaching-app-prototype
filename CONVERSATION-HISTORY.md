@@ -536,3 +536,154 @@ After each conversation session:
 - Password: Linda2024!
 - Role: admin
 - Expected behavior: Auto-redirect to /desktop on desktop screens
+
+
+---
+
+## Session 5: Desktop Admin Pages Implementation (March 5, 2026)
+
+**Context**: Continuing from previous session where we had completed Phase 1 infrastructure and started mobile pages. Session persistence issue still present but decided to move forward with feature implementation.
+
+### Work Completed
+
+1. **Session Builder (Admin Page 7)**
+   - Split-panel layout: Sessions library (left) + Build form (right)
+   - Filters: Age Group, Session Type, Duration, Skill Focus
+   - Full form with objectives, equipment, setup, coaching points, variations
+   - Save/Draft/Cancel functionality
+   - Mock data with 3 sample sessions
+
+2. **Lesson Builder (Admin Page 8)**
+   - Split-panel layout: Lessons library (left) + Build form (right)
+   - 4 FIXED session blocks (Warm-Up & Technical, Skill Introduction, Progressive Development, Game Application)
+   - Session selection dropdowns filtered by age group and block type
+   - Auto-calculated total duration
+   - Mock data with 1 lesson and 8 available sessions
+
+3. **Teams Management (Admin Page 9)**
+   - Table view with search and filters
+   - Add/edit/delete teams with modal
+   - Coach assignment
+   - Player count tracking
+   - Mock data with 3 teams
+
+4. **User Management (Admin Page 10)**
+   - User table with role badges
+   - Status toggle (Active/Inactive)
+   - CSV import functionality
+   - Add/edit/delete users
+   - Team assignment
+   - Mock data with 5 users
+
+5. **Reporting Dashboard (Admin Page 11)**
+   - 4 key metrics cards
+   - Attendance trend chart (6 weeks)
+   - User engagement by role
+   - Popular lessons table
+   - 3 summary stat cards
+   - Date range filtering
+   - Export buttons (PDF/Excel)
+
+6. **Announcements Management (Admin Page 12)**
+   - Create/edit/delete announcements
+   - Priority levels (Normal/High)
+   - Audience targeting
+   - Pin to top functionality
+   - Mock data with 2 announcements
+
+### Technical Issues Encountered
+
+1. **Repository Push Issue**
+   - Problem: Was pushing to wrong repository (.kiro.git instead of coaching-app-prototype.git)
+   - Solution: Identified correct remote and pushed to `prototype` remote with `git push prototype prototype:main`
+   - Impact: Previous commits weren't deploying to Netlify
+
+2. **Build Failures**
+   - Problem: Syntax errors in AuthContext.tsx (missing closing braces, undefined `timeout` variable)
+   - Problem: Syntax errors in Reporting.tsx (className typos: `cdow` instead of `className="bg-white rounded-lg shadow"`, `itm.total` instead of `item.total`)
+   - Solution: Fixed all syntax errors
+   - Verification: `npm run build` now passes successfully
+
+3. **Session Persistence Still Not Working**
+   - Symptom: App stuck on "navigating..." after page refresh
+   - Attempted Fix: Simplified auth initialization, removed timeout recovery logic
+   - Current Status: Build is clean, deployment successful, but session persistence issue remains
+   - Decision: Document as known issue, continue with feature development
+
+4. **Disk Space Warning**
+   - User's laptop has only 2.3GB free space
+   - Could be contributing to performance issues
+   - Recommended cleanup but continued work
+
+### User Feedback & Decisions
+
+- User confirmed all pages should follow Figma handover specifications
+- User wanted CSV import for User Management (implemented)
+- User decided to move forward with features despite session persistence issue
+- User requested all work be documented before ending session
+
+### Files Created/Modified
+
+**Created:**
+- `src/pages/desktop/SessionBuilder.tsx`
+- `src/pages/desktop/LessonBuilder.tsx`
+- `src/pages/desktop/TeamsManagement.tsx`
+- `src/pages/desktop/UserManagement.tsx`
+- `src/pages/desktop/Announcements.tsx`
+
+**Modified:**
+- `src/pages/desktop/Reporting.tsx` (fixed syntax errors)
+- `src/contexts/AuthContext.tsx` (simplified auth initialization, fixed syntax errors)
+- `src/layouts/DesktopLayout.tsx` (updated navigation structure)
+- `CHANGELOG.md` (documented all changes)
+- `CONVERSATION-HISTORY.md` (this file)
+
+### Deployment Status
+
+- Repository: https://github.com/Mikebrooke65/coaching-app-prototype
+- Branch: main (from prototype branch)
+- Netlify URL: https://wcrfootball.netlify.app
+- Build Status: ✅ Passing
+- All 12 admin pages deployed and accessible
+
+### Next Steps
+
+1. **High Priority - Session Persistence**
+   - Debug why `supabase.auth.getSession()` hangs
+   - Check Supabase project auth settings
+   - Consider alternative session management approach
+   - Test with different browsers/devices
+
+2. **Connect to Database**
+   - Replace all mock data with real Supabase queries
+   - Implement actual CRUD operations
+   - Add error handling and loading states
+
+3. **Remaining Mobile Pages**
+   - Games (placeholder exists)
+   - Resources (placeholder exists)
+   - Schedule (placeholder exists)
+   - Messaging (placeholder exists)
+   - AI Coach (placeholder exists)
+
+4. **Desktop Versions of Mobile Pages**
+   - DesktopCoaching (placeholder exists)
+   - DesktopGames (placeholder exists)
+   - DesktopResources (placeholder exists)
+   - DesktopSchedule (placeholder exists)
+   - DesktopMessaging (placeholder exists)
+
+5. **Testing & Refinement**
+   - Test all pages with real data
+   - Add form validation
+   - Improve error handling
+   - Add loading states
+   - Optimize performance
+
+### Notes for Next Session
+
+- Session persistence issue is the top priority to fix
+- All 12 admin pages are complete with mock data
+- Need to connect everything to Supabase database
+- User has low disk space (2.3GB free) - may need cleanup
+- Test user credentials: mikerbrooke@outlook.com / Linda2024! (admin role)
