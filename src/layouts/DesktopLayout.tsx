@@ -1,4 +1,4 @@
-import { Outlet, NavLink } from 'react-router';
+import { Outlet, NavLink, useLocation } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppStore } from '../stores/appStore';
 import { SyncStatusIndicator } from '../components/SyncStatusIndicator';
@@ -7,9 +7,10 @@ import { LogoutButton } from '../components/LogoutButton';
 export function DesktopLayout() {
   const { user } = useAuth();
   const { isSidebarOpen, setSidebarOpen } = useAppStore();
+  const location = useLocation();
 
   // Debug: Log when component renders
-  console.log('DesktopLayout rendering');
+  console.log('DesktopLayout rendering, location:', location.pathname);
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -350,7 +351,7 @@ export function DesktopLayout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-auto p-6">
-          <Outlet />
+          <Outlet key={location.pathname} />
         </main>
       </div>
     </div>
