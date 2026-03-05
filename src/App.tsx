@@ -1,11 +1,12 @@
-import { RouterProvider } from 'react-router';
+import { RouterProvider, useNavigate } from 'react-router';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { router } from './routes';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { useResponsive } from './hooks/useResponsive';
+import { useEffect } from 'react';
 
 function AppInitializer() {
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
   
   // Initialize hooks that need to run at app level
   useOnlineStatus();

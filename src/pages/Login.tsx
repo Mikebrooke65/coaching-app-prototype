@@ -26,7 +26,10 @@ export function Login() {
     try {
       console.log('About to call login...');
       await login(email, password);
-      console.log('Login returned, navigating...');
+      console.log('Login successful, waiting for auth state to settle...');
+      
+      // Small delay to let auth state change event fire
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Check if user is admin and on desktop, redirect to desktop view
       const isDesktop = window.innerWidth >= 768;
