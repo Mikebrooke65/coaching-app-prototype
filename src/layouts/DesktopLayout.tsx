@@ -39,14 +39,21 @@ export function DesktopLayout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {/* Main Navigation Section */}
+          {isSidebarOpen && (
+            <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Main
+            </div>
+          )}
+          
           <NavLink
             to="/desktop"
             end
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-600'
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
@@ -59,7 +66,7 @@ export function DesktopLayout() {
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
               />
             </svg>
-            {isSidebarOpen && <span>Dashboard</span>}
+            {isSidebarOpen && <span>Landing</span>}
           </NavLink>
 
           <NavLink
@@ -67,7 +74,7 @@ export function DesktopLayout() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-600'
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
@@ -84,53 +91,11 @@ export function DesktopLayout() {
           </NavLink>
 
           <NavLink
-            to="/desktop/lesson-builder"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`
-            }
-          >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            {isSidebarOpen && <span>Lesson Builder</span>}
-          </NavLink>
-
-          <NavLink
-            to="/desktop/session-builder"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`
-            }
-          >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            {isSidebarOpen && <span>Session Builder</span>}
-          </NavLink>
-
-          <NavLink
             to="/desktop/games"
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-600'
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
@@ -153,11 +118,125 @@ export function DesktopLayout() {
           </NavLink>
 
           <NavLink
+            to="/desktop/resources"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`
+            }
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+            {isSidebarOpen && <span>Resources</span>}
+          </NavLink>
+
+          <NavLink
+            to="/desktop/schedule"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`
+            }
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            {isSidebarOpen && <span>Schedule</span>}
+          </NavLink>
+
+          <NavLink
+            to="/desktop/messaging"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`
+            }
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+              />
+            </svg>
+            {isSidebarOpen && <span>Messaging</span>}
+          </NavLink>
+
+          {/* Admin Section */}
+          {isSidebarOpen && (
+            <div className="px-3 py-2 mt-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Admin
+            </div>
+          )}
+          {!isSidebarOpen && <div className="my-2 border-t border-gray-200"></div>}
+          
+          {/* Admin-Only Features */}
+          <NavLink
+            to="/desktop/session-builder"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`
+            }
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            {isSidebarOpen && <span>Session Builder</span>}
+          </NavLink>
+
+          <NavLink
+            to="/desktop/lesson-builder"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`
+            }
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            {isSidebarOpen && <span>Lesson Builder</span>}
+          </NavLink>
+
+          <NavLink
             to="/desktop/teams"
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-600'
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
@@ -178,7 +257,7 @@ export function DesktopLayout() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-600'
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
@@ -195,32 +274,11 @@ export function DesktopLayout() {
           </NavLink>
 
           <NavLink
-            to="/desktop/announcements"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`
-            }
-          >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
-              />
-            </svg>
-            {isSidebarOpen && <span>Announcements</span>}
-          </NavLink>
-
-          <NavLink
             to="/desktop/reporting"
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 isActive
-                  ? 'bg-indigo-50 text-indigo-600'
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
@@ -234,6 +292,27 @@ export function DesktopLayout() {
               />
             </svg>
             {isSidebarOpen && <span>Reporting</span>}
+          </NavLink>
+
+          <NavLink
+            to="/desktop/announcements"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`
+            }
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+              />
+            </svg>
+            {isSidebarOpen && <span>Announcements</span>}
           </NavLink>
         </nav>
 
