@@ -132,6 +132,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setState({
               user: null,
               session: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
+          });
+        } else {
+          setState({
+            user: null,
+            session: null,
             isAuthenticated: false,
             isLoading: false,
           });
@@ -139,7 +147,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .catch((error) => {
         if (!mounted) return;
-        clearTimeout(timeout);
         console.error('Error initializing auth:', error);
         setState({
           user: null,
@@ -173,7 +180,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
-      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);

@@ -207,7 +207,7 @@ export function Reporting() {
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Attendance Trend */}
-          <div cdow p-6">
+          <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Attendance Trend</h3>
             <div className="space-y-3">
               {mockAttendanceTrend.map((item, index) => (
@@ -229,7 +229,7 @@ export function Reporting() {
           </div>
 
           {/* User Engagement */}
-          <div classNaded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">User Engagement by Role</h3>
             <div className="space-y-4">
               {mockUserEngagement.map((item, index) => (
@@ -237,7 +237,7 @@ export function Reporting() {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-gray-700">{item.role}</span>
                     <span className="text-sm text-gray-600">
-                      {item.active}/{itm.total} ({item.percentage}%)
+                      {item.active}/{item.total} ({item.percentage}%)
                     </span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
