@@ -18,10 +18,9 @@ function getSupabaseClient() {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: false,
         storage: window.localStorage,
         storageKey: 'sb-auth-token',
-        flowType: 'pkce',
       }
     });
   }
