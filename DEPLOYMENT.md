@@ -2,13 +2,15 @@
 
 ## CRITICAL: Git Push Commands
 
-**ALWAYS push to origin (the .kiro repo that Netlify watches):**
+**ALWAYS push to origin prototype branch (the .kiro repo that Netlify watches):**
 
 ```bash
-git push origin prototype:main
+git push origin prototype:prototype
 ```
 
-**NEVER push to prototype remote** - that's a different repo that Netlify doesn't watch!
+**NEVER push to:**
+- `prototype` remote - that's a different repo that Netlify doesn't watch!
+- `origin main` branch - Netlify watches the `prototype` branch, not `main`!
 
 ## Repository Setup
 
@@ -19,7 +21,7 @@ git push origin prototype:main
 
 - **Site**: https://wcrfootball.netlify.app
 - **Watches**: github.com/Mikebrooke65/.kiro
-- **Branch**: main
+- **Branch**: prototype (NOT main!)
 - **Build command**: npm run build
 - **Publish directory**: dist
 
@@ -28,7 +30,7 @@ git push origin prototype:main
 1. Make changes to files
 2. Test locally if needed: `npm run dev`
 3. Commit: `git add -A && git commit -m "message"`
-4. Push: `git push origin prototype:main`
+4. Push: `git push origin prototype:prototype`
 5. Wait 1-2 minutes for Netlify to build and deploy
 6. Verify at https://wcrfootball.netlify.app
 
