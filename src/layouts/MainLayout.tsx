@@ -59,10 +59,10 @@ export function MainLayout() {
               </NavLink>
 
               <NavLink
-                to="/lessons"
+                to="/coaching"
                 className={({ isActive }) =>
                   `flex flex-col items-center justify-center flex-1 h-full ${
-                    isActive ? 'text-indigo-600' : 'text-gray-600'
+                    isActive ? 'text-[#0091f3]' : 'text-gray-600'
                   }`
                 }
               >
@@ -74,7 +74,7 @@ export function MainLayout() {
                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                   />
                 </svg>
-                <span className="text-xs mt-1">Lessons</span>
+                <span className="text-xs mt-1">Coaching</span>
               </NavLink>
 
               <NavLink

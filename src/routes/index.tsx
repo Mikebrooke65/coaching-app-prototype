@@ -11,6 +11,7 @@ import { Login } from '../pages/Login';
 
 // Mobile pages
 import { Landing } from '../pages/Landing';
+import { Coaching } from '../pages/Coaching';
 import { Lessons } from '../pages/Lessons';
 import { LessonDetail } from '../pages/LessonDetail';
 import { Games } from '../pages/Games';
@@ -52,6 +53,16 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Landing />,
+      },
+      {
+        path: 'coaching',
+        element: (
+          <ProtectedRoute
+            allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH]}
+          >
+            <Coaching />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'lessons',
