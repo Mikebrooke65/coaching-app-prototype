@@ -26,6 +26,7 @@ const mockAnnouncements = [
 ];
 
 export function Announcements() {
+  console.log('Announcements component rendering');
   const [announcements, setAnnouncements] = useState(mockAnnouncements);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);

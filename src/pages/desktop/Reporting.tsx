@@ -55,6 +55,7 @@ const mockUserEngagement = [
 ];
 
 export function Reporting() {
+  console.log('Reporting component rendering');
   const [dateRange, setDateRange] = useState('last-30-days');
 
   const handleExport = (format: 'pdf' | 'excel') => {
