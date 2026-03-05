@@ -27,7 +27,12 @@ export function Login() {
       console.log('About to call login...');
       await login(email, password);
       console.log('Login returned, navigating...');
-      navigate(from, { replace: true });
+      
+      // Check if user is admin and on desktop, redirect to desktop view
+      const isDesktop = window.innerWidth >= 768;
+      const redirectPath = from !== '/' ? from : (isDesktop ? '/desktop' : '/');
+      
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed');
