@@ -409,3 +409,130 @@ After each conversation session:
 4. Note any questions asked and answers provided
 5. Include relevant links, commit hashes, and technical specifications
 6. Keep chronological order (newest at top after this entry)
+
+
+---
+
+## Session: March 5, 2026 (Continued) - Phase 1 Testing & Troubleshooting
+
+### Context
+- Phase 1 Core Infrastructure implementation completed
+- Testing authentication and login functionality
+- Encountered multiple issues with local development environment
+- Decided to deploy to Netlify for stable testing environment
+
+### Discussion Points
+
+1. **Test User Creation**
+   - Created script to add test user via Supabase service role
+   - Test user credentials:
+     - Email: mikerbrooke@outlook.com
+     - Password: Linda2024!
+     - Role: admin
+     - User ID: ad7b7dfa-3549-468f-b369-3ca1e705e4fa
+   - User successfully created in both auth.users and public.users tables
+
+2. **Login Issues - Multiple Supabase Client Instances**
+   - Problem: Login hung at "Signing in..." with no response
+   - Console showed: "Multiple GoTrueClient instances detected"
+   - Error: "Lock was not released within 5000ms"
+   - Root cause: React hot-reload creating multiple Supabase client instances
+   - Solution: Implemented singleton pattern in src/lib/supabase.ts
+   - Added PKCE flow type and explicit storage configuration
+
+3. **RLS Policy Issues**
+   - Problem: 500 errors when fetching user profile after authentication
+   - Root cause: Circular dependencies in RLS policies
+   - Migration 003: Attempted to fix by simplifying policies
+   - Migration 004: Final fix - removed all recursive policy checks
+   - Solution: Allow all authenticated users to view users table (application-level filtering)
+
+4. **Authentication Success**
+   - After fixes, login working successfully
+   - User profile fetched correctly with team assignments
+   - Navigation to landing page working
+   - Basic UI rendering with header, navigation, and user info
+
+5. **Admin Redirect Logic**
+   - Added automatic redirect for admin users to desktop interface
+   - Logic: If user role is admin AND on desktop screen → redirect to /desktop
+   - Implemented in Landing.tsx with useEffect hook
+
+6. **Local Development Challenges**
+   - Multiple issues with local dev environment (hanging, lock timeouts)
+   - User frustrated with time spent on local setup
+   - Decision: Deploy to Netlify for stable testing environment
+   - Rationale: More productive to test on deployed version
+
+7. **Deployment Preparation**
+   - Created netlify.toml configuration file
+   - Attempted to push to GitHub
+   - Issue: GitHub blocked push due to secrets in files
+   - Removed service role key from TROUBLESHOOTING.md and scripts
+   - Rewrote git history to remove secrets
+   - Successfully pushed to prototype branch
+
+### Technical Details
+
+**Files Created:**
+- scripts/create-test-user.ts - Script to create test users
+- scripts/recreate-test-user.ts - Script to recreate users with new password
+- scripts/test-auth.ts - Script to test authentication from Node.js
+- scripts/check-user-status.ts - Script to check user status in database
+- TROUBLESHOOTING.md - Detailed documentation of login issues and solutions
+- netlify.toml - Netlify deployment configuration
+- supabase/migrations/003_fix_users_rls.sql - First RLS policy fix attempt
+- supabase/migrations/004_fix_users_rls_final.sql - Final RLS policy fix
+
+**Files Modified:**
+- src/lib/supabase.ts - Implemented singleton pattern
+- src/pages/Landing.tsx - Added admin redirect logic
+- src/contexts/AuthContext.tsx - Added debug logging (later removed)
+- src/pages/Login.tsx - Added debug logging (later removed)
+- CHANGELOG.md - Updated with Phase 1 completion and fixes
+- TROUBLESHOOTING.md - Documented all issues and resolutions
+
+**Migrations Executed:**
+- 003_fix_users_rls.sql - Simplified RLS policies, removed circular dependencies
+- 004_fix_users_rls_final.sql - Final RLS fix with non-recursive policies
+
+### Decisions Made
+- Use singleton pattern for Supabase client to prevent multiple instances
+- Simplify RLS policies to avoid circular dependencies
+- Allow all authenticated users to view users table (rely on application logic for filtering)
+- Deploy to Netlify instead of continuing with local development issues
+- Remove secrets from git history before pushing
+
+### Issues Resolved
+1. ✅ Multiple Supabase client instances causing lock timeouts
+2. ✅ RLS policy circular dependencies causing 500 errors
+3. ✅ User profile fetching after authentication
+4. ✅ Login hanging indefinitely
+5. ✅ GitHub secret scanning blocking push
+
+### Current Status
+- Phase 1 (Core Infrastructure) complete and functional
+- Authentication working successfully
+- User can log in and see basic UI
+- Admin redirect logic implemented
+- Code pushed to GitHub (prototype branch)
+- Ready for Netlify deployment
+
+### Next Steps
+1. Deploy to Netlify with environment variables
+2. Test authentication on deployed version
+3. Verify admin redirect to desktop interface
+4. Begin Phase 2: UI Implementation (Figma designs)
+
+### Lessons Learned
+- Local development environment can be unstable with hot-reload
+- Singleton pattern essential for Supabase client in React
+- RLS policies should avoid recursive queries
+- Deploying early to stable environment more productive than debugging local issues
+- Git history rewriting necessary when secrets accidentally committed
+
+### Test Credentials (For Netlify Testing)
+- Email: mikerbrooke@outlook.com
+- Password: Linda2024!
+- Role: admin
+- Expected behavior: Auto-redirect to /desktop on desktop screens
