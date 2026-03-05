@@ -121,22 +121,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Session found, fetching profile...');
           fetchUserProfile(session.user.id).then((profile) => {
             if (!mounted) return;
+            console.log('Profile fetched, setting authenticated state');
             setState({
               user: profile,
               session,
               isAuthenticated: !!profile,
               isLoading: false,
             });
-          }).catch(() => {
+          }).catch((err) => {
             if (!mounted) return;
+            console.error('Profile fetch failed:', err);
+            // Even if profile fetch fails, keep the session
             setState({
               user: null,
-              session: null,
-              isAuthenticated: false,
+              session,
+              isAuthenticated: true, // Changed: Keep authenticated if session exists
               isLoading: false,
             });
           });
         } else {
+          console.log('No session found');
           setState({
             user: null,
             session: null,
