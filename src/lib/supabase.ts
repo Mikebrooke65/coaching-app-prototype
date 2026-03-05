@@ -9,10 +9,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-// Create client with minimal config
+// Create client with explicit localStorage
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'supabase.auth.token',
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
   }
 });
