@@ -32,6 +32,8 @@ const mockSessions = [
 ];
 
 export function SessionBuilder() {
+  console.log('SessionBuilder rendering');
+  
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [filterType, setFilterType] = useState('all');
