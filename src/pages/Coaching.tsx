@@ -1,14 +1,62 @@
 import { Link } from 'react-router';
+import { useState } from 'react';
+import { ChevronDown, Sparkles } from 'lucide-react';
 
 export function Coaching() {
+  const [selectedTeam, setSelectedTeam] = useState('U14 Blue');
+  const [showTeamDropdown, setShowTeamDropdown] = useState(false);
+
+  // Mock teams - in real app, this would come from user's team assignments
+  const teams = ['U14 Blue', 'U16 Rangers'];
+
   return (
-    <div className="bg-gray-50 min-h-full">
+    <div className="bg-gray-50 min-h-full pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#0091f3] to-[#0077cc] text-white p-6">
-        <h1 className="text-2xl font-bold mb-1">Coaching</h1>
-        <p className="text-blue-100 text-sm">
-          Access lessons, AI coaching assistant, and training resources
-        </p>
+      <div className="p-4">
+        <div className="border-l-8 border-[#22c55e] pl-4 mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">Coaching</h1>
+          <p className="text-gray-600 text-sm">
+            Access lessons, AI coaching assistant, and training resources
+          </p>
+        </div>
+      </div>
+
+      {/* Team Selection Block */}
+      <div className="px-4 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-lg text-gray-900">Team {selectedTeam}</h2>
+              <div className="relative">
+                <button
+                  onClick={() => setShowTeamDropdown(!showTeamDropdown)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#0091f3] text-white rounded-lg text-sm font-medium hover:bg-[#0081d8] transition-colors"
+                >
+                  Change Team
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showTeamDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                {showTeamDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-10">
+                    {teams.map((team) => (
+                      <button
+                        key={team}
+                        className={`block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                          team === selectedTeam ? 'bg-blue-50 text-[#0091f3] font-medium' : 'text-gray-700'
+                        }`}
+                        onClick={() => {
+                          setSelectedTeam(team);
+                          setShowTeamDropdown(false);
+                        }}
+                      >
+                        {team}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Coaching Options */}

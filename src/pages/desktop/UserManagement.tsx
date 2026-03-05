@@ -1,70 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
-// Mock users data
-const mockUsers = [
-  {
-    id: '1',
-    email: 'mikerbrooke@outlook.com',
-    first_name: 'Mike',
-    last_name: 'Brooke',
-    role: 'admin',
-    status: 'active',
-    team: 'Rangers U10 Blue',
-    teamId: 't1',
-    last_login: '2026-03-05',
-  },
-  {
-    id: '2',
-    email: 'john.smith@example.com',
-    first_name: 'John',
-    last_name: 'Smith',
-    role: 'coach',
-    status: 'active',
-    team: 'Rangers U10 Blue',
-    teamId: 't1',
-    last_login: '2026-03-04',
-  },
-  {
-    id: '3',
-    email: 'sarah.johnson@example.com',
-    first_name: 'Sarah',
-    last_name: 'Johnson',
-    role: 'coach',
-    status: 'active',
-    team: 'Rangers U12 Red',
-    teamId: 't2',
-    last_login: '2026-03-03',
-  },
-  {
-    id: '4',
-    email: 'player1@example.com',
-    first_name: 'Tommy',
-    last_name: 'Wilson',
-    role: 'player',
-    status: 'active',
-    team: 'Rangers U10 Blue',
-    teamId: 't1',
-    last_login: '2026-03-02',
-  },
-  {
-    id: '5',
-    email: 'parent1@example.com',
-    first_name: 'Jane',
-    last_name: 'Wilson',
-    role: 'caregiver',
-    status: 'active',
-    team: 'Rangers U10 Blue',
-    teamId: 't1',
-    last_login: '2026-03-01',
-  },
-];
+interface User {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  cellphone?: string;
+  role: string;
+  active: boolean;
+  last_login?: string;
+}
 
-// Mock teams for dropdown
-const mockTeams = [
-  { id: 't1', name: 'Rangers U10 Blue' },
-  { id: 't2', name: 'Rangers U12 Red' },
-  { id: 't3', name: 'Rangers U14 Girls' },
-];
+interface Team {
+  id: string;
+  name: string;
+}
 
 const roleOptions = [
   { value: 'player', label: 'Player', color: 'bg-blue-100 text-blue-700' },
@@ -75,10 +27,13 @@ const roleOptions = [
 ];
 
 export function UserManagement() {
-  const [users, setUsers] = useState(mockUsers);
+  const { user: currentUser } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -89,13 +44,51 @@ export function UserManagement() {
     first_name: '',
     last_name: '',
     role: 'player',
-    status: 'active',
+    active: true,
     teamId: '',
     cellphone: '',
+    password: '',
   });
 
   // Import state
   const [importData, setImportData] = useState('');
+
+  // Fetch users and teams
+  useEffect(() => {
+    fetchUsers();
+    fetchTeams();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('last_name');
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchTeams = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('teams')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setTeams(data || []);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =

@@ -33,7 +33,7 @@ export function ProtectedRoute({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If authenticated but no user profile yet, show loading
+  // If authenticated but no user profile yet, show loading (but don't block)
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">

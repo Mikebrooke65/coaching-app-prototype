@@ -1,54 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
-// Mock teams data
-const mockTeams = [
-  {
-    id: '1',
-    name: 'Rangers U10 Blue',
-    ageGroup: 'U9-U12',
-    division: 'Community',
-    gender: 'Mixed',
-    coach: 'John Smith',
-    coachId: 'c1',
-    playerCount: 12,
-    season: '2026',
-  },
-  {
-    id: '2',
-    name: 'Rangers U12 Red',
-    ageGroup: 'U9-U12',
-    division: 'Academy',
-    gender: 'Mixed',
-    coach: 'Sarah Johnson',
-    coachId: 'c2',
-    playerCount: 15,
-    season: '2026',
-  },
-  {
-    id: '3',
-    name: 'Rangers U14 Girls',
-    ageGroup: 'U13-U17',
-    division: 'Community',
-    gender: 'Female',
-    coach: 'Mike Brown',
-    coachId: 'c3',
-    playerCount: 10,
-    season: '2026',
-  },
-];
+interface Team {
+  id: string;
+  name: string;
+  age_group: string;
+  division: string;
+  training_ground: string;
+  training_time: string;
+  coach?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    role: string;
+  };
+  player_count?: number;
+}
 
-// Mock coaches
-const mockCoaches = [
-  { id: 'c1', name: 'John Smith' },
-  { id: 'c2', name: 'Sarah Johnson' },
-  { id: 'c3', name: 'Mike Brown' },
-  { id: 'c4', name: 'Emma Wilson' },
-];
+interface Coach {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+}
 
 export function TeamsManagement() {
-  const [teams, setTeams] = useState(mockTeams);
+  const { user } = useAuth();
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTeam, setEditingTeam] = useState<any>(null);
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAge, setFilterAge] = useState('all');
   const [filterDivision, setFilterDivision] = useState('all');
@@ -56,41 +39,80 @@ export function TeamsManagement() {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
-    ageGroup: 'U9-U12',
+    age_group: 'U9-U12',
     division: 'Community',
-    gender: 'Mixed',
-    coachId: '',
-    season: '2026',
+    training_ground: '',
+    training_time: '',
+    coach_id: '',
   });
 
+  // Fetch teams and coaches
+  useEffect(() => {
+    fetchTeams();
+    fetchCoaches();
+  }, []);
+
+  const fetchTeams = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setTeams(data || []);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchCoaches = async () => {
+    try {
+      // Fetch users with coach or admin role
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, first_name, last_name, role')
+        .in('role', ['coach', 'admin'])
+        .eq('active', true)
+        .order('first_name');
+
+      if (error) throw error;
+      setCoaches(data || []);
+    } catch (error) {
+      console.error('Error fetching coaches:', error);
+    }
+  };
+
   const filteredTeams = teams.filter((team) => {
-    const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.coach.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesAge = filterAge === 'all' || team.ageGroup === filterAge;
+    const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesAge = filterAge === 'all' || team.age_group === filterAge;
     const matchesDivision = filterDivision === 'all' || team.division === filterDivision;
     return matchesSearch && matchesAge && matchesDivision;
   });
 
-  const handleOpenModal = (team?: any) => {
+  const handleOpenModal = (team?: Team) => {
     if (team) {
       setEditingTeam(team);
       setFormData({
         name: team.name,
-        ageGroup: team.ageGroup,
+        age_group: team.age_group,
         division: team.division,
-        gender: team.gender,
-        coachId: team.coachId,
-        season: team.season,
+        training_ground: team.training_ground,
+        training_time: team.training_time,
+        coach_id: '',
       });
     } else {
       setEditingTeam(null);
       setFormData({
         name: '',
-        ageGroup: 'U9-U12',
+        age_group: 'U9-U12',
         division: 'Community',
-        gender: 'Mixed',
-        coachId: '',
-        season: '2026',
+        training_ground: '',
+        training_time: '',
+        coach_id: '',
       });
     }
     setIsModalOpen(true);
@@ -101,33 +123,62 @@ export function TeamsManagement() {
     setEditingTeam(null);
   };
 
-  const handleSave = () => {
-    const coach = mockCoaches.find((c) => c.id === formData.coachId);
-    
-    if (editingTeam) {
-      // Update existing team
-      setTeams(teams.map((t) =>
-        t.id === editingTeam.id
-          ? { ...t, ...formData, coach: coach?.name || 'Unassigned' }
-          : t
-      ));
-    } else {
-      // Create new team
-      const newTeam = {
-        id: `t${teams.length + 1}`,
-        ...formData,
-        coach: coach?.name || 'Unassigned',
-        playerCount: 0,
-      };
-      setTeams([...teams, newTeam]);
+  const handleSave = async () => {
+    try {
+      if (editingTeam) {
+        // Update existing team
+        const { error } = await supabase
+          .from('teams')
+          .update({
+            name: formData.name,
+            age_group: formData.age_group,
+            division: formData.division,
+            training_ground: formData.training_ground,
+            training_time: formData.training_time,
+          })
+          .eq('id', editingTeam.id);
+
+        if (error) throw error;
+      } else {
+        // Create new team
+        const { error } = await supabase
+          .from('teams')
+          .insert({
+            name: formData.name,
+            age_group: formData.age_group,
+            division: formData.division,
+            training_ground: formData.training_ground,
+            training_time: formData.training_time,
+          });
+
+        if (error) throw error;
+      }
+
+      // Refresh teams list
+      await fetchTeams();
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error saving team:', error);
+      alert('Failed to save team. Please try again.');
     }
-    
-    handleCloseModal();
   };
 
-  const handleDelete = (teamId: string) => {
-    if (confirm('Are you sure you want to delete this team?')) {
-      setTeams(teams.filter((t) => t.id !== teamId));
+  const handleDelete = async (teamId: string) => {
+    if (!confirm('Are you sure you want to delete this team?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('teams')
+        .delete()
+        .eq('id', teamId);
+
+      if (error) throw error;
+
+      // Refresh teams list
+      await fetchTeams();
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      alert('Failed to delete team. Please try again.');
     }
   };
 
@@ -202,84 +253,83 @@ export function TeamsManagement() {
 
       {/* Teams Table */}
       <div className="flex-1 bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Team Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Age Group
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Division
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Gender
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Coach
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Players
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTeams.map((team) => (
-                <tr key={team.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{team.name}</div>
-                    <div className="text-sm text-gray-500">Season {team.season}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-[#0091f3] bg-opacity-10 text-[#0091f3]">
-                      {team.ageGroup}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      team.division === 'Academy'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-green-100 text-green-700'
-                    }`}>
-                      {team.division}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {team.gender}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {team.coach}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {team.playerCount}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => handleOpenModal(team)}
-                      className="text-[#0091f3] hover:text-[#0077cc] mr-3"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(team.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Delete
-                    </button>
-                  </td>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0091f3]"></div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Team Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Age Group
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Division
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Training Ground
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Training Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredTeams.map((team) => (
+                  <tr key={team.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900">{team.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-[#0091f3] bg-opacity-10 text-[#0091f3]">
+                        {team.age_group}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        team.division === 'Academy'
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {team.division}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {team.training_ground}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {team.training_time}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => handleOpenModal(team)}
+                        className="text-[#0091f3] hover:text-[#0077cc] mr-3"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(team.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-        {filteredTeams.length === 0 && (
+        {!isLoading && filteredTeams.length === 0 && (
           <div className="text-center py-12">
             <svg
               className="w-12 h-12 text-gray-300 mx-auto mb-3"
@@ -329,8 +379,8 @@ export function TeamsManagement() {
                     Age Group *
                   </label>
                   <select
-                    value={formData.ageGroup}
-                    onChange={(e) => setFormData({ ...formData, ageGroup: e.target.value })}
+                    value={formData.age_group}
+                    onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                   >
                     <option value="U4-U6">U4-U6 (First Kicks)</option>
@@ -356,48 +406,50 @@ export function TeamsManagement() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Gender *
+                    Training Ground *
                   </label>
-                  <select
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  <input
+                    type="text"
+                    value={formData.training_ground}
+                    onChange={(e) => setFormData({ ...formData, training_ground: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                  >
-                    <option value="Mixed">Mixed</option>
-                    <option value="Female">Female</option>
-                  </select>
+                    placeholder="e.g., West Coast Stadium"
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Season *
+                    Training Time *
                   </label>
                   <input
                     type="text"
-                    value={formData.season}
-                    onChange={(e) => setFormData({ ...formData, season: e.target.value })}
+                    value={formData.training_time}
+                    onChange={(e) => setFormData({ ...formData, training_time: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                    placeholder="2026"
+                    placeholder="e.g., Saturdays 9:00 AM"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Assign Coach
+                  Assign Coach (Optional)
                 </label>
                 <select
-                  value={formData.coachId}
-                  onChange={(e) => setFormData({ ...formData, coachId: e.target.value })}
+                  value={formData.coach_id}
+                  onChange={(e) => setFormData({ ...formData, coach_id: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 >
                   <option value="">Unassigned</option>
-                  {mockCoaches.map((coach) => (
+                  {coaches.map((coach) => (
                     <option key={coach.id} value={coach.id}>
-                      {coach.name}
+                      {coach.first_name} {coach.last_name} ({coach.role})
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Both coaches and admins can be assigned to teams
+                </p>
               </div>
             </div>
 
