@@ -134,6 +134,11 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      // Debug route to test if desktop routes work at all
+      {
+        path: 'test',
+        element: <div style={{ padding: '20px', fontSize: '24px', fontWeight: 'bold' }}>DESKTOP TEST ROUTE WORKS!</div>,
+      },
       {
         index: true,
         element: <DesktopLanding />,
