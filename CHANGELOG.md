@@ -4,6 +4,18 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-06] - Desktop UI Alignment with Figma
+
+### Added
+- Colored page headings to Session Builder and Lesson Builder pages
+  - Session Builder: Green heading (#22c55e) with description
+  - Lesson Builder: Green heading (#22c55e) with description
+  - Matches Figma design specifications for coaching tools section
+
+### Fixed
+- Session Builder and Lesson Builder pages now have consistent heading style with other desktop pages
+- All desktop pages now properly aligned with Figma design specifications
+
 ## [2026-03-05] - Desktop Admin Pages Implementation
 
 ### Added

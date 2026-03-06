@@ -102,7 +102,14 @@ export function SessionBuilder() {
   };
 
   return (
-    <div className="h-full flex gap-6">
+    <div className="h-full flex flex-col gap-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-[#22c55e]">Session Builder</h1>
+        <p className="text-gray-600 mt-2">Create and manage training sessions for your teams</p>
+      </div>
+
+      <div className="flex-1 flex gap-6">
       {/* Left Panel - Sessions Library */}
       <div className="w-1/3 flex flex-col bg-white rounded-lg shadow">
         {/* Header */}
@@ -409,6 +416,7 @@ export function SessionBuilder() {
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
