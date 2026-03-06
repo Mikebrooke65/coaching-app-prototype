@@ -133,7 +133,7 @@ export function UserManagement() {
   };
 
   const handleSave = () => {
-    const team = mockTeams.find((t) => t.id === formData.teamId);
+    const team = teams.find((t) => t.id === formData.teamId);
 
     if (editingUser) {
       // Update existing user
@@ -503,7 +503,7 @@ export function UserManagement() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 >
                   <option value="">Unassigned</option>
-                  {mockTeams.map((team) => (
+                  {teams.map((team) => (
                     <option key={team.id} value={team.id}>
                       {team.name}
                     </option>

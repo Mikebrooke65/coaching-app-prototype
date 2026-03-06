@@ -63,133 +63,175 @@ export function DesktopLayout() {
             to="/desktop"
             end
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors relative ${
                 isActive
-                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  ? 'bg-gray-50 text-[#0091f3]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            {isSidebarOpen && <span>Landing</span>}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0091f3] rounded-l-lg"></div>
+                )}
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>
+                {isSidebarOpen && <span>Landing</span>}
+              </>
+            )}
           </NavLink>
 
           <NavLink
             to="/desktop/coaching"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors relative ${
                 isActive
-                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  ? 'bg-gray-50 text-[#22c55e]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
-            </svg>
-            {isSidebarOpen && <span>Coaching</span>}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#22c55e] rounded-l-lg"></div>
+                )}
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                {isSidebarOpen && <span>Coaching</span>}
+              </>
+            )}
           </NavLink>
 
           <NavLink
             to="/desktop/games"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors relative ${
                 isActive
-                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  ? 'bg-gray-50 text-[#ea7800]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            {isSidebarOpen && <span>Games</span>}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#ea7800] rounded-l-lg"></div>
+                )}
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {isSidebarOpen && <span>Games</span>}
+              </>
+            )}
           </NavLink>
 
           <NavLink
             to="/desktop/resources"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors relative ${
                 isActive
-                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  ? 'bg-gray-50 text-[#8b5cf6]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-              />
-            </svg>
-            {isSidebarOpen && <span>Resources</span>}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#8b5cf6] rounded-l-lg"></div>
+                )}
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+                {isSidebarOpen && <span>Resources</span>}
+              </>
+            )}
           </NavLink>
 
           <NavLink
             to="/desktop/schedule"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors relative ${
                 isActive
-                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  ? 'bg-gray-50 text-[#06b6d4]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            {isSidebarOpen && <span>Schedule</span>}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#06b6d4] rounded-l-lg"></div>
+                )}
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                {isSidebarOpen && <span>Schedule</span>}
+              </>
+            )}
           </NavLink>
 
           <NavLink
             to="/desktop/messaging"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors relative ${
                 isActive
-                  ? 'bg-[#0091f3] bg-opacity-10 text-[#0091f3]'
+                  ? 'bg-gray-50 text-[#545859]'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }
           >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-              />
-            </svg>
-            {isSidebarOpen && <span>Messaging</span>}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#545859] rounded-l-lg"></div>
+                )}
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                  />
+                </svg>
+                {isSidebarOpen && <span>Messaging</span>}
+              </>
+            )}
           </NavLink>
 
           {/* Admin Section */}
@@ -350,9 +392,17 @@ export function DesktopLayout() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
         {/* Top bar */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">West Coast Rangers FC</h1>
+        <header className="bg-[#0091f3] px-6 py-4 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <img 
+              src={gannetLogo} 
+              alt="" 
+              className="h-full w-auto object-contain ml-auto"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
+          </div>
+          <div className="relative flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-white">Urrah</h1>
             <SyncStatusIndicator />
           </div>
         </header>

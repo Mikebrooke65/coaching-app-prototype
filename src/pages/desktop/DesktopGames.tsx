@@ -92,7 +92,7 @@ export function DesktopGames() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Games Management</h1>
+        <h1 className="text-3xl font-bold text-[#ea7800]">Games Management</h1>
         <button className="flex items-center gap-2 px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0081d9] transition-colors">
           <Plus className="w-4 h-4" />
           Add Game

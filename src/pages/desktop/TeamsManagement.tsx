@@ -39,7 +39,7 @@ export function TeamsManagement() {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
-    age_group: 'U9-U12',
+    age_group: 'U9',
     division: 'Community',
     training_ground: '',
     training_time: '',
@@ -57,7 +57,10 @@ export function TeamsManagement() {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('teams')
-        .select('*')
+        .select(`
+          *,
+          coach:users!teams_coach_id_fkey(id, first_name, last_name, role)
+        `)
         .order('name');
 
       if (error) throw error;
@@ -102,13 +105,13 @@ export function TeamsManagement() {
         division: team.division,
         training_ground: team.training_ground,
         training_time: team.training_time,
-        coach_id: '',
+        coach_id: team.coach?.id || '',
       });
     } else {
       setEditingTeam(null);
       setFormData({
         name: '',
-        age_group: 'U9-U12',
+        age_group: 'U9',
         division: 'Community',
         training_ground: '',
         training_time: '',
@@ -135,6 +138,7 @@ export function TeamsManagement() {
             division: formData.division,
             training_ground: formData.training_ground,
             training_time: formData.training_time,
+            coach_id: formData.coach_id || null,
           })
           .eq('id', editingTeam.id);
 
@@ -149,6 +153,7 @@ export function TeamsManagement() {
             division: formData.division,
             training_ground: formData.training_ground,
             training_time: formData.training_time,
+            coach_id: formData.coach_id || null,
           });
 
         if (error) throw error;
@@ -233,10 +238,20 @@ export function TeamsManagement() {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
           >
             <option value="all">All Age Groups</option>
-            <option value="U4-U6">U4-U6</option>
-            <option value="U7-U8">U7-U8</option>
-            <option value="U9-U12">U9-U12</option>
-            <option value="U13-U17">U13-U17</option>
+            <option value="U4">U4</option>
+            <option value="U5">U5</option>
+            <option value="U6">U6</option>
+            <option value="U7">U7</option>
+            <option value="U8">U8</option>
+            <option value="U9">U9</option>
+            <option value="U10">U10</option>
+            <option value="U11">U11</option>
+            <option value="U12">U12</option>
+            <option value="U13">U13</option>
+            <option value="U14">U14</option>
+            <option value="U15">U15</option>
+            <option value="U16">U16</option>
+            <option value="U17">U17</option>
           </select>
 
           <select
@@ -262,22 +277,22 @@ export function TeamsManagement() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Team Name
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Team
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Age Group
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Division
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Coach
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Training Ground
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Training Time
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -285,15 +300,10 @@ export function TeamsManagement() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredTeams.map((team) => (
                   <tr key={team.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{team.name}</div>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{team.age_group} {team.name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-[#0091f3] bg-opacity-10 text-[#0091f3]">
-                        {team.age_group}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                         team.division === 'Academy'
                           ? 'bg-purple-100 text-purple-700'
@@ -302,13 +312,16 @@ export function TeamsManagement() {
                         {team.division}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                      {team.coach ? `${team.coach.first_name} ${team.coach.last_name}` : '-'}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                       {team.training_ground}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                       {team.training_time}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => handleOpenModal(team)}
                         className="text-[#0091f3] hover:text-[#0077cc] mr-3"
@@ -383,10 +396,20 @@ export function TeamsManagement() {
                     onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                   >
-                    <option value="U4-U6">U4-U6 (First Kicks)</option>
-                    <option value="U7-U8">U7-U8 (Fun Football)</option>
-                    <option value="U9-U12">U9-U12 (Junior)</option>
-                    <option value="U13-U17">U13-U17 (Youth)</option>
+                    <option value="U4">U4</option>
+                    <option value="U5">U5</option>
+                    <option value="U6">U6</option>
+                    <option value="U7">U7</option>
+                    <option value="U8">U8</option>
+                    <option value="U9">U9</option>
+                    <option value="U10">U10</option>
+                    <option value="U11">U11</option>
+                    <option value="U12">U12</option>
+                    <option value="U13">U13</option>
+                    <option value="U14">U14</option>
+                    <option value="U15">U15</option>
+                    <option value="U16">U16</option>
+                    <option value="U17">U17</option>
                   </select>
                 </div>
 

@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               isAuthenticated: !!profile,
               isLoading: false,
             });
-          }).catch((err) => {
+          }, (err) => {
             if (!mounted) return;
             console.error('Profile fetch failed:', err);
             // Even if profile fetch fails, keep the session
@@ -142,8 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             isLoading: false,
           });
         }
-      })
-      .catch((error) => {
+      }, (error) => {
         if (!mounted) return;
         console.error('Error initializing auth:', error);
         setState({
@@ -210,13 +209,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Fetch profile in background
         const profile = await fetchUserProfile(data.user.id);
-        
-        // Update last login timestamp (don't await - fire and forget)
-        supabase
-          .from('users')
-          .update({ last_login: new Date().toISOString() })
-          .eq('id', data.user.id)
-          .catch(err => console.warn('Failed to update last login:', err));
 
         console.log('Login successful, updating with profile');
         setState({
