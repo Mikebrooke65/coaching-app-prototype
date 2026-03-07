@@ -1,42 +1,156 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { Bell, TrendingUp, Users, Calendar } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  image_url: string | null;
+  is_ongoing: boolean;
+  expires_at: string | null;
+  target_roles: string[] | null;
+  target_team_types: string[] | null;
+  target_divisions: string[] | null;
+  target_age_groups: string[] | null;
+  target_team_ids: string[] | null;
+  created_at: string;
+}
+
+interface Team {
+  id: string;
+  name: string;
+  age_group: string;
+  division: string;
+}
 
 export function Landing() {
   const { user } = useAuth();
   const { hasFullVersion } = usePermissions();
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [userTeams, setUserTeams] = useState<Team[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    users: 0,
+    teams: 0,
+  });
 
-  const announcements = [
-    {
-      id: 1,
-      title: 'Season Kickoff This Weekend',
-      message: "All teams report to West Coast Stadium, Saturday 8:00 AM. Don't forget your gear!",
-      date: 'Feb 24, 2026',
-      priority: 'high' as const,
-    },
-    {
-      id: 2,
-      title: 'New Training Drills Available',
-      message: 'Check out the updated passing drills in the Lessons section for U12-U16 teams.',
-      date: 'Feb 22, 2026',
-      priority: 'normal' as const,
-    },
-    {
-      id: 3,
-      title: 'Parent-Coach Meeting',
-      message: 'Monthly meeting scheduled for March 5th at 6:00 PM in the clubhouse.',
-      date: 'Feb 20, 2026',
-      priority: 'normal' as const,
-    },
-  ];
+  useEffect(() => {
+    fetchUserTeams();
+    fetchStats();
+  }, [user]);
 
-  const stats = [
-    { label: 'Active Players', value: '180', icon: Users, color: 'bg-blue-100 text-[#0091f3]' },
-    { label: 'Teams', value: '12', icon: TrendingUp, color: 'bg-orange-100 text-[#ea7800]' },
-    { label: 'Upcoming Games', value: '8', icon: Calendar, color: 'bg-gray-100 text-[#545859]' },
-  ];
+  useEffect(() => {
+    if (userTeams.length > 0 || user) {
+      fetchAnnouncements();
+    }
+  }, [userTeams, user]);
+
+  const fetchUserTeams = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch teams where user is coach
+      const { data, error } = await supabase
+        .from('teams')
+        .select('id, name, age_group, division')
+        .eq('coach_id', user.id);
+
+      if (error) throw error;
+      setUserTeams(data || []);
+    } catch (error) {
+      console.error('Error fetching user teams:', error);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      // Fetch total users count
+      const { count: usersCount, error: usersError } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+
+      if (usersError) throw usersError;
+
+      // Fetch total teams count
+      const { count: teamsCount, error: teamsError } = await supabase
+        .from('teams')
+        .select('*', { count: 'exact', head: true });
+
+      if (teamsError) throw teamsError;
+
+      setStats({
+        users: usersCount || 0,
+        teams: teamsCount || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchAnnouncements = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      
+      // Fetch all active announcements
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Filter announcements based on targeting
+      const filtered = (data || []).filter((announcement) => {
+        // Check role targeting
+        if (announcement.target_roles && announcement.target_roles.length > 0) {
+          if (!announcement.target_roles.includes(user.role)) {
+            return false;
+          }
+        }
+
+        // Check team-based targeting (only if user has teams)
+        if (userTeams.length > 0) {
+          // Check division targeting
+          if (announcement.target_divisions && announcement.target_divisions.length > 0) {
+            const userDivisions = userTeams.map(t => t.division);
+            if (!announcement.target_divisions.some(d => userDivisions.includes(d))) {
+              return false;
+            }
+          }
+
+          // Check age group targeting
+          if (announcement.target_age_groups && announcement.target_age_groups.length > 0) {
+            const userAgeGroups = userTeams.map(t => t.age_group);
+            if (!announcement.target_age_groups.some(ag => userAgeGroups.includes(ag))) {
+              return false;
+            }
+          }
+
+          // Check specific team targeting
+          if (announcement.target_team_ids && announcement.target_team_ids.length > 0) {
+            const userTeamIds = userTeams.map(t => t.id);
+            if (!announcement.target_team_ids.some(tid => userTeamIds.includes(tid))) {
+              return false;
+            }
+          }
+        }
+
+        return true;
+      });
+
+      setAnnouncements(filtered);
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="px-4 py-6 pb-20">
@@ -52,18 +166,29 @@ export function Landing() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <div className={`w-10 h-10 rounded-xl ${stat.color} flex items-center justify-center mb-2`}>
-                <Icon className="w-5 h-5" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900 mb-0.5">{stat.value}</p>
-              <p className="text-xs text-gray-600">{stat.label}</p>
-            </div>
-          );
-        })}
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#0091f3] flex items-center justify-center mb-2">
+            <Users className="w-5 h-5" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900 mb-0.5">{stats.users}</p>
+          <p className="text-xs text-gray-600">Users</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#ea7800] flex items-center justify-center mb-2">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900 mb-0.5">{stats.teams}</p>
+          <p className="text-xs text-gray-600">Teams</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="w-10 h-10 rounded-xl bg-gray-100 text-[#545859] flex items-center justify-center mb-2">
+            <Calendar className="w-5 h-5" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900 mb-0.5">?</p>
+          <p className="text-xs text-gray-600">Coming Soon</p>
+        </div>
       </div>
 
       {/* Announcements */}
@@ -74,24 +199,48 @@ export function Landing() {
             <h3 className="font-semibold text-gray-900">Announcements</h3>
           </div>
         </div>
-        <div className="divide-y divide-gray-100">
-          {announcements.map((announcement) => (
-            <div key={announcement.id} className="px-4 py-4">
-              <div className="flex items-start justify-between mb-1">
-                <h4 className="font-semibold text-gray-900 text-sm flex items-center space-x-2 flex-1">
-                  <span>{announcement.title}</span>
-                  {announcement.priority === 'high' && (
-                    <span className="bg-[#ea7800] text-white text-xs px-2 py-0.5 rounded-full">
-                      !
-                    </span>
-                  )}
-                </h4>
+        {isLoading ? (
+          <div className="px-4 py-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0091f3] mx-auto"></div>
+          </div>
+        ) : announcements.length > 0 ? (
+          <div className="divide-y divide-gray-100">
+            {announcements.map((announcement) => (
+              <div key={announcement.id} className="px-4 py-4">
+                {announcement.image_url && (
+                  <img 
+                    src={announcement.image_url} 
+                    alt="" 
+                    className="w-full h-32 object-cover rounded-lg mb-3"
+                  />
+                )}
+                <div className="flex items-start justify-between mb-1">
+                  <h4 className="font-semibold text-gray-900 text-sm flex items-center space-x-2 flex-1">
+                    <span>{announcement.title}</span>
+                    {announcement.is_ongoing && (
+                      <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                        Ongoing
+                      </span>
+                    )}
+                  </h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-2 whitespace-pre-wrap">{announcement.content}</p>
+                <span className="text-xs text-gray-500">
+                  {new Date(announcement.created_at).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  })}
+                </span>
               </div>
-              <p className="text-sm text-gray-600 mb-2">{announcement.message}</p>
-              <span className="text-xs text-gray-500">{announcement.date}</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="px-4 py-8 text-center text-gray-500">
+            <Bell className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No announcements at this time</p>
+          </div>
+        )}
       </div>
     </div>
   );

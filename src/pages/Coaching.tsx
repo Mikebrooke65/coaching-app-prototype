@@ -1,13 +1,144 @@
-import { Link } from 'react-router';
-import { useState } from 'react';
-import { ChevronDown, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+
+interface Team {
+  id: string;
+  name: string;
+  age_group: string;
+}
+
+interface Lesson {
+  id: string;
+  title: string;
+  skill_category: string;
+  age_group: string;
+  delivery_date?: string;
+}
 
 export function Coaching() {
-  const [selectedTeam, setSelectedTeam] = useState('U14 Blue');
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [pastLessons, setPastLessons] = useState<Lesson[]>([]);
+  const [availableLessons, setAvailableLessons] = useState<Lesson[]>([]);
 
-  // Mock teams - in real app, this would come from user's team assignments
-  const teams = ['U14 Blue', 'U16 Rangers'];
+  const handleLessonClick = (lessonId: string) => {
+    if (selectedLessonId === lessonId) {
+      // Second click - navigate to lesson detail
+      navigate(`/lessons/${lessonId}`);
+    } else {
+      // First click - select the lesson
+      setSelectedLessonId(lessonId);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserTeams();
+  }, [user]);
+
+  useEffect(() => {
+    if (selectedTeam) {
+      fetchLessons();
+    }
+  }, [selectedTeam]);
+
+  const fetchUserTeams = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      // Fetch teams where this user is the coach
+      const { data, error } = await supabase
+        .from('teams')
+        .select('id, name, age_group')
+        .eq('coach_id', user.id)
+        .order('age_group');
+
+      if (error) throw error;
+
+      setTeams(data || []);
+      // Set first team as selected by default
+      if (data && data.length > 0) {
+        setSelectedTeam(data[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchLessons = async () => {
+    if (!selectedTeam) return;
+
+    try {
+      // Fetch past lessons (delivered to this team)
+      const { data: pastData, error: pastError } = await supabase
+        .from('lesson_deliveries')
+        .select(`
+          id,
+          delivery_date,
+          lesson:lessons (
+            id,
+            title,
+            skill_category,
+            age_group
+          )
+        `)
+        .eq('team_id', selectedTeam.id)
+        .order('delivery_date', { ascending: false });
+
+      if (pastError) throw pastError;
+
+      // Transform the data
+      const past = (pastData || []).map((delivery: any) => ({
+        id: delivery.lesson.id,
+        title: delivery.lesson.title,
+        skill_category: delivery.lesson.skill_category,
+        age_group: delivery.lesson.age_group,
+        delivery_date: delivery.delivery_date,
+      }));
+
+      setPastLessons(past);
+
+      // Fetch available lessons (not yet delivered to this team, matching age group)
+      const deliveredLessonIds = past.map(l => l.id);
+      
+      let query = supabase
+        .from('lessons')
+        .select('id, title, skill_category, age_group')
+        .eq('age_group', selectedTeam.age_group)
+        .order('title');
+
+      // Exclude already delivered lessons
+      if (deliveredLessonIds.length > 0) {
+        query = query.not('id', 'in', `(${deliveredLessonIds.join(',')})`);
+      }
+
+      const { data: availableData, error: availableError } = await query;
+
+      if (availableError) throw availableError;
+
+      setAvailableLessons(availableData || []);
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-gray-50 min-h-full pb-20 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22c55e]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-full pb-20">
@@ -22,109 +153,187 @@ export function Coaching() {
       </div>
 
       {/* Team Selection Block */}
-      <div className="px-4 mb-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold text-lg text-gray-900">Team {selectedTeam}</h2>
-              <div className="relative">
-                <button
-                  onClick={() => setShowTeamDropdown(!showTeamDropdown)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#0091f3] text-white rounded-lg text-sm font-medium hover:bg-[#0081d8] transition-colors"
-                >
-                  Change Team
-                  <ChevronDown className={`w-4 h-4 transition-transform ${showTeamDropdown ? 'rotate-180' : ''}`} />
-                </button>
-                {showTeamDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-10">
-                    {teams.map((team) => (
-                      <button
-                        key={team}
-                        className={`block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                          team === selectedTeam ? 'bg-blue-50 text-[#0091f3] font-medium' : 'text-gray-700'
-                        }`}
-                        onClick={() => {
-                          setSelectedTeam(team);
-                          setShowTeamDropdown(false);
-                        }}
-                      >
-                        {team}
-                      </button>
-                    ))}
+      {teams.length > 0 ? (
+        <div className="px-4 mb-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-visible">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-lg text-gray-900">
+                  Team {selectedTeam?.age_group} {selectedTeam?.name}
+                </h2>
+                {teams.length > 1 && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowTeamDropdown(!showTeamDropdown)}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#0091f3] text-white rounded-lg text-sm font-medium hover:bg-[#0081d8] transition-colors"
+                    >
+                      Change Team
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showTeamDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showTeamDropdown && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                        {teams.map((team) => (
+                          <button
+                            key={team.id}
+                            className={`block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                              team.id === selectedTeam?.id ? 'bg-blue-50 text-[#0091f3] font-medium' : 'text-gray-700'
+                            }`}
+                            onClick={() => {
+                              setSelectedTeam(team);
+                              setShowTeamDropdown(false);
+                            }}
+                          >
+                            {team.age_group} {team.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Coaching Options */}
-      <div className="p-4 space-y-3">
-        <Link
-          to="/lessons"
-          className="block bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4"
-        >
-          <div className="flex items-center">
-            <div className="w-12 h-12 rounded-full bg-[#0091f3] bg-opacity-10 flex items-center justify-center mr-4">
-              <svg className="w-6 h-6 text-[#0091f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 text-lg">Lessons</h3>
-              <p className="text-sm text-gray-600">Browse structured lesson plans</p>
-            </div>
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Link>
-
-        <Link
-          to="/ai-coach"
-          className="block bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4"
-        >
-          <div className="flex items-center">
-            <div className="w-12 h-12 rounded-full bg-[#ea7800] bg-opacity-10 flex items-center justify-center mr-4">
-              <svg className="w-6 h-6 text-[#ea7800]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 text-lg">AI Coach</h3>
-              <p className="text-sm text-gray-600">Get AI-powered coaching tips</p>
-            </div>
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Link>
-
-        {/* Quick Stats */}
-        <div className="bg-white rounded-lg shadow p-4 mt-6">
-          <h3 className="font-semibold text-gray-900 mb-3">Your Coaching Stats</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-[#0091f3]">12</div>
-              <div className="text-xs text-gray-600">Lessons Delivered</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-[#0091f3]">8</div>
-              <div className="text-xs text-gray-600">Favorites</div>
-            </div>
+      ) : (
+        <div className="px-4 mb-6">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm text-yellow-800">
+              You are not assigned to any teams yet. Contact an administrator to be assigned to a team.
+            </p>
           </div>
         </div>
+      )}
+
+      {/* Coaching Options */}
+      <div className="p-4 space-y-4">
+        {/* Past Lessons Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-4 border-b border-gray-100">
+            <h3 className="font-semibold text-gray-900">Past Lessons</h3>
+          </div>
+          {pastLessons.length > 0 ? (
+            <div className="divide-y divide-gray-100">
+              {pastLessons.map((lesson) => {
+                const skillColors: Record<string, string> = {
+                  'Shooting': '#ea7800',
+                  'Passing': '#0091f3',
+                  'Attacking': '#22c55e',
+                  'Defending': '#545859',
+                  'Technical': '#8b5cf6',
+                };
+                const color = skillColors[lesson.skill_category] || '#0091f3';
+                
+                return (
+                  <div key={lesson.id} className="p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-gray-900">{lesson.title}</h4>
+                          <span 
+                            className="px-2 py-0.5 text-xs font-medium rounded-full text-white"
+                            style={{ backgroundColor: color }}
+                          >
+                            {lesson.skill_category}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {lesson.delivery_date ? new Date(lesson.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date'}
+                        </p>
+                      </div>
+                      <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="p-8 text-center text-gray-500">
+              <p className="text-sm">No lessons delivered yet</p>
+            </div>
+          )}
+        </div>
+
+        {/* Next Lesson Selection */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-4 border-b border-gray-100">
+            <h3 className="font-semibold text-gray-900">Next Lesson</h3>
+            <p className="text-sm text-gray-600">Select a lesson to deliver</p>
+          </div>
+          {availableLessons.length > 0 ? (
+            <div className="divide-y divide-gray-100">
+              {availableLessons.map((lesson) => {
+                const skillColors: Record<string, string> = {
+                  'Shooting': '#ea7800',
+                  'Passing': '#0091f3',
+                  'Attacking': '#22c55e',
+                  'Defending': '#545859',
+                  'Technical': '#8b5cf6',
+                };
+                const color = skillColors[lesson.skill_category] || '#0091f3';
+                
+                return (
+                  <div 
+                    key={lesson.id} 
+                    className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => handleLessonClick(lesson.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
+                          selectedLessonId === lesson.id 
+                            ? 'bg-[#0091f3] border-[#0091f3]' 
+                            : 'border-gray-300'
+                        }`}>
+                          {selectedLessonId === lesson.id && (
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-gray-900">{lesson.title}</h4>
+                          <span 
+                            className="px-2 py-0.5 text-xs font-medium rounded-full text-white"
+                            style={{ backgroundColor: color }}
+                          >
+                            {lesson.skill_category}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="p-8 text-center text-gray-500">
+              <p className="text-sm">No available lessons for {selectedTeam?.age_group}</p>
+              <p className="text-xs mt-1">All lessons have been delivered to this team</p>
+            </div>
+          )}
+        </div>
+
+        {/* Ask AI Coach Button */}
+        <Link
+          to="/ai-coach"
+          className="block bg-black text-white rounded-lg shadow hover:shadow-md transition-shadow p-4"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+              />
+            </svg>
+            <span className="font-semibold">Ask AI Coach</span>
+          </div>
+        </Link>
       </div>
     </div>
   );

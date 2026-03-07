@@ -1,0 +1,125 @@
+LESSON PLAN TEMPLATE
+====================
+Copy this template for each lesson. Fill it out in Word/Notepad, then send it to me.
+
+---LESSON START---
+TITLE: [Lesson title here]
+AGE GROUP: [U4, U5, U6, U7, U8, U9, U10, U11, U12, U13, U14, U15, U16, or U17]
+SKILL CATEGORY: [Shooting, Passing, Attacking, Defending, or Technical]
+LEVEL: [Beginner, Intermediate, or Advanced]
+DURATION: [45 or 60 minutes]
+DESCRIPTION: [2-3 sentence description of what the lesson covers]
+
+OBJECTIVES:
+- [Objective 1]
+- [Objective 2]
+- [Objective 3]
+- [Objective 4 - optional]
+
+SESSION 1: Warm-Up & Technical Fundamentals (15 min)
+Description: [What happens in this session]
+Equipment: [List items like: Cones (20), Balls (1 per player), Bibs (2 colors)]
+Coaching Points:
+- [Point 1]
+- [Point 2]
+- [Point 3]
+- [Point 4]
+
+SESSION 2: Skill Introduction (15 min)
+Description: [What happens in this session]
+Equipment: [List items]
+Coaching Points:
+- [Point 1]
+- [Point 2]
+- [Point 3]
+- [Point 4]
+
+SESSION 3: Progressive Skill Development (15 min)
+Description: [What happens in this session]
+Equipment: [List items]
+Coaching Points:
+- [Point 1]
+- [Point 2]
+- [Point 3]
+- [Point 4]
+
+SESSION 4: Small-Sided Game Application (15 min)
+Description: [What happens in this session]
+Equipment: [List items]
+Coaching Points:
+- [Point 1]
+- [Point 2]
+- [Point 3]
+- [Point 4]
+---LESSON END---
+
+
+EXAMPLE FILLED OUT:
+===================
+
+---LESSON START---
+TITLE: Shooting with Power
+AGE GROUP: U12
+SKILL CATEGORY: Shooting
+LEVEL: Intermediate
+DURATION: 60
+DESCRIPTION: Develop powerful shooting technique using proper body mechanics and follow-through. Focus on striking through the ball and generating power from the hips.
+
+OBJECTIVES:
+- Strike ball with laces for power
+- Use proper approach angle
+- Generate power from hips and core
+- Follow through towards target
+
+SESSION 1: Warm-Up & Technical Fundamentals (15 min)
+Description: Static shooting practice focusing on technique without pressure
+Equipment: Balls (1 per player), Cones (10), Goals (2)
+Coaching Points:
+- Plant foot beside ball
+- Strike with laces
+- Knee over ball
+- Follow through
+
+SESSION 2: Skill Introduction (15 min)
+Description: Shooting from different angles and distances
+Equipment: Balls (10), Cones (20), Goals (2), Mannequins (3)
+Coaching Points:
+- Approach at angle
+- Head down on contact
+- Strike through center of ball
+- Power from hips
+
+SESSION 3: Progressive Skill Development (15 min)
+Description: Shooting under pressure with defenders
+Equipment: Balls (8), Cones (16), Bibs (2 colors), Goals (2)
+Coaching Points:
+- Quick setup touch
+- Shoot early when possible
+- Stay balanced
+- Be confident
+
+SESSION 4: Small-Sided Game Application (15 min)
+Description: Small-sided game with shooting zones
+Equipment: Balls (3), Cones (12), Bibs (2 colors), Goals (2)
+Coaching Points:
+- Recognize shooting opportunities
+- Get shot off quickly
+- Shoot on sight
+- Follow up rebounds
+---LESSON END---
+
+
+INSTRUCTIONS:
+=============
+1. Copy the template above for each of your 20 lessons
+2. Fill in all the details in Word
+3. Save as a .txt or .docx file
+4. Share it with me (paste the text or attach the file)
+5. I'll convert it to SQL and load it into your database
+
+TIPS:
+- Keep descriptions concise (1-2 sentences)
+- Equipment lists should be specific with quantities
+- Coaching points should be short and actionable
+- You can have 3-5 objectives per lesson
+- Session durations can be adjusted (10, 15, or 20 min each)
