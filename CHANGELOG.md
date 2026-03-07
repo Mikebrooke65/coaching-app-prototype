@@ -4,6 +4,56 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-08] - Resources and Announcements Systems
+
+### Added
+- **Resources Management System**
+  - Desktop admin page for uploading and managing resource files
+  - 4 categories: Rules, Field Setup, Coach Support, General
+  - File upload with Supabase Storage integration
+  - Mobile Resources page with category filtering
+  - Special Rules section with dropdown selector for 4 age-group rule sets:
+    - First Kicks (4-6 years)
+    - Fun Football (7-8 years)
+    - Mini Football (9-10 years)
+    - Mini Football (11-12 years)
+  - Database migration for resources table and storage bucket
+
+- **Announcements Management System**
+  - Desktop admin page for creating and managing announcements
+  - Flexible targeting system:
+    - User roles (Coach, Manager, Admin, Player, Caregiver)
+    - Team types (First Kicks, Fun Football, Junior, Youth, Senior)
+    - Divisions (Community, Academy)
+    - Age groups (U4-U17)
+    - Specific teams
+  - Optional image upload for announcements
+  - "Ongoing" flag to prevent 7-day auto-expiry
+  - Automatic expiry after 7 days for non-ongoing announcements
+  - Mobile Landing page displays targeted announcements
+  - Database migration for announcements table and storage bucket
+
+- **Lessons and Sessions Database**
+  - Created lessons table with 8 sample lessons
+  - Created sessions table (4 sessions per lesson)
+  - Created lesson_deliveries and session_deliveries tables
+  - Lesson template file for bulk lesson creation
+  - Seed file for adding lessons via SQL
+
+### Changed
+- Updated mobile Landing page to show real data:
+  - Users count from database
+  - Teams count from database
+  - Announcements fetched with targeting logic
+- Updated Coaching page to fetch real lessons from database
+- Fixed lesson selection behavior (navigate to detail on second click)
+- Improved Rules page styling with better visual hierarchy
+
+### Fixed
+- Fixed lesson navigation route (changed from `/lesson/:id` to `/lessons/:id`)
+- Fixed duplicate stats variable declaration in Landing page
+- Fixed bullet point alignment in Rules sections
+
 ## [2026-03-06] - Desktop UI Alignment with Figma
 
 ### Added
