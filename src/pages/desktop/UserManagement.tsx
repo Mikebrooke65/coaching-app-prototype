@@ -271,20 +271,22 @@ export function UserManagement() {
         return;
       }
 
-      // Call bulk create edge function
+      // Call bulk create Netlify function
       const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
       
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bulk-create-users`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session?.session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ users: usersToCreate }),
-        }
-      );
+      if (!token) {
+        throw new Error('No active session');
+      }
+      
+      const response = await fetch('/.netlify/functions/bulk-create-users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ users: usersToCreate }),
+      });
 
       const results = await response.json();
 
