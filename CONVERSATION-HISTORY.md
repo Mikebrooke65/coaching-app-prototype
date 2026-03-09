@@ -1,6 +1,97 @@
 # Conversation History
 
-## Session: March 9, 2026 - U9 Lesson Generation (Ball Striking and 1v1)
+## Session: March 9, 2026 (Part 2) - Session Builder Desktop Page Restructure
+
+### Context Transfer
+Continued from earlier session today. Previous work included:
+- Completed U9 Passing/Receiving lessons (final U9 skill)
+- Fixed lesson detail page display and sorting issues
+- Implemented lesson delivery and feedback system (with refetch issue)
+- Improved lesson detail UX by moving feedback to modals
+- Started restructuring Session Builder desktop page
+
+### Tasks Completed
+
+#### 1. Completed Session Builder Desktop Page Restructure
+- **Changed layout from horizontal to vertical**:
+  - Previous: Two-panel layout (left: library, right: form)
+  - New: Vertical layout (top: scrollable list, bottom: form)
+- **Top Section** (fixed height 320px):
+  - Vertical scrollable list of all sessions
+  - Search bar with icon
+  - Filter dropdowns: Session Type, Age Group
+  - "New Session" button to create new sessions
+  - Session count display (filtered vs total)
+  - Session cards show:
+    - Title (bold)
+    - Duration badge
+    - Session type badge (color-coded)
+    - Age group badge
+    - Session name (small text)
+  - Selected session highlighted with blue border
+- **Bottom Section** (flexible height):
+  - Form header shows "Edit: [Session Title]" or "Create New Session"
+  - "Clear & Create New" link when editing
+  - Form fields properly mapped to database:
+    - Session Name (e.g., session_1_warmup)
+    - Title (e.g., Get Moving)
+    - Session Type (warmup, skill_intro, progressive, game)
+    - Duration (minutes)
+    - Age Group (U9, U10)
+    - Organisation / How It Runs
+    - Equipment (one per line)
+    - Coaching Points (one per line)
+    - Steps (one per line)
+    - Key Objectives (one per line)
+    - Pitch Layout Description
+  - Action buttons: "Update Session" or "Create Session", "Clear Form"
+- **Functionality**:
+  - Clicking any session from top list populates form with all data
+  - Form fields map correctly to database schema
+  - "New Session" button clears form for new creation
+  - Filters work correctly (Type, Age Group, Search)
+  - Ready for future filter button additions
+
+### Files Modified
+- `src/pages/desktop/SessionBuilder.tsx` - Complete layout restructure
+
+### Technical Notes
+- Vertical list scales well for hundreds of sessions
+- Fixed height top section prevents layout issues
+- Bottom section scrolls independently for long forms
+- Session selection state properly managed
+- Form data structure matches database schema exactly
+- Save functionality placeholder ready for Supabase integration
+
+### User Feedback
+- User confirmed vertical scrollable list is correct approach
+- User will add more filter buttons in the future
+- Layout now matches user's vision for the page
+
+### Next Steps
+1. Implement save functionality (create/update sessions in database)
+2. Add more filter buttons as needed
+3. Test with real session data (64+ sessions)
+4. Continue with remaining U10 lesson generation
+5. Debug lesson delivery refetch issue
+
+### Git Commit Needed
+```
+feat: Restructure Session Builder desktop page to vertical layout
+
+- Changed from two-panel to vertical layout
+- Top: Scrollable list of all sessions (320px height)
+- Bottom: Form for creating/editing sessions
+- Clicking session populates form with all data
+- Added "New Session" button and clear form functionality
+- Improved filters and session count display
+- Form fields properly mapped to database schema
+- Ready for future filter button additions
+```
+
+---
+
+## Session: March 9, 2026 (Part 1) - U9 Lesson Generation (Ball Striking and 1v1)
 
 ### Context Transfer
 Continued from previous session that had gotten too long. Previous work included:

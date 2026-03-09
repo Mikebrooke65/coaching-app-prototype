@@ -16,7 +16,7 @@ import { DesktopMessaging } from "./components/desktop/DesktopMessaging";
 import { TeamsManagement } from "./components/desktop/TeamsManagement";
 import { UserManagement } from "./components/desktop/UserManagement";
 import { Reporting } from "./components/desktop/Reporting";
-import { Announcements } from "./components/desktop/Announcements";
+import { Announcements } from "../pages/desktop/Announcements";
 import { LessonBuilder } from "./components/desktop/LessonBuilder";
 import { SessionBuilder } from "./components/desktop/SessionBuilder";
 import { User } from "./App";

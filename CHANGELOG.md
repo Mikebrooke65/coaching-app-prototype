@@ -4,6 +4,30 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-09] - Session Builder Desktop Page Restructure
+
+### Changed
+- **Session Builder Desktop Page**
+  - Restructured layout from two-panel (left: library, right: form) to vertical layout
+  - Top section: Vertical scrollable list of all sessions (fixed height 320px)
+  - Bottom section: Form for creating/editing sessions
+  - Clicking a session from the list populates the form with all session data
+  - Added "New Session" button to clear form for new session creation
+  - Improved filters: Search, Session Type, Age Group
+  - Session count display shows filtered vs total sessions
+  - Form fields properly mapped to database schema:
+    - session_name, title, session_type, duration, age_group
+    - organisation, equipment, coaching_points, steps, key_objectives
+    - pitch_layout_description
+  - Ready for future filter button additions
+
+### Technical Notes
+- Vertical list handles hundreds of sessions efficiently with scrolling
+- Session selection highlights selected session with blue border
+- Form auto-populates when session clicked
+- "Clear Form" button resets to new session creation mode
+- Save functionality placeholder ready for database integration
+
 ## [2026-03-09] - U9 Lesson Generation (Ball Striking and 1v1)
 
 ### Added

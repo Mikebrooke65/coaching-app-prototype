@@ -1,222 +1,266 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 
-// Mock session data
-const mockSessions = [
-  {
-    id: '1',
-    name: 'Dynamic Warm-Up',
-    type: 'Warm-Up',
-    duration: 10,
-    ageGroup: 'U9-U12',
-    skills: ['Movement', 'Coordination'],
-    objectives: 'Prepare body for training, increase heart rate',
-  },
-  {
-    id: '2',
-    name: 'Passing in Pairs',
-    type: 'Technical',
-    duration: 15,
-    ageGroup: 'U9-U12',
-    skills: ['Passing', 'First Touch'],
-    objectives: 'Develop accurate passing technique',
-  },
-  {
-    id: '3',
-    name: '3v3 Possession',
-    type: 'Game Application',
-    duration: 20,
-    ageGroup: 'U9-U12',
-    skills: ['Passing', 'Movement', 'Decision Making'],
-    objectives: 'Apply passing skills in game situations',
-  },
-];
+interface Session {
+  id: string;
+  session_name: string;
+  title: string;
+  age_group: string;
+  session_type: string;
+  duration: number;
+  organisation: string;
+  equipment: string[];
+  coaching_points: string[];
+  key_objectives: string[];
+}
 
 export function SessionBuilder() {
   console.log('SessionBuilder rendering');
   
-  const [selectedSession, setSelectedSession] = useState<any>(null);
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [filterType, setFilterType] = useState('all');
   const [filterAge, setFilterAge] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Form state
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'Warm-Up',
+    sessionName: '',
+    title: '',
+    type: 'warmup',
     duration: 15,
-    ageGroup: 'U9-U12',
-    skills: '',
-    objectives: '',
+    ageGroup: 'U9',
+    organisation: '',
     equipment: '',
-    setup: '',
     coachingPoints: '',
-    variations: '',
+    steps: '',
+    keyObjectives: '',
+    pitchLayout: '',
   });
 
-  const filteredSessions = mockSessions.filter((session) => {
-    const matchesType = filterType === 'all' || session.type === filterType;
-    const matchesAge = filterAge === 'all' || session.ageGroup === filterAge;
-    const matchesSearch = session.name.toLowerCase().includes(searchQuery.toLowerCase());
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const fetchSessions = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .order('age_group')
+        .order('session_type');
+
+      if (error) throw error;
+      setSessions(data || []);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredSessions = sessions.filter((session) => {
+    const matchesType = filterType === 'all' || session.session_type === filterType;
+    const matchesAge = filterAge === 'all' || session.age_group === filterAge;
+    const matchesSearch = session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         session.session_name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesType && matchesAge && matchesSearch;
   });
 
-  const handleCreateNew = () => {
-    setIsCreatingNew(true);
-    setSelectedSession(null);
-    setFormData({
-      name: '',
-      type: 'Warm-Up',
-      duration: 15,
-      ageGroup: 'U9-U12',
-      skills: '',
-      objectives: '',
-      equipment: '',
-      setup: '',
-      coachingPoints: '',
-      variations: '',
-    });
-  };
-
-  const handleSelectSession = (session: any) => {
-    setIsCreatingNew(false);
+  const handleSelectSession = (session: Session) => {
     setSelectedSession(session);
     setFormData({
-      name: session.name,
-      type: session.type,
+      sessionName: session.session_name,
+      title: session.title,
+      type: session.session_type,
       duration: session.duration,
-      ageGroup: session.ageGroup,
-      skills: session.skills.join(', '),
-      objectives: session.objectives,
-      equipment: '',
-      setup: '',
-      coachingPoints: '',
-      variations: '',
+      ageGroup: session.age_group,
+      organisation: session.organisation || '',
+      equipment: session.equipment?.join('\n') || '',
+      coachingPoints: session.coaching_points?.join('\n') || '',
+      steps: session.steps?.join('\n') || '',
+      keyObjectives: session.key_objectives?.join('\n') || '',
+      pitchLayout: session.pitch_layout_description || '',
     });
   };
 
-  const handleSave = () => {
+  const handleClearForm = () => {
+    setSelectedSession(null);
+    setFormData({
+      sessionName: '',
+      title: '',
+      type: 'warmup',
+      duration: 15,
+      ageGroup: 'U9',
+      organisation: '',
+      equipment: '',
+      coachingPoints: '',
+      steps: '',
+      keyObjectives: '',
+      pitchLayout: '',
+    });
+  };
+
+  const handleSave = async () => {
     console.log('Saving session:', formData);
-    // TODO: Save to Supabase
-    alert('Session saved! (This will save to database when connected)');
+    // TODO: Implement save to database
+    alert('Session save will be implemented');
+  };
+
+  const sessionTypeLabels: Record<string, string> = {
+    warmup: 'Warm-Up',
+    skill_intro: 'Skill Intro',
+    progressive: 'Progressive',
+    game: 'Game',
   };
 
   return (
-    <div className="h-full flex flex-col gap-6">
+    <div className="h-full flex flex-col gap-6 overflow-hidden">
       {/* Page Header */}
-      <div>
+      <div className="flex-shrink-0">
         <h1 className="text-3xl font-bold text-[#22c55e]">Session Builder</h1>
         <p className="text-gray-600 mt-2">Create and manage training sessions for your teams</p>
       </div>
 
-      <div className="flex-1 flex gap-6">
-      {/* Left Panel - Sessions Library */}
-      <div className="w-1/3 flex flex-col bg-white rounded-lg shadow">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Sessions Library</h2>
-            <button
-              onClick={handleCreateNew}
-              className="px-3 py-1.5 bg-[#0091f3] text-white rounded-lg text-sm font-medium hover:bg-[#0077cc] flex items-center gap-1"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              New Session
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="relative mb-3">
-            <input
-              type="text"
-              placeholder="Search sessions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-            />
-            <svg
-              className="absolute left-3 top-2.5 w-4 h-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-
-          {/* Filters */}
-          <div className="flex gap-2">
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-            >
-              <option value="all">All Types</option>
-              <option value="Warm-Up">Warm-Up</option>
-              <option value="Technical">Technical</option>
-              <option value="Game Application">Game Application</option>
-            </select>
-
-            <select
-              value={filterAge}
-              onChange={(e) => setFilterAge(e.target.value)}
-              className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-            >
-              <option value="all">All Ages</option>
-              <option value="U4-U6">U4-U6</option>
-              <option value="U7-U8">U7-U8</option>
-              <option value="U9-U12">U9-U12</option>
-              <option value="U13-U17">U13-U17</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Sessions List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {filteredSessions.map((session) => (
-            <button
-              key={session.id}
-              onClick={() => handleSelectSession(session)}
-              className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                selectedSession?.id === session.id
-                  ? 'border-[#0091f3] bg-[#0091f3] bg-opacity-5'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-medium text-gray-900 text-sm">{session.name}</h3>
-                <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700">
-                  {session.duration} min
-                </span>
+      {/* Top Section - Vertical Scrollable Sessions List */}
+      <div className="flex-shrink-0 h-80">
+        <div className="bg-white rounded-lg shadow h-full flex flex-col">
+          {/* Header with Search and New Button */}
+          <div className="p-4 border-b border-gray-200 flex-shrink-0">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search sessions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                />
+                <svg
+                  className="absolute left-3 top-2.5 w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
               </div>
-              <div className="flex flex-wrap gap-1 mb-2">
-                <span className="text-xs px-2 py-0.5 rounded bg-[#0091f3] bg-opacity-10 text-[#0091f3]">
-                  {session.type}
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                  {session.ageGroup}
-                </span>
+
+              <button
+                onClick={handleClearForm}
+                className="px-4 py-2 bg-[#0091f3] text-white rounded-lg text-sm font-medium hover:bg-[#0077cc] flex items-center gap-2 whitespace-nowrap"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                New Session
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                >
+                  <option value="all">All Types</option>
+                  <option value="warmup">Warm-Up</option>
+                  <option value="skill_intro">Skill Intro</option>
+                  <option value="progressive">Progressive</option>
+                  <option value="game">Game</option>
+                </select>
+
+                <select
+                  value={filterAge}
+                  onChange={(e) => setFilterAge(e.target.value)}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                >
+                  <option value="all">All Ages</option>
+                  <option value="U9">U9</option>
+                  <option value="U10">U10</option>
+                </select>
               </div>
-              <p className="text-xs text-gray-600 line-clamp-2">{session.objectives}</p>
-            </button>
-          ))}
+
+              <div className="text-xs text-gray-500">
+                {filteredSessions.length} of {sessions.length} sessions
+              </div>
+            </div>
+          </div>
+
+          {/* Vertical Scrollable Session List */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0091f3]"></div>
+              </div>
+            ) : filteredSessions.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                No sessions found
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredSessions.map((session) => (
+                  <button
+                    key={session.id}
+                    onClick={() => handleSelectSession(session)}
+                    className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                      selectedSession?.id === session.id
+                        ? 'border-[#0091f3] bg-[#0091f3] bg-opacity-5 shadow-md'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-gray-900 text-sm flex-1 pr-2">
+                        {session.title}
+                      </h3>
+                      <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700 whitespace-nowrap">
+                        {session.duration} min
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-1">
+                      <span className="text-xs px-2 py-0.5 rounded bg-[#0091f3] bg-opacity-10 text-[#0091f3]">
+                        {sessionTypeLabels[session.session_type] || session.session_type}
+                      </span>
+                      <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                        {session.age_group}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 line-clamp-1">{session.session_name}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Right Panel - Build/Edit Session */}
-      <div className="flex-1 bg-white rounded-lg shadow p-6 overflow-y-auto">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-          {isCreatingNew ? 'Build a Session' : selectedSession ? 'Edit Session' : 'Select or Create a Session'}
-        </h2>
+      {/* Bottom Section - Session Form */}
+      <div className="flex-1 bg-white rounded-lg shadow overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {selectedSession ? `Edit: ${selectedSession.title}` : 'Create New Session'}
+            </h2>
+            {selectedSession && (
+              <button
+                onClick={handleClearForm}
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                Clear & Create New
+              </button>
+            )}
+          </div>
+        </div>
 
-        {(isCreatingNew || selectedSession) ? (
+        <div className="flex-1 overflow-y-auto p-6">
           <form className="space-y-6">
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
@@ -226,10 +270,23 @@ export function SessionBuilder() {
                 </label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.sessionName}
+                  onChange={(e) => setFormData({ ...formData, sessionName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                  placeholder="e.g., Dynamic Warm-Up"
+                  placeholder="e.g., session_1_warmup"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                  placeholder="e.g., Get Moving"
                 />
               </div>
 
@@ -242,10 +299,10 @@ export function SessionBuilder() {
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 >
-                  <option value="Warm-Up">Warm-Up & Technical</option>
-                  <option value="Technical">Skill Introduction</option>
-                  <option value="Progressive">Progressive Development</option>
-                  <option value="Game Application">Game Application</option>
+                  <option value="warmup">Warm-Up & Technical</option>
+                  <option value="skill_intro">Skill Introduction</option>
+                  <option value="progressive">Progressive Development</option>
+                  <option value="game">Game Application</option>
                 </select>
               </div>
 
@@ -256,7 +313,7 @@ export function SessionBuilder() {
                 <input
                   type="number"
                   value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 15 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                   min="5"
                   max="60"
@@ -272,96 +329,93 @@ export function SessionBuilder() {
                   onChange={(e) => setFormData({ ...formData, ageGroup: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 >
-                  <option value="U4-U6">U4-U6 (First Kicks)</option>
-                  <option value="U7-U8">U7-U8 (Fun Football)</option>
-                  <option value="U9-U12">U9-U12 (Junior)</option>
-                  <option value="U13-U17">U13-U17 (Youth)</option>
+                  <option value="U9">U9</option>
+                  <option value="U10">U10</option>
                 </select>
               </div>
             </div>
 
-            {/* Skills */}
+            {/* Organisation */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Skills Focus
-              </label>
-              <input
-                type="text"
-                value={formData.skills}
-                onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                placeholder="e.g., Passing, First Touch, Movement"
-              />
-              <p className="text-xs text-gray-500 mt-1">Separate multiple skills with commas</p>
-            </div>
-
-            {/* Objectives */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Objectives *
+                Organisation / How It Runs *
               </label>
               <textarea
-                value={formData.objectives}
-                onChange={(e) => setFormData({ ...formData, objectives: e.target.value })}
+                value={formData.organisation}
+                onChange={(e) => setFormData({ ...formData, organisation: e.target.value })}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                placeholder="What should players learn or achieve in this session?"
+                placeholder="Describe how the session is organized and runs..."
               />
             </div>
 
             {/* Equipment */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Equipment Needed
+                Equipment (one per line)
               </label>
               <textarea
                 value={formData.equipment}
                 onChange={(e) => setFormData({ ...formData, equipment: e.target.value })}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                placeholder="e.g., Cones (20), Balls (1 per player), Bibs (2 colors)"
-              />
-            </div>
-
-            {/* Setup Instructions */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Setup Instructions
-              </label>
-              <textarea
-                value={formData.setup}
-                onChange={(e) => setFormData({ ...formData, setup: e.target.value })}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                placeholder="How to set up the training area..."
+                placeholder="Cones (20)&#10;Football (soccer balls) - 1 per player&#10;Bibs (2 colors)"
               />
             </div>
 
             {/* Coaching Points */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Coaching Points *
+                Coaching Points (one per line) *
               </label>
               <textarea
                 value={formData.coachingPoints}
                 onChange={(e) => setFormData({ ...formData, coachingPoints: e.target.value })}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                placeholder="Key coaching points (one per line)..."
+                placeholder="Key coaching points..."
               />
             </div>
 
-            {/* Variations */}
+            {/* Steps */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Variations & Progressions
+                Steps (one per line)
               </label>
               <textarea
-                value={formData.variations}
-                onChange={(e) => setFormData({ ...formData, variations: e.target.value })}
+                value={formData.steps}
+                onChange={(e) => setFormData({ ...formData, steps: e.target.value })}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                placeholder="Step-by-step instructions..."
+              />
+            </div>
+
+            {/* Key Objectives */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Key Objectives (one per line) *
+              </label>
+              <textarea
+                value={formData.keyObjectives}
+                onChange={(e) => setFormData({ ...formData, keyObjectives: e.target.value })}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                placeholder="How to make it easier or harder..."
+                placeholder="What players should learn..."
+              />
+            </div>
+
+            {/* Pitch Layout Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Pitch Layout Description
+              </label>
+              <textarea
+                value={formData.pitchLayout}
+                onChange={(e) => setFormData({ ...formData, pitchLayout: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                placeholder="Describe the pitch setup, player positions, etc..."
               />
             </div>
 
@@ -372,51 +426,18 @@ export function SessionBuilder() {
                 onClick={handleSave}
                 className="flex-1 px-4 py-2 bg-[#0091f3] text-white rounded-lg font-medium hover:bg-[#0077cc]"
               >
-                Save Session
+                {selectedSession ? 'Update Session' : 'Create Session'}
               </button>
               <button
                 type="button"
+                onClick={handleClearForm}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
               >
-                Save as Draft
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCreatingNew(false);
-                  setSelectedSession(null);
-                }}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900"
-              >
-                Cancel
+                Clear Form
               </button>
             </div>
           </form>
-        ) : (
-          <div className="text-center py-12">
-            <svg
-              className="w-16 h-16 text-gray-300 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <p className="text-gray-500 mb-4">Select a session to edit or create a new one</p>
-            <button
-              onClick={handleCreateNew}
-              className="px-4 py-2 bg-[#0091f3] text-white rounded-lg font-medium hover:bg-[#0077cc]"
-            >
-              Create New Session
-            </button>
-          </div>
-        )}
-      </div>
+        </div>
       </div>
     </div>
   );

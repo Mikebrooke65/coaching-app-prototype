@@ -214,17 +214,57 @@ export function Landing() {
                     className="w-full h-32 object-cover rounded-lg mb-3"
                   />
                 )}
-                <div className="flex items-start justify-between mb-1">
-                  <h4 className="font-semibold text-gray-900 text-sm flex items-center space-x-2 flex-1">
-                    <span>{announcement.title}</span>
-                    {announcement.is_ongoing && (
-                      <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                        Ongoing
-                      </span>
-                    )}
-                  </h4>
-                </div>
-                <p className="text-sm text-gray-600 mb-2 whitespace-pre-wrap">{announcement.content}</p>
+                <h1 className="font-bold text-gray-900 text-[30px] mb-2" style={{ fontFamily: 'Aktiv Grotesk Corp, Inter, sans-serif' }}>
+                  {announcement.title}
+                  {announcement.is_ongoing && (
+                    <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full ml-2 align-middle">
+                      Ongoing
+                    </span>
+                  )}
+                </h1>
+                <div 
+                  className="announcement-content text-sm mb-2"
+                  dangerouslySetInnerHTML={{ __html: announcement.content }}
+                />
+                <style>{`
+                  .announcement-content {
+                    font-family: 'Exo 2', sans-serif;
+                    line-height: 1.6;
+                    color: #4b5563;
+                  }
+                  .announcement-content h2 {
+                    font-size: 18px !important;
+                    font-weight: 600 !important;
+                    color: #111827 !important;
+                    margin-top: 1rem !important;
+                    margin-bottom: 0.5rem !important;
+                    font-family: 'Exo 2', sans-serif !important;
+                  }
+                  .announcement-content h3 {
+                    font-size: 16px !important;
+                    font-weight: 600 !important;
+                    color: #111827 !important;
+                    margin-top: 0.75rem !important;
+                    margin-bottom: 0.5rem !important;
+                    font-family: 'Exo 2', sans-serif !important;
+                  }
+                  .announcement-content p {
+                    margin-bottom: 0.5rem;
+                    font-size: 14px;
+                  }
+                  .announcement-content ul, .announcement-content ol {
+                    margin-left: 1.5rem;
+                    margin-bottom: 0.5rem;
+                    font-size: 14px;
+                  }
+                  .announcement-content strong {
+                    font-weight: 600;
+                    color: #111827;
+                  }
+                  .announcement-content em {
+                    font-style: italic;
+                  }
+                `}</style>
                 <span className="text-xs text-gray-500">
                   {new Date(announcement.created_at).toLocaleDateString('en-US', { 
                     month: 'short', 

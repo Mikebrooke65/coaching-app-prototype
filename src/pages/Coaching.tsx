@@ -31,8 +31,8 @@ export function Coaching() {
 
   const handleLessonClick = (lessonId: string) => {
     if (selectedLessonId === lessonId) {
-      // Second click - navigate to lesson detail
-      navigate(`/lessons/${lessonId}`);
+      // Second click - navigate to lesson detail with team context
+      navigate(`/lessons/${lessonId}`, { state: { teamId: selectedTeam?.id } });
     } else {
       // First click - select the lesson
       setSelectedLessonId(lessonId);
@@ -115,6 +115,7 @@ export function Coaching() {
         .from('lessons')
         .select('id, title, skill_category, age_group')
         .eq('age_group', selectedTeam.age_group)
+        .order('skill_category')
         .order('title');
 
       // Exclude already delivered lessons
