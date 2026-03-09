@@ -169,47 +169,30 @@ export function UserManagement() {
 
         alert('User updated successfully');
       } else {
-        // Create new user via Edge Function
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        // Create new user via Edge Function using Supabase client
+        console.log('Calling edge function via supabase.functions.invoke...');
         
-        if (sessionError || !sessionData.session) {
-          throw new Error('No active session found. Please log out and log back in.');
+        const { data, error } = await supabase.functions.invoke('create-user', {
+          body: {
+            email: formData.email,
+            password: formData.password,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            role: formData.role,
+            active: formData.active,
+            cellphone: formData.cellphone,
+            team_id: formData.teamId || null,
+          },
+        });
+
+        console.log('Edge function response:', { data, error });
+
+        if (error) {
+          throw new Error(error.message || 'Failed to create user');
         }
 
-        const accessToken = sessionData.session.access_token;
-        if (!accessToken) {
-          throw new Error('No access token found. Please log out and log back in.');
-        }
-
-        console.log('Calling edge function with token:', accessToken.substring(0, 20) + '...');
-        
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: formData.email,
-              password: formData.password,
-              first_name: formData.first_name,
-              last_name: formData.last_name,
-              role: formData.role,
-              active: formData.active,
-              cellphone: formData.cellphone,
-              team_id: formData.teamId || null,
-            }),
-          }
-        );
-
-        const result = await response.json();
-        console.log('Edge function response:', result);
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Failed to create user');
+        if (data?.error) {
+          throw new Error(data.error);
         }
 
         alert(`User created successfully!\n\nEmail: ${formData.email}\n${formData.password ? 'Password: ' + formData.password : 'A random password was generated - user can reset via email'}`);
