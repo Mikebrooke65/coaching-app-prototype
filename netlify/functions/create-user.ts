@@ -41,6 +41,14 @@ export const handler: Handler = async (event) => {
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+    console.log('Environment check:', {
+      hasUrl: !!supabaseUrl,
+      hasAnonKey: !!supabaseAnonKey,
+      hasServiceKey: !!supabaseServiceKey,
+      urlSource: supabaseUrl ? (process.env.SUPABASE_URL ? 'SUPABASE_URL' : 'VITE_SUPABASE_URL') : 'none',
+      anonKeySource: supabaseAnonKey ? (process.env.SUPABASE_ANON_KEY ? 'SUPABASE_ANON_KEY' : 'VITE_SUPABASE_ANON_KEY') : 'none',
+    });
+
     if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
       return {
         statusCode: 500,
@@ -51,6 +59,10 @@ export const handler: Handler = async (event) => {
             url: !supabaseUrl,
             anonKey: !supabaseAnonKey,
             serviceKey: !supabaseServiceKey,
+          },
+          details: {
+            urlSource: supabaseUrl ? (process.env.SUPABASE_URL ? 'SUPABASE_URL' : 'VITE_SUPABASE_URL') : 'none',
+            anonKeySource: supabaseAnonKey ? (process.env.SUPABASE_ANON_KEY ? 'SUPABASE_ANON_KEY' : 'VITE_SUPABASE_ANON_KEY') : 'none',
           }
         }),
       };
