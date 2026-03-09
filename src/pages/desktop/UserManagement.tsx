@@ -170,14 +170,25 @@ export function UserManagement() {
         alert('User updated successfully');
       } else {
         // Create new user via Edge Function
-        const { data: session } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !sessionData.session) {
+          throw new Error('No active session found. Please log out and log back in.');
+        }
+
+        const accessToken = sessionData.session.access_token;
+        if (!accessToken) {
+          throw new Error('No access token found. Please log out and log back in.');
+        }
+
+        console.log('Calling edge function with token:', accessToken.substring(0, 20) + '...');
         
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
           {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${session?.session?.access_token}`,
+              'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -194,6 +205,7 @@ export function UserManagement() {
         );
 
         const result = await response.json();
+        console.log('Edge function response:', result);
 
         if (!response.ok) {
           throw new Error(result.error || 'Failed to create user');
