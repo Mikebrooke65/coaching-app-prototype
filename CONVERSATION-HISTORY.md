@@ -1,5 +1,158 @@
 # Conversation History
 
+## Session: March 10, 2026 - User Management Edge Functions Deployment
+
+### Context
+User needed to automate the user creation process which previously required:
+1. Manually creating user in Supabase Auth Dashboard
+2. Copying the generated UUID
+3. Manually inserting into users table
+
+This doesn't scale to 200+ users needed for production.
+
+### Tasks Completed
+
+#### 1. Created Supabase Edge Functions
+- **Created `create-user` function** (`supabase/functions/create-user/index.ts`):
+  - Handles single user creation
+  - Verifies admin permissions
+  - Creates user in Supabase Auth
+  - Creates matching record in users table
+  - Assigns to team if specified
+  - Generates random password if not provided
+  - Atomic operation with rollback on failure
+
+- **Created `bulk-create-users` function** (`supabase/functions/bulk-create-users/index.ts`):
+  - Handles CSV batch imports
+  - Processes multiple users in sequence
+  - Returns detailed success/failure report
+  - Same security and validation as single user creation
+
+#### 2. Updated UserManagement Component
+- Modified `src/pages/desktop/UserManagement.tsx`:
+  - Calls edge functions instead of trying to use admin API directly
+  - Added password field to user creation form (optional)
+  - Email field disabled when editing (cannot change after creation)
+  - Better error handling and user feedback
+  - CSV import now uses bulk-create-users function
+
+#### 3. Created Documentation
+- **DEPLOY-EDGE-FUNCTIONS.md**: Step-by-step deployment guide
+- **USER-MANAGEMENT-SOLUTION.md**: Complete solution overview
+- **supabase/functions/README.md**: Technical documentation
+
+#### 4. Deployed Edge Functions
+- **Installation Method**: Used `npx supabase` (no global install needed)
+- **Deployment Steps**:
+  1. `npx supabase login` - Authenticated via browser
+  2. `npx supabase link --project-ref pikrxkxpizdezazlwxhb` - Linked project
+  3. `npx supabase functions deploy create-user` - Deployed first function
+  4. `npx supabase functions deploy bulk-create-users` - Deployed second function
+- **Result**: Both functions successfully deployed to production
+
+#### 5. Debugged Authentication Issues
+- **Problem**: Functions returning 401 Unauthorized
+- **Root Cause**: Functions were using admin client to verify user tokens (incorrect)
+- **Solution**: 
+  - Changed to use regular Supabase client with anon key for token verification
+  - Create two clients: one for auth verification, one for admin operations
+  - Properly extract access token from session
+  - Added validation and error logging
+
+- **Code Changes**:
+  - Fixed both edge functions to use correct authentication flow
+  - Redeployed both functions with fixes
+  - Updated UserManagement component with better session handling
+  - Added console logging for debugging
+
+#### 6. Pushed Code and Waiting for Deployment
+- Committed all changes to git
+- Pushed to GitHub prototype branch
+- Netlify will auto-deploy (waiting for build to complete)
+- Need to test after deployment finishes
+
+### Files Created
+- `supabase/functions/create-user/index.ts`
+- `supabase/functions/bulk-create-users/index.ts`
+- `supabase/functions/README.md`
+- `DEPLOY-EDGE-FUNCTIONS.md`
+- `USER-MANAGEMENT-SOLUTION.md`
+
+### Files Modified
+- `src/pages/desktop/UserManagement.tsx` - Updated to call edge functions
+- `CHANGELOG.md` - Added deployment and debugging entries
+- `CONVERSATION-HISTORY.md` - This file
+
+### Technical Details
+
+**Edge Function Architecture**:
+- Written in TypeScript for Deno runtime
+- Use Supabase JS client v2
+- CORS headers for cross-origin requests
+- Two-client pattern:
+  - Regular client (anon key) for user authentication
+  - Admin client (service role key) for privileged operations
+
+**Authentication Flow**:
+1. Frontend gets user's session with `supabase.auth.getSession()`
+2. Extracts `access_token` from session
+3. Sends to edge function in `Authorization: Bearer {token}` header
+4. Edge function creates regular client with user's token
+5. Calls `supabaseClient.auth.getUser()` to verify authentication
+6. Checks user's role in users table
+7. If admin, proceeds with user creation using admin client
+
+**Security**:
+- Service role key never exposed to client
+- Admin role verified before any operations
+- Failed auth user creations automatically rolled back
+- Detailed error messages for debugging
+
+### Issues Encountered
+
+1. **npm install -g supabase failed**
+   - Error: "Installing Supabase CLI as a global module is not supported"
+   - Solution: Used `npx supabase` instead (no installation needed)
+
+2. **401 Unauthorized errors**
+   - Functions were using admin client to verify user tokens
+   - Admin client can't verify regular user session tokens
+   - Fixed by using regular client with anon key for verification
+
+3. **Missing authorization header**
+   - Initial logs showed no auth header being sent
+   - Added better session validation in frontend
+   - Added logging to debug token extraction
+
+### Current Status
+- ✅ Edge functions created and deployed
+- ✅ Authentication fix implemented and redeployed
+- ✅ Frontend code updated with better error handling
+- ✅ Code committed and pushed to GitHub
+- ⏳ Waiting for Netlify to redeploy with latest code
+- ⏳ Need to test user creation after deployment
+
+### Next Steps
+1. Wait for Netlify deployment (2-3 minutes)
+2. Hard refresh browser (Ctrl+Shift+R)
+3. Test creating a single user
+4. Check console logs for token debugging
+5. Verify user created in Supabase Auth and users table
+6. Test CSV bulk import with 2-3 users
+7. Document final results
+
+### User Experience
+User successfully:
+- Installed Supabase CLI via npx
+- Logged in to Supabase
+- Linked project
+- Deployed both edge functions
+- Understood the deployment process
+
+User is taking a break while waiting for Netlify deployment to complete.
+
+---
+
 ## Session: March 9, 2026 (Part 2) - Session Builder Desktop Page Restructure
 
 ### Context Transfer

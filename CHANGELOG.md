@@ -4,6 +4,60 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-10] - User Management Edge Functions Deployment and Debugging
+
+### Added
+- **Edge Function Deployment Process**
+  - Successfully deployed both edge functions to Supabase
+  - Used `npx supabase` commands (no global installation needed)
+  - Deployment process: login → link project → deploy functions
+  - Both functions deployed successfully to production
+
+### Changed
+- **Edge Function Authentication Fix**
+  - Fixed 401 Unauthorized errors in edge functions
+  - Changed from using admin client to verify tokens to using regular client
+  - Now creates two Supabase clients:
+    - Regular client with user's token for authentication verification
+    - Admin client for privileged operations (creating users)
+  - Added better error handling and logging in UserManagement component
+  - Added session validation before calling edge functions
+
+### Fixed
+- **Token Verification Issue**
+  - Edge functions were trying to verify user tokens with admin client (incorrect)
+  - Now use anon key client with user's authorization header
+  - Properly extracts and validates access token from session
+  - Added console logging to debug token issues
+
+### In Progress
+- **Testing Edge Functions**
+  - Functions deployed successfully
+  - Authentication fix implemented
+  - Waiting for Netlify to redeploy with latest code
+  - Need to test user creation after deployment completes
+
+### Technical Notes
+- Edge functions require SUPABASE_ANON_KEY for user token verification
+- SUPABASE_SERVICE_ROLE_KEY only used for admin operations
+- Token must be passed in Authorization header as `Bearer {token}`
+- Session must be active and valid when calling edge functions
+
+### Deployment Commands Used
+```bash
+npx supabase login
+npx supabase link --project-ref pikrxkxpizdezazlwxhb
+npx supabase functions deploy create-user
+npx supabase functions deploy bulk-create-users
+```
+
+### Next Steps
+1. Wait for Netlify deployment to complete
+2. Test user creation in production
+3. Test CSV bulk import
+4. Verify users created in both Auth and users table
+5. Document any remaining issues
+
 ## [2026-03-10] - User Management Automation with Edge Functions
 
 ### Added
