@@ -4,6 +4,191 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-09] - U9 Lesson Generation (Ball Striking and 1v1)
+
+### Added
+- **U9 Ball Striking Lessons (2 lessons, 8 sessions)**
+  - Migration 018: `018_ball-striking-u9-lessons-01-02.sql`
+  - Lesson 01: "Strike It Right: Introduction to Ball Striking"
+    - Session 1: Striking Technique (20 min warmup)
+    - Session 2: Shooting Accuracy (15 min skill intro)
+    - Session 3: Shooting Under Pressure (15 min progressive)
+    - Session 4: Shooting Game (15 min game)
+  - Lesson 02: "Strike It Clean: Advanced Ball Striking"
+    - Session 1: First Time Striking (20 min warmup)
+    - Session 2: Power and Placement (15 min skill intro)
+    - Session 3: Shooting from Angles (15 min progressive)
+    - Session 4: Volleys and Half-Volleys (15 min game)
+  - Image prompts: `U9-BALL-STRIKING-LESSON-01-IMAGE-PROMPTS.md` and `U9-BALL-STRIKING-LESSON-02-IMAGE-PROMPTS.md`
+
+- **U9 1v1 Lessons (2 lessons, 8 sessions)**
+  - Migration 019: `019_1v1-u9-lessons-01-02.sql`
+  - Lesson 01: "Take Them On: Introduction to 1v1"
+    - Session 1: 1v1 Basics (20 min warmup)
+    - Session 2: 1v1 Moves (15 min skill intro) - Step-over, Drag-back, Chop
+    - Session 3: 1v1 Under Pressure (15 min progressive)
+    - Session 4: 1v1 Game (15 min game)
+  - Lesson 02: "Master the Moves: Advanced 1v1"
+    - Session 1: 1v1 Space Creation (20 min warmup)
+    - Session 2: 1v1 Advanced Moves (15 min skill intro) - Scissors, Cruyff turn, Elastico
+    - Session 3: 1v1 Combination Play (15 min progressive)
+    - Session 4: 1v1 Tournament (15 min game)
+  - Image prompts: `U9-1V1-LESSON-01-IMAGE-PROMPTS.md` and `U9-1V1-LESSON-02-IMAGE-PROMPTS.md`
+
+### Progress Update
+- **Completed**: 12 of 32 lessons (37.5%)
+  - U9 Defending: Tackling (2), Marking (2), Pressing (2), Intercepting (2) ✅
+  - U9 Attacking: Dribbling (2), Ball Striking (2), 1v1 (2) ✅
+- **Remaining**: 20 lessons
+  - U9 Attacking: Passing/Receiving (2)
+  - U10 All Skills: 8 skills × 2 lessons = 16 lessons
+
+### Technical Notes
+- All lessons follow LESSON-CREATION-GUIDE.md format
+- All image prompts follow IMAGE-PROMPT-GUIDELINES.md standards
+- Each lesson has exactly 4 sessions (warmup, skill_intro, progressive, game)
+- Total duration: 65 minutes per lesson
+- All lessons are Beginner level for U9
+- Metric measurements used throughout (meters, not yards)
+- "football (soccer ball)" terminology consistently applied
+- Ball possession clearly specified in all pitch layouts
+
+## [2026-03-09] - Lesson System Architecture Refactor
+
+### Added
+- **Lesson System Architecture Documentation**
+  - Created comprehensive `LESSON-SYSTEM-ARCHITECTURE.md` specification
+  - Documented core principles: sessions as globally reusable assets
+  - Defined correct database schema with lessons referencing sessions
+  - Established session naming conventions
+  - Documented media storage structure and requirements
+  - Created bulk load process documentation
+  - Defined admin UI workflow for future development
+
+- **First Complete Lesson: U9 Tackling Lesson 01**
+  - Created `lessons/U9-Tackling-Lesson-01.md` with full content
+  - Lesson: "Win It Safely: Block & Poke" (65 minutes total)
+  - 4 complete sessions:
+    1. Mirror Jockey (20 min) - Warmup
+    2. Block Tackle Introduction (15 min) - Skill Intro
+    3. 1v1 Tackle Under Pressure (15 min) - Progressive
+    4. Tackle Game Application (15 min) - Game
+  - Each session includes:
+    - Organisation/how it runs
+    - Equipment lists
+    - Coaching points (5-6 per session)
+    - Step-by-step instructions (5-6 steps)
+    - Key learning objectives (3 per session)
+    - Pitch layout descriptions
+    - Media file naming
+    - Image generation prompts for pitch diagrams
+
+- **Testing Documentation**
+  - Created `TESTING-LESSON-SYSTEM.md` with detailed testing instructions
+  - Created `LESSON-TESTING-CHECKLIST.md` with step-by-step checklist
+  - Created `LESSON-SYSTEM-SUMMARY.md` with overview of all work
+  - Included troubleshooting guides and SQL queries for verification
+
+- **Updated App Component**
+  - Created `src/pages/LessonDetail-NEW.tsx` for new schema
+  - Fetches lesson with all 4 sessions via JOIN queries
+  - Displays all new fields: organisation, steps, key_objectives
+  - Shows pitch diagrams if URLs are set
+  - Handles session type labels
+  - Improved layout with expandable session cards
+
+### Changed
+- **Database Schema Refactored (Migration 010)**
+  - Sessions are now standalone with unique names as natural identifiers
+  - Lessons reference 4 sessions (session_1_id through session_4_id)
+  - Sessions can be reused across multiple lessons
+  - Deleting a lesson no longer deletes its sessions
+  - Added session_type field: warmup, skill_intro, progressive, game
+  - Added comprehensive session fields:
+    - organisation (how it runs)
+    - steps (step-by-step instructions)
+    - key_objectives (player learning objectives)
+    - pitch_layout_description
+    - diagram_url and video_url
+  - Lessons now have coaching_focus array
+  - Foreign key constraints use ON DELETE RESTRICT for sessions
+
+- **Session Naming Convention**
+  - Format: `session-<descriptive-name>-<age-group>`
+  - Examples: `session-mirror-jockey-u9`, `session-block-tackle-intro-u9`
+  - Must be globally unique
+  - Never include lesson numbers
+  - Never include session slot numbers
+
+- **Media Storage Structure**
+  - Bucket: `lesson-media` (public)
+  - Path: `/media/pitch-diagrams/{age-group}/{skill}/{session-name}.png`
+  - Videos: `/media/videos/{age-group}/{skill}/{session-name}.mp4`
+  - Specs: PNG, 4:5 or 1:1 aspect ratio, 800px min resolution
+
+### Fixed
+- Corrected fundamental architecture flaw in original schema
+- Sessions were incorrectly tied to lessons (lesson_id FK)
+- Now sessions are independent and lessons reference them
+- Enables session reusability as originally intended
+
+### Technical Notes
+- Migration 010 drops and recreates all lesson/session tables
+- Sample data includes complete U9 Tackling Lesson 01
+- 4 sessions created with unique names
+- 1 lesson created referencing those 4 sessions
+- Ready for bulk generation of remaining 31 lessons
+- Architecture supports admin UI for Session Builder and Lesson Builder
+
+### Documentation Files Created
+- `LESSON-SYSTEM-ARCHITECTURE.md` - Complete architecture spec
+- `TESTING-LESSON-SYSTEM.md` - Testing instructions
+- `LESSON-TESTING-CHECKLIST.md` - Step-by-step checklist
+- `LESSON-SYSTEM-SUMMARY.md` - Overview and summary
+- `lessons/U9-Tackling-Lesson-01.md` - First complete lesson
+
+### Next Steps
+1. Test migration and verify data
+2. Upload pitch diagram images
+3. Test lesson display in app
+4. Generate remaining 31 lessons (2 per skill × 8 skills × 2 age groups)
+5. Build Session Builder UI (admin creates sessions)
+6. Build Lesson Builder UI (admin selects 4 sessions)
+
+## [2026-03-08] - Announcement Rich Text Editor Implementation
+
+### Changed
+- **Announcements System - Rich Text Editor**
+  - Replaced markdown syntax with WYSIWYG rich text editor (React Quill)
+  - Admin announcement form now has visual formatting toolbar:
+    - Bold, italic, underline buttons
+    - Heading 2 and Heading 3 options (H1 removed - reserved for title)
+    - Bullet and numbered lists
+    - Link insertion
+    - Clean formatting button
+  - Increased editor height to 300px for better usability
+  - Mobile Landing page now renders HTML content with proper styling
+  - Removed react-markdown dependency
+  
+- **Typography Hierarchy**
+  - Announcement title: H1 (30px, Inter/Aktiv Grotesk Corp, bold)
+  - Content H2: 18px (Exo 2, weight 600)
+  - Content H3: 16px (Exo 2, weight 600)
+  - Body text: Exo 2
+  - Added custom CSS for announcement content styling
+  - Enforced font families per brand guidelines (Aktiv Grotesk Corp for headings, Exo 2 for body)
+
+### Fixed
+- Fixed announcement content display in admin table (now renders HTML instead of showing raw code)
+- Fixed react-markdown className prop error (removed unsupported prop)
+- Added `!important` flags to content heading styles to override Quill defaults
+
+### Technical Notes
+- Users can now format announcements visually without knowing markdown syntax
+- Rich text content stored as HTML in database
+- Mobile Landing page uses `dangerouslySetInnerHTML` to render formatted content
+- Desktop admin page shows formatted preview in announcement list table
+
 ## [2026-03-08] - Resources and Announcements Systems
 
 ### Added

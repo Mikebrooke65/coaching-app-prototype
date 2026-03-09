@@ -1,5 +1,125 @@
 # Conversation History
 
+## Session: March 9, 2026 - U9 Lesson Generation (Ball Striking and 1v1)
+
+### Context Transfer
+Continued from previous session that had gotten too long. Previous work included:
+- Fixed announcements display issues (rich text editor implementation)
+- Created IMAGE-PROMPT-GUIDELINES.md with mandatory 6-section structure
+- Created LESSON-CREATION-GUIDE.md for consistent lesson format
+- Defined and documented 8 key skills (4 defending, 4 attacking)
+- Generated U9 lessons for: Tackling (2), Marking (2), Pressing (2), Intercepting (2), Dribbling (2)
+- Established workflow: 1 SQL file per skill (both lessons) + 2 image prompt markdown files
+
+### Tasks Completed
+
+#### 1. Completed U9 Ball Striking Lessons
+- **Created migration 018**: `018_ball-striking-u9-lessons-01-02.sql`
+- **Lesson 01: "Strike It Right: Introduction to Ball Striking"**
+  - Session 1: Striking Technique (20 min) - Plant foot, laces, follow through
+  - Session 2: Shooting Accuracy (15 min) - Aim for corners, 2 pts corners/1 pt center
+  - Session 3: Shooting Under Pressure (15 min) - 2v1, quick decisions, shoot early
+  - Session 4: Shooting Game (15 min) - 4v4, 2 pts outside zone/1 pt inside zone
+- **Lesson 02: "Strike It Clean: Advanced Ball Striking"**
+  - Session 1: First Time Striking (20 min) - Strike moving ball without control
+  - Session 2: Power and Placement (15 min) - Laces for power, side-foot for placement
+  - Session 3: Shooting from Angles (15 min) - 0°, 45°, 90° angles, far post targeting
+  - Session 4: Volleys and Half-Volleys (15 min) - 3 pts volley/2 pts half-volley/1 pt regular
+- **Created image prompts**:
+  - `U9-BALL-STRIKING-LESSON-01-IMAGE-PROMPTS.md` (4 prompts)
+  - `U9-BALL-STRIKING-LESSON-02-IMAGE-PROMPTS.md` (4 prompts)
+- **Key concepts**: Technique over power, accuracy first, shoot early, be confident
+
+#### 2. Completed U9 1v1 Lessons
+- **Created migration 019**: `019_1v1-u9-lessons-01-02.sql`
+- **Lesson 01: "Take Them On: Introduction to 1v1"**
+  - Session 1: 1v1 Basics (20 min) - Change pace/direction, protect ball, accelerate
+  - Session 2: 1v1 Moves (15 min) - Step-over, drag-back, chop moves
+  - Session 3: 1v1 Under Pressure (15 min) - 1v1 in channels, 10-second rule
+  - Session 4: 1v1 Game (15 min) - 4v4 with bonus point for beating defender
+- **Lesson 02: "Master the Moves: Advanced 1v1"**
+  - Session 1: 1v1 Space Creation (20 min) - Body feints, fake one way/go another
+  - Session 2: 1v1 Advanced Moves (15 min) - Scissors, Cruyff turn, elastico
+  - Session 3: 1v1 Combination Play (15 min) - 2v2, must beat defender before shooting
+  - Session 4: 1v1 Tournament (15 min) - Pure 1v1 tournament, 3 games per player
+- **Created image prompts**:
+  - `U9-1V1-LESSON-01-IMAGE-PROMPTS.md` (4 prompts)
+  - `U9-1V1-LESSON-02-IMAGE-PROMPTS.md` (4 prompts)
+- **Key concepts**: Change pace, sell the fake, attack with purpose, be brave/creative
+
+### Progress Summary
+**Completed**: 12 of 32 lessons (37.5%)
+- U9 Defending: Tackling (2), Marking (2), Pressing (2), Intercepting (2) ✅
+- U9 Attacking: Dribbling (2), Ball Striking (2), 1v1 (2) ✅
+
+**Remaining**: 20 lessons
+- U9 Attacking: Passing/Receiving (2 lessons)
+- U10 All Skills: 8 skills × 2 lessons = 16 lessons
+
+### Files Created
+
+**SQL Migrations**:
+- `supabase/migrations/018_ball-striking-u9-lessons-01-02.sql`
+- `supabase/migrations/019_1v1-u9-lessons-01-02.sql`
+
+**Image Prompt Files**:
+- `U9-BALL-STRIKING-LESSON-01-IMAGE-PROMPTS.md`
+- `U9-BALL-STRIKING-LESSON-02-IMAGE-PROMPTS.md`
+- `U9-1V1-LESSON-01-IMAGE-PROMPTS.md`
+- `U9-1V1-LESSON-02-IMAGE-PROMPTS.md`
+
+**Updated Documentation**:
+- `CHANGELOG.md` - Added Ball Striking and 1v1 lessons entry
+- `CONVERSATION-HISTORY.md` - This file
+
+### Quality Standards Maintained
+- All sessions follow LESSON-CREATION-GUIDE.md format
+- All image prompts follow IMAGE-PROMPT-GUIDELINES.md 6-section structure
+- Metric measurements (meters) used throughout
+- "football (soccer ball)" terminology consistently applied
+- Ball possession clearly specified in all pitch layouts
+- Each lesson: 4 sessions, 65 minutes total, Beginner level
+- Coaching focus: 4 key points per lesson
+- Objectives: 4 per lesson
+
+### Technical Notes
+
+**Ball Striking Lessons**:
+- Progression: Basic technique → Accuracy → Pressure → Game application
+- Advanced: First-time striking → Power/placement choice → Angles → Volleys
+- Scoring systems encourage specific techniques (corner goals, distance shots, volleys)
+- Emphasis on decision-making: when to use power vs placement
+
+**1v1 Lessons**:
+- Basic moves: Step-over, drag-back, chop (simple, effective)
+- Advanced moves: Scissors, Cruyff turn, elastico (more complex)
+- Progression: Individual skill → Pressure → Combination → Competition
+- Tournament format in Lesson 02 provides competitive application
+
+### Next Steps
+1. Generate U9 Passing/Receiving lessons (2 lessons, 8 sessions)
+2. Complete U9 age group (14 of 16 lessons done)
+3. Begin U10 age group (16 lessons remaining)
+4. Upload all pitch diagram images to Supabase Storage
+5. Test lessons in app with real data
+
+### Git Commit Needed
+```
+feat: Add U9 Ball Striking and 1v1 lessons
+
+- Created Ball Striking Lesson 01: Strike It Right
+- Created Ball Striking Lesson 02: Strike It Clean
+- Created 1v1 Lesson 01: Take Them On
+- Created 1v1 Lesson 02: Master the Moves
+- Generated 8 image prompt files (4 prompts each)
+- Total: 16 sessions across 4 lessons
+- Progress: 12 of 32 lessons complete (37.5%)
+- All lessons follow LESSON-CREATION-GUIDE.md format
+- All prompts follow IMAGE-PROMPT-GUIDELINES.md standards
+```
+
+---
+
 ## Session: March 8, 2026 - Resources and Announcements Implementation
 
 ### Context Transfer
