@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -16,6 +17,7 @@ interface User {
 interface Team {
   id: string;
   name: string;
+  age_group: string;
 }
 
 const roleOptions = [
@@ -28,6 +30,7 @@ const roleOptions = [
 
 export function UserManagement() {
   const { user: currentUser } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,6 +62,19 @@ export function UserManagement() {
     fetchTeams();
   }, []);
 
+  // Check for edit parameter in URL
+  useEffect(() => {
+    const editUserId = searchParams.get('edit');
+    if (editUserId && users.length > 0) {
+      const userToEdit = users.find(u => u.id === editUserId);
+      if (userToEdit) {
+        handleOpenModal(userToEdit);
+        // Clear the URL parameter
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, users]);
+
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
@@ -80,8 +96,9 @@ export function UserManagement() {
     try {
       const { data, error } = await supabase
         .from('teams')
-        .select('id, name')
-        .order('name');
+        .select('id, name, age_group')
+        .order('age_group', { ascending: true })
+        .order('name', { ascending: true });
 
       if (error) throw error;
       setTeams(data || []);
@@ -100,17 +117,26 @@ export function UserManagement() {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const handleOpenModal = (user?: any) => {
+  const handleOpenModal = async (user?: any) => {
     if (user) {
       setEditingUser(user);
+      
+      // Fetch current team assignment
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('user_id', user.id)
+        .single();
+      
       setFormData({
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
         role: user.role,
-        status: user.status,
-        teamId: user.teamId || '',
+        active: user.active,
+        teamId: teamMember?.team_id || '',
         cellphone: user.cellphone || '',
+        password: '',
       });
     } else {
       setEditingUser(null);
@@ -119,9 +145,10 @@ export function UserManagement() {
         first_name: '',
         last_name: '',
         role: 'player',
-        status: 'active',
+        active: true,
         teamId: '',
         cellphone: '',
+        password: '',
       });
     }
     setIsModalOpen(true);
@@ -149,22 +176,31 @@ export function UserManagement() {
 
         if (error) throw error;
 
-        // Update team assignment if changed
-        if (formData.teamId) {
-          // Remove from old team
-          await supabase
-            .from('team_members')
-            .delete()
-            .eq('user_id', editingUser.id);
+        // Update team assignment
+        // Remove from old team first
+        const { error: deleteError } = await supabase
+          .from('team_members')
+          .delete()
+          .eq('user_id', editingUser.id);
 
-          // Add to new team
-          await supabase
+        if (deleteError) {
+          console.error('Error removing from old team:', deleteError);
+        }
+
+        // Add to new team if one is selected
+        if (formData.teamId) {
+          const { error: insertError } = await supabase
             .from('team_members')
             .insert({
               team_id: formData.teamId,
               user_id: editingUser.id,
               role: formData.role === 'coach' ? 'coach' : 'player',
             });
+
+          if (insertError) {
+            console.error('Error adding to new team:', insertError);
+            throw insertError;
+          }
         }
 
         alert('User updated successfully');
@@ -624,10 +660,10 @@ export function UserManagement() {
                   onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 >
-                  <option value="">Unassigned</option>
+                  <option value="">None (Unassigned)</option>
                   {teams.map((team) => (
                     <option key={team.id} value={team.id}>
-                      {team.name}
+                      {team.age_group} {team.name}
                     </option>
                   ))}
                 </select>

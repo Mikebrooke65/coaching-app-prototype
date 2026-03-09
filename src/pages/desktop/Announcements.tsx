@@ -285,7 +285,10 @@ export function Announcements() {
                           )}
                           <div>
                             <div className="font-medium text-gray-900">{announcement.title}</div>
-                            <div className="text-sm text-gray-600 line-clamp-1">{announcement.content}</div>
+                            <div 
+                              className="text-sm text-gray-600 line-clamp-2"
+                              dangerouslySetInnerHTML={{ __html: announcement.content }}
+                            />
                           </div>
                         </div>
                       </td>

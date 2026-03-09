@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Team {
   id: string;
@@ -16,6 +17,19 @@ interface Team {
     role: string;
   };
   player_count?: number;
+}
+
+interface TeamMember {
+  id: string;
+  user_id: string;
+  role: string;
+  user: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    cellphone?: string;
+  };
 }
 
 interface Coach {
@@ -35,6 +49,8 @@ export function TeamsManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAge, setFilterAge] = useState('all');
   const [filterDivision, setFilterDivision] = useState('all');
+  const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
+  const [teamMembers, setTeamMembers] = useState<Record<string, TeamMember[]>>({});
 
   // Form state
   const [formData, setFormData] = useState({
@@ -86,6 +102,37 @@ export function TeamsManagement() {
       setCoaches(data || []);
     } catch (error) {
       console.error('Error fetching coaches:', error);
+    }
+  };
+
+  const fetchTeamMembers = async (teamId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select(`
+          id,
+          user_id,
+          role,
+          user:users(id, first_name, last_name, email, cellphone)
+        `)
+        .eq('team_id', teamId)
+        .order('role', { ascending: false });
+
+      if (error) throw error;
+      setTeamMembers(prev => ({ ...prev, [teamId]: data || [] }));
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+    }
+  };
+
+  const handleToggleTeam = async (teamId: string) => {
+    if (expandedTeamId === teamId) {
+      setExpandedTeamId(null);
+    } else {
+      setExpandedTeamId(teamId);
+      if (!teamMembers[teamId]) {
+        await fetchTeamMembers(teamId);
+      }
     }
   };
 
@@ -299,43 +346,107 @@ export function TeamsManagement() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredTeams.map((team) => (
-                  <tr key={team.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{team.age_group} {team.name}</div>
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        team.division === 'Academy'
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-green-100 text-green-700'
-                      }`}>
-                        {team.division}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {team.coach ? `${team.coach.first_name} ${team.coach.last_name}` : '-'}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {team.training_ground}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {team.training_time}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleOpenModal(team)}
-                        className="text-[#0091f3] hover:text-[#0077cc] mr-3"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(team.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
+                  <>
+                    <tr key={team.id} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleToggleTeam(team.id)}
+                            className="p-1 hover:bg-gray-200 rounded"
+                          >
+                            {expandedTeamId === team.id ? (
+                              <ChevronDown className="w-4 h-4 text-gray-600" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4 text-gray-600" />
+                            )}
+                          </button>
+                          <div className="text-sm font-medium text-gray-900">{team.age_group} {team.name}</div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          team.division === 'Academy'
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {team.division}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                        {team.coach ? `${team.coach.first_name} ${team.coach.last_name}` : '-'}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                        {team.training_ground}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                        {team.training_time}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleOpenModal(team)}
+                          className="text-[#0091f3] hover:text-[#0077cc] mr-3"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(team.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedTeamId === team.id && (
+                      <tr>
+                        <td colSpan={6} className="px-3 py-4 bg-gray-50">
+                          <div className="ml-8">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Team Members</h4>
+                            {teamMembers[team.id] && teamMembers[team.id].length > 0 ? (
+                              <div className="bg-white rounded-lg border border-gray-200">
+                                <table className="w-full">
+                                  <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-200">
+                                    {teamMembers[team.id].map((member) => (
+                                      <tr key={member.id} className="hover:bg-gray-50">
+                                        <td className="px-4 py-2 text-sm">
+                                          <button
+                            onClick={() => window.open(`/desktop/users?edit=${member.user_id}`, '_blank')}
+                                            className="text-[#0091f3] hover:text-[#0077cc] hover:underline font-medium"
+                                          >
+                                            {member.user.first_name} {member.user.last_name}
+                                          </button>
+                                        </td>
+                                        <td className="px-4 py-2 text-sm text-gray-600">{member.user.email}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-600">{member.user.cellphone || '-'}</td>
+                                        <td className="px-4 py-2">
+                                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                            member.role === 'coach' 
+                                              ? 'bg-purple-100 text-purple-700' 
+                                              : 'bg-blue-100 text-blue-700'
+                                          }`}>
+                                            {member.role}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500 italic">No members assigned to this team yet</p>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>
