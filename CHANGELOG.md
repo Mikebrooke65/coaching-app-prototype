@@ -4,6 +4,57 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-10] - User Management Automation with Edge Functions
+
+### Added
+- **Automated User Creation System**
+  - Created Supabase Edge Function `create-user` for single user creation
+  - Created Supabase Edge Function `bulk-create-users` for CSV batch import
+  - Both functions handle Supabase Auth + users table creation atomically
+  - Automatic team assignment based on team name or ID
+  - Random password generation if not provided
+  - Admin permission verification for security
+
+- **Updated User Management Page**
+  - Individual user creation via form now fully automated
+  - CSV bulk import now processes via edge function
+  - Password field added to user creation form (optional)
+  - Email field disabled when editing (cannot change after creation)
+  - Detailed success/failure reporting for bulk imports
+  - Error handling with rollback on failures
+
+- **Documentation**
+  - Created `USER-MANAGEMENT-SOLUTION.md` - Complete solution overview
+  - Created `DEPLOY-EDGE-FUNCTIONS.md` - Step-by-step deployment guide
+  - Created `supabase/functions/README.md` - Technical function documentation
+  - CSV format examples and troubleshooting guides
+
+### Changed
+- User creation no longer requires manual two-step process
+- CSV import now creates users in Supabase Auth automatically
+- Service role key operations moved to secure server-side functions
+
+### Fixed
+- Eliminated manual UUID copying requirement
+- Solved scalability issue for 200+ user imports
+- Atomic operations prevent orphaned auth users or table records
+
+### Technical Notes
+- Edge functions use Deno runtime
+- Service role key only used server-side (never exposed to client)
+- Functions verify admin role before allowing user creation
+- Failed creations automatically rolled back
+- Team assignment supports partial name matching
+
+### Deployment Required
+To use this feature, admin must deploy edge functions:
+```bash
+supabase functions deploy create-user
+supabase functions deploy bulk-create-users
+```
+
+See `DEPLOY-EDGE-FUNCTIONS.md` for complete instructions.
+
 ## [2026-03-09] - Session Builder Desktop Page Restructure
 
 ### Changed

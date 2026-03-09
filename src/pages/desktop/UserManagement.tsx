@@ -132,30 +132,82 @@ export function UserManagement() {
     setEditingUser(null);
   };
 
-  const handleSave = () => {
-    const team = teams.find((t) => t.id === formData.teamId);
+  const handleSave = async () => {
+    try {
+      if (editingUser) {
+        // Update existing user in users table
+        const { error } = await supabase
+          .from('users')
+          .update({
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            cellphone: formData.cellphone,
+            role: formData.role,
+            active: formData.active,
+          })
+          .eq('id', editingUser.id);
 
-    if (editingUser) {
-      // Update existing user
-      setUsers(
-        users.map((u) =>
-          u.id === editingUser.id
-            ? { ...u, ...formData, team: team?.name || 'Unassigned' }
-            : u
-        )
-      );
-    } else {
-      // Create new user
-      const newUser = {
-        id: `u${users.length + 1}`,
-        ...formData,
-        team: team?.name || 'Unassigned',
-        last_login: 'Never',
-      };
-      setUsers([...users, newUser]);
+        if (error) throw error;
+
+        // Update team assignment if changed
+        if (formData.teamId) {
+          // Remove from old team
+          await supabase
+            .from('team_members')
+            .delete()
+            .eq('user_id', editingUser.id);
+
+          // Add to new team
+          await supabase
+            .from('team_members')
+            .insert({
+              team_id: formData.teamId,
+              user_id: editingUser.id,
+              role: formData.role === 'coach' ? 'coach' : 'player',
+            });
+        }
+
+        alert('User updated successfully');
+      } else {
+        // Create new user via Edge Function
+        const { data: session } = await supabase.auth.getSession();
+        
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session?.session?.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+              first_name: formData.first_name,
+              last_name: formData.last_name,
+              role: formData.role,
+              active: formData.active,
+              cellphone: formData.cellphone,
+              team_id: formData.teamId || null,
+            }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to create user');
+        }
+
+        alert(`User created successfully!\n\nEmail: ${formData.email}\n${formData.password ? 'Password: ' + formData.password : 'A random password was generated - user can reset via email'}`);
+      }
+
+      handleCloseModal();
+      fetchUsers(); // Refresh the list
+    } catch (error: any) {
+      console.error('Error saving user:', error);
+      alert(`Error: ${error.message}`);
     }
-
-    handleCloseModal();
   };
 
   const handleDelete = (userId: string) => {
@@ -174,44 +226,85 @@ export function UserManagement() {
     );
   };
 
-  const handleImport = () => {
-    // Parse CSV data (simple implementation)
-    const lines = importData.trim().split('\n');
-    if (lines.length < 2) {
-      alert('Invalid CSV format. Please include headers and at least one user.');
-      return;
-    }
-
-    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
-    const newUsers = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map((v) => v.trim());
-      const user: any = { id: `imported-${Date.now()}-${i}`, last_login: 'Never' };
-
-      headers.forEach((header, index) => {
-        if (header === 'email') user.email = values[index];
-        else if (header === 'first_name' || header === 'firstname') user.first_name = values[index];
-        else if (header === 'last_name' || header === 'lastname') user.last_name = values[index];
-        else if (header === 'role') user.role = values[index] || 'player';
-        else if (header === 'status') user.status = values[index] || 'active';
-        else if (header === 'team') user.team = values[index] || 'Unassigned';
-        else if (header === 'cellphone' || header === 'phone') user.cellphone = values[index];
-      });
-
-      // Validate required fields
-      if (user.email && user.first_name && user.last_name) {
-        newUsers.push(user);
+  const handleImport = async () => {
+    try {
+      // Parse CSV data
+      const lines = importData.trim().split('\n');
+      if (lines.length < 2) {
+        alert('Invalid CSV format. Please include headers and at least one user.');
+        return;
       }
-    }
 
-    if (newUsers.length > 0) {
-      setUsers([...users, ...newUsers]);
+      const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+      const usersToCreate = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map((v) => v.trim());
+        const userData: any = {};
+
+        headers.forEach((header, index) => {
+          if (header === 'email') userData.email = values[index];
+          else if (header === 'first_name' || header === 'firstname') userData.first_name = values[index];
+          else if (header === 'last_name' || header === 'lastname') userData.last_name = values[index];
+          else if (header === 'role') userData.role = values[index] || 'player';
+          else if (header === 'active' || header === 'status') {
+            userData.active = values[index]?.toLowerCase() === 'active' || values[index]?.toLowerCase() === 'true';
+          }
+          else if (header === 'team') userData.team_name = values[index];
+          else if (header === 'cellphone' || header === 'phone') userData.cellphone = values[index];
+          else if (header === 'password') userData.password = values[index];
+        });
+
+        // Validate required fields
+        if (userData.email && userData.first_name && userData.last_name) {
+          usersToCreate.push(userData);
+        }
+      }
+
+      if (usersToCreate.length === 0) {
+        alert('No valid users found in CSV data');
+        return;
+      }
+
+      // Call bulk create edge function
+      const { data: session } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bulk-create-users`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session?.session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ users: usersToCreate }),
+        }
+      );
+
+      const results = await response.json();
+
+      if (!response.ok) {
+        throw new Error(results.error || 'Failed to import users');
+      }
+
+      // Show results
+      let message = `Import complete!\n\nSuccessfully created: ${results.success} users\nFailed: ${results.failed} users`;
+      if (results.errors && results.errors.length > 0) {
+        message += '\n\nErrors:\n' + results.errors.slice(0, 5).map((e: any) => 
+          `${e.email}: ${e.error}`
+        ).join('\n');
+        if (results.errors.length > 5) {
+          message += `\n... and ${results.errors.length - 5} more errors`;
+        }
+      }
+      alert(message);
+
       setImportData('');
       setIsImportModalOpen(false);
-      alert(`Successfully imported ${newUsers.length} users`);
-    } else {
-      alert('No valid users found in CSV data');
+      fetchUsers(); // Refresh the list
+    } catch (error: any) {
+      console.error('Error importing users:', error);
+      alert(`Import failed: ${error.message}`);
     }
   };
 
@@ -450,10 +543,32 @@ export function UserManagement() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                  disabled={!!editingUser}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3] disabled:bg-gray-100"
                   placeholder="john.smith@example.com"
                 />
+                {editingUser && (
+                  <p className="text-xs text-gray-500 mt-1">Email cannot be changed after creation</p>
+                )}
               </div>
+
+              {!editingUser && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Password {!editingUser && '*'}
+                  </label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                    placeholder="Leave blank for random password"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    If left blank, a random password will be generated. User can reset via email.
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
@@ -537,7 +652,7 @@ export function UserManagement() {
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">Import Users from CSV</h2>
               <p className="text-sm text-gray-600 mt-1">
-                Paste CSV data with headers: email, first_name, last_name, role, status, team, cellphone
+                Paste CSV data with headers: email, first_name, last_name, role, active, team, cellphone, password (optional)
               </p>
             </div>
 
@@ -545,12 +660,21 @@ export function UserManagement() {
               <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800 font-medium mb-2">Example CSV format:</p>
                 <code className="text-xs text-blue-900 block">
-                  email,first_name,last_name,role,status,team,cellphone
+                  email,first_name,last_name,role,active,team,cellphone,password
                   <br />
-                  john@example.com,John,Doe,coach,active,Rangers U10 Blue,021-123-4567
+                  john@example.com,John,Doe,coach,true,Rangers U10 Blue,021-123-4567,MyPassword123
                   <br />
-                  jane@example.com,Jane,Smith,player,active,Rangers U12 Red,021-987-6543
+                  jane@example.com,Jane,Smith,player,true,Rangers U12 Red,021-987-6543,
                 </code>
+                <p className="text-xs text-blue-700 mt-2">
+                  • Password is optional - if blank, a random password will be generated
+                  <br />
+                  • Active can be: true/false or active/inactive
+                  <br />
+                  • Role can be: player, caregiver, coach, manager, admin
+                  <br />
+                  • Team name will be matched (partial match OK)
+                </p>
               </div>
 
               <textarea
