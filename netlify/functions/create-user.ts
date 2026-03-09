@@ -35,10 +35,26 @@ export const handler: Handler = async (event) => {
 
     const token = authHeader.replace('Bearer ', '');
 
-    // Create Supabase client with user's token to verify they're authenticated
-    const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY!;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    // Get environment variables
+    // Netlify Functions can access both build-time and runtime env vars
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Server configuration error',
+          missing: {
+            url: !supabaseUrl,
+            anonKey: !supabaseAnonKey,
+            serviceKey: !supabaseServiceKey,
+          }
+        }),
+      };
+    }
 
     const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
