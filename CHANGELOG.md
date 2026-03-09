@@ -4,6 +4,52 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-10] - User Management Automation Complete
+
+### Added
+- **Automated User Creation via Netlify Functions**
+  - Created Netlify Function `create-user` for single user creation
+  - Handles Supabase Auth + users table creation atomically
+  - Admin permission verification
+  - Random password generation if not provided
+  - Team assignment support
+  - Automatic rollback on failures
+
+- **Frontend Integration**
+  - Updated UserManagement.tsx to call Netlify Function
+  - Password field added to user creation form (optional)
+  - Better error handling and user feedback
+  - CSV bulk import ready (function created but not yet integrated)
+
+### Changed
+- **Switched from Supabase Edge Functions to Netlify Functions**
+  - Edge Functions had persistent JWT validation issues at infrastructure level
+  - Netlify Functions more reliable for this use case
+  - Service role key properly secured in Netlify environment variables
+
+### Fixed
+- **Environment Variable Configuration**
+  - Added SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY to Netlify
+  - Fixed typo in variable name (ROLY → ROLE)
+  - Functions now properly access all required credentials
+
+### Technical Notes
+- Netlify Functions use TypeScript with @netlify/functions
+- Authentication flow: User JWT → Verify with anon key client → Check admin role → Use service key for creation
+- Service role key never exposed to client
+- Atomic operations with rollback on failure
+- Ready to scale to 200+ users
+
+### Deployment
+- Function deployed to: `/.netlify/functions/create-user`
+- Environment variables configured in Netlify dashboard
+- Successfully tested user creation in production
+
+### Next Steps
+1. Integrate bulk CSV import with Netlify Function
+2. Test with larger user batches
+3. Document user import process for admins
+
 ## [2026-03-10] - User Management Edge Functions Deployment and Debugging
 
 ### Added
