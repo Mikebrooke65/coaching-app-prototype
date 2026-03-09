@@ -1,0 +1,3 @@
+# Edge Function configuration
+# Disable automatic JWT verification - we'll handle it manually
+verify_jwt = false

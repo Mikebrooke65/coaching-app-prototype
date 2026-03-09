@@ -169,11 +169,23 @@ export function UserManagement() {
 
         alert('User updated successfully');
       } else {
-        // Create new user via Edge Function using Supabase client
-        console.log('Calling edge function via supabase.functions.invoke...');
+        // Create new user via Netlify Function
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
         
-        const { data, error } = await supabase.functions.invoke('create-user', {
-          body: {
+        if (!token) {
+          throw new Error('No active session');
+        }
+
+        console.log('Calling Netlify function...');
+        
+        const response = await fetch('/.netlify/functions/create-user', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             email: formData.email,
             password: formData.password,
             first_name: formData.first_name,
@@ -182,17 +194,14 @@ export function UserManagement() {
             active: formData.active,
             cellphone: formData.cellphone,
             team_id: formData.teamId || null,
-          },
+          }),
         });
 
-        console.log('Edge function response:', { data, error });
+        const result = await response.json();
+        console.log('Netlify function response:', result);
 
-        if (error) {
-          throw new Error(error.message || 'Failed to create user');
-        }
-
-        if (data?.error) {
-          throw new Error(data.error);
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to create user');
         }
 
         alert(`User created successfully!\n\nEmail: ${formData.email}\n${formData.password ? 'Password: ' + formData.password : 'A random password was generated - user can reset via email'}`);
