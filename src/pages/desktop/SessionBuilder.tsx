@@ -22,6 +22,7 @@ export function SessionBuilder() {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [filterType, setFilterType] = useState('all');
   const [filterAge, setFilterAge] = useState('all');
+  const [filterDivision, setFilterDivision] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Form state
@@ -38,6 +39,9 @@ export function SessionBuilder() {
     keyObjectives: '',
     pitchLayout: '',
   });
+
+  const [diagramFile, setDiagramFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchSessions();
@@ -64,9 +68,10 @@ export function SessionBuilder() {
   const filteredSessions = sessions.filter((session) => {
     const matchesType = filterType === 'all' || session.session_type === filterType;
     const matchesAge = filterAge === 'all' || session.age_group === filterAge;
+    const matchesDivision = filterDivision === 'all'; // TODO: Add division field to sessions table
     const matchesSearch = session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          session.session_name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesType && matchesAge && matchesSearch;
+    return matchesType && matchesAge && matchesDivision && matchesSearch;
   });
 
   const handleSelectSession = (session: Session) => {
@@ -88,6 +93,8 @@ export function SessionBuilder() {
 
   const handleClearForm = () => {
     setSelectedSession(null);
+    setDiagramFile(null);
+    setVideoFile(null);
     setFormData({
       sessionName: '',
       title: '',
@@ -104,9 +111,97 @@ export function SessionBuilder() {
   };
 
   const handleSave = async () => {
-    console.log('Saving session:', formData);
-    // TODO: Implement save to database
-    alert('Session save will be implemented');
+    try {
+      // Validate required fields
+      if (!formData.sessionName || !formData.title || !formData.organisation || !formData.coachingPoints || !formData.keyObjectives) {
+        alert('Please fill in all required fields (marked with *)');
+        return;
+      }
+
+      let diagramUrl = selectedSession?.diagram_url || null;
+      let videoUrl = selectedSession?.video_url || null;
+
+      // Upload diagram if provided
+      if (diagramFile) {
+        const fileExt = diagramFile.name.split('.').pop();
+        const fileName = `${formData.sessionName}.${fileExt}`;
+        const filePath = `pitch-diagrams/${formData.ageGroup}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('lesson-media')
+          .upload(filePath, diagramFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('lesson-media')
+          .getPublicUrl(filePath);
+
+        diagramUrl = publicUrl;
+      }
+
+      // Upload video if provided
+      if (videoFile) {
+        const fileExt = videoFile.name.split('.').pop();
+        const fileName = `${formData.sessionName}.${fileExt}`;
+        const filePath = `videos/${formData.ageGroup}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('lesson-media')
+          .upload(filePath, videoFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('lesson-media')
+          .getPublicUrl(filePath);
+
+        videoUrl = publicUrl;
+      }
+
+      // Prepare session data
+      const sessionData = {
+        session_name: formData.sessionName,
+        title: formData.title,
+        session_type: formData.type,
+        duration: formData.duration,
+        age_group: formData.ageGroup,
+        organisation: formData.organisation,
+        equipment: formData.equipment.split('\n').filter(line => line.trim()),
+        coaching_points: formData.coachingPoints.split('\n').filter(line => line.trim()),
+        steps: formData.steps.split('\n').filter(line => line.trim()),
+        key_objectives: formData.keyObjectives.split('\n').filter(line => line.trim()),
+        pitch_layout_description: formData.pitchLayout || null,
+        diagram_url: diagramUrl,
+        video_url: videoUrl,
+      };
+
+      if (selectedSession) {
+        // Update existing session
+        const { error } = await supabase
+          .from('sessions')
+          .update(sessionData)
+          .eq('id', selectedSession.id);
+
+        if (error) throw error;
+        alert('Session updated successfully!');
+      } else {
+        // Create new session
+        const { error } = await supabase
+          .from('sessions')
+          .insert(sessionData);
+
+        if (error) throw error;
+        alert('Session created successfully!');
+      }
+
+      // Refresh sessions list and clear form
+      await fetchSessions();
+      handleClearForm();
+    } catch (error: any) {
+      console.error('Error saving session:', error);
+      alert(`Failed to save session: ${error.message}`);
+    }
   };
 
   const sessionTypeLabels: Record<string, string> = {
@@ -118,52 +213,51 @@ export function SessionBuilder() {
 
   return (
     <div className="h-full flex flex-col gap-6 overflow-hidden">
-      {/* Page Header */}
+      {/* Page Header with Search and New Button */}
       <div className="flex-shrink-0">
-        <h1 className="text-3xl font-bold text-[#22c55e]">Session Builder</h1>
-        <p className="text-gray-600 mt-2">Create and manage training sessions for your teams</p>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Search sessions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+            />
+            <svg
+              className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+
+          <button
+            onClick={handleClearForm}
+            className="px-4 py-2 bg-[#0091f3] text-white rounded-lg font-medium hover:bg-[#0077cc] flex items-center gap-2 whitespace-nowrap"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Session
+          </button>
+        </div>
       </div>
 
-      {/* Top Section - Vertical Scrollable Sessions List */}
-      <div className="flex-shrink-0 h-80">
-        <div className="bg-white rounded-lg shadow h-full flex flex-col">
-          {/* Header with Search and New Button */}
-          <div className="p-4 border-b border-gray-200 flex-shrink-0">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="Search sessions..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                />
-                <svg
-                  className="absolute left-3 top-2.5 w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-
-              <button
-                onClick={handleClearForm}
-                className="px-4 py-2 bg-[#0091f3] text-white rounded-lg text-sm font-medium hover:bg-[#0077cc] flex items-center gap-2 whitespace-nowrap"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                New Session
-              </button>
-            </div>
-
+      {/* Middle Section - Sessions List with Filters */}
+      <div className="flex-shrink-0">
+        <div className="bg-white rounded-lg shadow">
+          {/* Sessions Header with Filters */}
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Sessions</h2>
+            
             <div className="flex items-center justify-between">
               <div className="flex gap-2">
                 <select
@@ -186,6 +280,23 @@ export function SessionBuilder() {
                   <option value="all">All Ages</option>
                   <option value="U9">U9</option>
                   <option value="U10">U10</option>
+                  <option value="U11">U11</option>
+                  <option value="U12">U12</option>
+                  <option value="U13">U13</option>
+                  <option value="U14">U14</option>
+                  <option value="U15">U15</option>
+                  <option value="U16">U16</option>
+                  <option value="U17">U17</option>
+                </select>
+
+                <select
+                  value={filterDivision}
+                  onChange={(e) => setFilterDivision(e.target.value)}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                >
+                  <option value="all">All Divisions</option>
+                  <option value="Community">Community</option>
+                  <option value="Academy">Academy</option>
                 </select>
               </div>
 
@@ -195,45 +306,40 @@ export function SessionBuilder() {
             </div>
           </div>
 
-          {/* Vertical Scrollable Session List */}
-          <div className="flex-1 overflow-y-auto p-4">
+          {/* Compact Session List - One line per session */}
+          <div className="max-h-64 overflow-y-auto">
             {isLoading ? (
-              <div className="flex items-center justify-center h-full">
+              <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0091f3]"></div>
               </div>
             ) : filteredSessions.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+              <div className="flex items-center justify-center py-12 text-gray-500 text-sm">
                 No sessions found
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-gray-100">
                 {filteredSessions.map((session) => (
                   <button
                     key={session.id}
                     onClick={() => handleSelectSession(session)}
-                    className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-                      selectedSession?.id === session.id
-                        ? 'border-[#0091f3] bg-[#0091f3] bg-opacity-5 shadow-md'
-                        : 'border-gray-200 hover:border-gray-300 hover:shadow'
+                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between gap-4 ${
+                      selectedSession?.id === session.id ? 'bg-blue-50 border-l-4 border-[#0091f3]' : ''
                     }`}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900 text-sm flex-1 pr-2">
-                        {session.title}
-                      </h3>
-                      <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700 whitespace-nowrap">
-                        {session.duration} min
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1 mb-1">
-                      <span className="text-xs px-2 py-0.5 rounded bg-[#0091f3] bg-opacity-10 text-[#0091f3]">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className="text-xs px-2 py-1 rounded bg-[#0091f3] bg-opacity-10 text-[#0091f3] whitespace-nowrap">
                         {sessionTypeLabels[session.session_type] || session.session_type}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                      <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 whitespace-nowrap">
                         {session.age_group}
                       </span>
+                      <span className="font-medium text-gray-900 text-sm truncate">
+                        {session.title}
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-600 line-clamp-1">{session.session_name}</p>
+                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                      {session.duration} min
+                    </span>
                   </button>
                 ))}
               </div>
@@ -417,6 +523,51 @@ export function SessionBuilder() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 placeholder="Describe the pitch setup, player positions, etc..."
               />
+            </div>
+
+            {/* Media Uploads */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pitch Diagram (Image)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setDiagramFile(e.target.files?.[0] || null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                />
+                {diagramFile && (
+                  <p className="mt-1 text-xs text-gray-600">Selected: {diagramFile.name}</p>
+                )}
+                {selectedSession?.diagram_url && !diagramFile && (
+                  <p className="mt-1 text-xs text-green-600">✓ Diagram uploaded</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  PNG format, 4:5 or 1:1 aspect ratio, min 800px resolution
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Demonstration Video (Optional)
+                </label>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                />
+                {videoFile && (
+                  <p className="mt-1 text-xs text-gray-600">Selected: {videoFile.name}</p>
+                )}
+                {selectedSession?.video_url && !videoFile && (
+                  <p className="mt-1 text-xs text-green-600">✓ Video uploaded</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  MP4 format recommended, max 50MB, keep under 2 minutes
+                </p>
+              </div>
             </div>
 
             {/* Action Buttons */}

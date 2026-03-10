@@ -246,3 +246,44 @@ export interface PlayerCaregiver {
   caregiver_id: string;
   created_at: string;
 }
+
+// Team member
+export interface TeamMember {
+  id: string;
+  team_id: string;
+  user_id: string;
+  role: 'player' | 'coach';
+  created_at: string;
+  updated_at: string;
+}
+
+// Game model
+export interface Game {
+  id: string;
+  team_id: string;
+  opponent: string;
+  game_date: string;
+  venue: string;
+  home_away: 'home' | 'away';
+  status: 'scheduled' | 'completed' | 'cancelled';
+  team_score?: number;
+  opponent_score?: number;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+// Game feedback model
+export interface GameFeedbackRecord {
+  id: string;
+  game_id: string;
+  team_id: string;
+  feedback_type: 'team' | 'player';
+  player_id?: string;
+  feedback_text: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by?: string;
+}
