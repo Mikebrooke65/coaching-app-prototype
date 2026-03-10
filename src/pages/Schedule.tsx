@@ -547,6 +547,7 @@ export function Schedule() {
                 </button>
               </div>
             </div>
+            </div>
           </div>
         </div>
       )}
