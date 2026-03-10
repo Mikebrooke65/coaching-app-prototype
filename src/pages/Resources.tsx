@@ -134,7 +134,13 @@ const ruleSets: RuleSet[] = [
   }
 ];
 
-const categories = ['Rules', 'Field Setup', 'Coach Support', 'General'] as const;
+const categories = ['Rules', 'Pitch', 'Guides', 'General'] as const;
+const categoryMapping = {
+  'Rules': 'Rules',
+  'Pitch': 'Field Setup',
+  'Guides': 'Coach Support',
+  'General': 'General'
+} as const;
 
 export function Resources() {
   const [selectedCategory, setSelectedCategory] = useState<typeof categories[number]>('Rules');
@@ -142,6 +148,11 @@ export function Resources() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRuleSet, setSelectedRuleSet] = useState<RuleSet>(ruleSets[0]);
   const [showRuleDropdown, setShowRuleDropdown] = useState(false);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     if (selectedCategory !== 'Rules') {
@@ -152,10 +163,12 @@ export function Resources() {
   const fetchResources = async () => {
     try {
       setIsLoading(true);
+      // Map display category to database category
+      const dbCategory = categoryMapping[selectedCategory];
       const { data, error } = await supabase
         .from('resources')
         .select('*')
-        .eq('category', selectedCategory)
+        .eq('category', dbCategory)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -188,12 +201,12 @@ export function Resources() {
 
       {/* Category Tabs */}
       <div className="px-4 mb-4">
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="grid grid-cols-4 gap-2">
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedCategory === category
                   ? 'bg-[#8b5cf6] text-white'
                   : 'bg-white text-gray-700 border border-gray-200'
@@ -245,7 +258,7 @@ export function Resources() {
             <div className="space-y-4">
               {selectedRuleSet.sections.map((section) => (
                 <div key={section.key} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="px-5 py-4 bg-gradient-to-r from-purple-50 to-white border-b border-purple-100">
+                  <div className="px-5 py-4 bg-[#8b5cf6] bg-opacity-20 border-b border-purple-200">
                     <h3 className="text-lg font-bold text-gray-900">{section.title}</h3>
                   </div>
                   <div className="px-5 py-4">
