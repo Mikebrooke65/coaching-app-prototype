@@ -60,13 +60,20 @@ git push kiro prototype && git push origin prototype
 ### Display Formats
 
 **Team Names**:
-- Always display as: "Age Group + Team Name"
-- Example: "U9 Lithium" (NOT "Lithium (U9)")
+- ALWAYS display as: "Age Group + Team Name" — this is the unique identifier
+- Example: "U9 Lithium" (NOT "Lithium", NOT "Lithium (U9)")
 - Format: `{team.age_group} {team.name}`
+- NEVER display `team.name` alone — always include `team.age_group` prefix
+- Applies everywhere: dropdowns, cards, headings, event titles, feedback labels
 
 **Game Events**:
 - Home: "Your Team vs Opposition"
 - Away: "Opposition vs Your Team"
+
+**Card/Section Shading**:
+- Use 20% opacity of the page's brand colour for card backgrounds and section headers
+- Apply via inline style: `style={{ backgroundColor: 'rgba(r, g, b, 0.2)' }}`
+- Do NOT use Tailwind `bg-opacity-20` with hex colours (unreliable)
 
 ## Code Conventions
 
@@ -90,9 +97,31 @@ git push kiro prototype && git push origin prototype
 
 ### Component Standards
 
+**Brand Colours**:
+- Primary Blue (Header, Home): `#0091f3`
+- Orange (Games): `#ea7800`
+- Dark Grey (Messaging): `#545859`
+- Green (Coaching): `#22c55e`
+- Purple (Resources): `#8b5cf6`
+- Cyan/Teal (Schedule): `#06b6d4`
+
+**Page Colour Assignments** (used for nav buttons, border accents, card shading):
+| Page | Colour | Hex | RGBA for 20% shading |
+|------|--------|-----|---------------------|
+| Home | Blue | `#0091f3` | `rgba(0, 145, 243, 0.2)` |
+| Coaching | Green | `#22c55e` | `rgba(34, 197, 94, 0.2)` |
+| Games | Orange | `#ea7800` | `rgba(234, 120, 0, 0.2)` |
+| Resources | Purple | `#8b5cf6` | `rgba(139, 92, 246, 0.2)` |
+| Schedule | Cyan | `#06b6d4` | `rgba(6, 182, 212, 0.2)` |
+| Messaging | Grey | `#545859` | `rgba(84, 88, 89, 0.2)` |
+
+**Fonts**:
+- Headings (app title, page headers): `Inter` / `Aktiv Grotesk Corp` (bold)
+- Body text, labels, content: `Exo 2`
+- Fallback: `-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`
+
 **Mobile Pages**:
 - Location: `src/pages/`
-- Use brand colors: `#0091f3` (blue), `#ea7800` (orange), `#545859` (grey)
 - Include bottom padding: `pb-20` for navigation clearance
 
 **Desktop Pages**:

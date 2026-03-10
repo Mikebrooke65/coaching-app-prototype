@@ -209,8 +209,8 @@ export function Coaching() {
       <div className="p-4 space-y-4">
         {/* Past Lessons Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">Past Lessons</h3>
+          <div className="px-4 py-2.5" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}>
+            <h3 className="font-semibold text-gray-900 text-sm">Past Lessons</h3>
           </div>
           {pastLessons.length > 0 ? (
             <div className="divide-y divide-gray-100">
@@ -225,32 +225,25 @@ export function Coaching() {
                 const color = skillColors[lesson.skill_category] || '#0091f3';
                 
                 return (
-                  <div key={lesson.id} className="p-4 hover:bg-gray-50 transition-colors cursor-pointer">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-gray-900">{lesson.title}</h4>
-                          <span 
-                            className="px-2 py-0.5 text-xs font-medium rounded-full text-white"
-                            style={{ backgroundColor: color }}
-                          >
-                            {lesson.skill_category}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          {lesson.delivery_date ? new Date(lesson.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date'}
-                        </p>
-                      </div>
-                      <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
+                  <div key={lesson.id} className="px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <p className="text-sm font-medium text-gray-900 truncate">{lesson.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-gray-500">
+                        {lesson.delivery_date ? new Date(lesson.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No date'}
+                      </span>
+                      <span 
+                        className="px-2 py-0 text-[10px] font-medium rounded-full text-white"
+                        style={{ backgroundColor: color }}
+                      >
+                        {lesson.skill_category}
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-6 text-center text-gray-500">
               <p className="text-sm">No lessons delivered yet</p>
             </div>
           )}
@@ -258,9 +251,9 @@ export function Coaching() {
 
         {/* Next Lesson Selection */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">Next Lesson</h3>
-            <p className="text-sm text-gray-600">Select a lesson to deliver</p>
+          <div className="px-4 py-2.5" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}>
+            <h3 className="font-semibold text-gray-900 text-sm">Next Lesson</h3>
+            <p className="text-xs text-gray-600">Select a lesson to deliver</p>
           </div>
           {availableLessons.length > 0 ? (
             <div className="divide-y divide-gray-100">
@@ -277,41 +270,35 @@ export function Coaching() {
                 return (
                   <div 
                     key={lesson.id} 
-                    className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => handleLessonClick(lesson.id)}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
-                        <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
-                          selectedLessonId === lesson.id 
-                            ? 'bg-[#0091f3] border-[#0091f3]' 
-                            : 'border-gray-300'
-                        }`}>
-                          {selectedLessonId === lesson.id && (
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
+                    <p className="text-sm font-medium text-gray-900 truncate">{lesson.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                        selectedLessonId === lesson.id 
+                          ? 'bg-[#0091f3] border-[#0091f3]' 
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedLessonId === lesson.id && (
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-gray-900">{lesson.title}</h4>
-                          <span 
-                            className="px-2 py-0.5 text-xs font-medium rounded-full text-white"
-                            style={{ backgroundColor: color }}
-                          >
-                            {lesson.skill_category}
-                          </span>
-                        </div>
-                      </div>
+                      <span 
+                        className="px-2 py-0 text-[10px] font-medium rounded-full text-white"
+                        style={{ backgroundColor: color }}
+                      >
+                        {lesson.skill_category}
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-6 text-center text-gray-500">
               <p className="text-sm">No available lessons for {selectedTeam?.age_group}</p>
               <p className="text-xs mt-1">All lessons have been delivered to this team</p>
             </div>

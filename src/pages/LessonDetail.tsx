@@ -319,7 +319,7 @@ export function LessonDetail() {
 
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{lesson.title}</h1>
+              <h1 className="text-lg font-bold text-gray-900 mb-2">{lesson.title}</h1>
               <div className="flex flex-wrap gap-2 mb-3">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#0091f3] text-white">
                   {lesson.age_group}
@@ -335,25 +335,6 @@ export function LessonDetail() {
                 </span>
               </div>
             </div>
-
-            <button
-              onClick={() => setIsFavorite(!isFavorite)}
-              className="ml-2 p-2 rounded-full hover:bg-gray-100"
-            >
-              <svg
-                className={`w-6 h-6 ${isFavorite ? 'fill-[#ea7800] text-[#ea7800]' : 'text-gray-400'}`}
-                fill={isFavorite ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                />
-              </svg>
-            </button>
           </div>
 
           {lesson.description && (
@@ -452,21 +433,13 @@ export function LessonDetail() {
 
       {/* Session Blocks */}
       <div className="p-4">
-        <h2 className="font-semibold text-gray-900 mb-3">Session Plan</h2>
         <div className="space-y-3">
           {lesson.sessions.map((session, index) => (
-            <div key={session.id} className="bg-white rounded-lg shadow">
+            <div key={session.id} className="rounded-lg shadow" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.4)' }}>
               <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-[#0091f3] text-white flex items-center justify-center font-semibold text-sm mr-3">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{session.title}</h3>
-                      <p className="text-xs text-gray-500">{session.duration} minutes • {sessionTypeLabels[index]}</p>
-                    </div>
-                  </div>
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-gray-400">{index + 1}. {sessionTypeLabels[index]} • {session.duration} min</p>
+                  <p className="text-base font-bold text-gray-900">{session.title}</p>
                 </div>
 
                 {/* Pitch Diagram */}

@@ -389,110 +389,84 @@ export function Games() {
       {/* Game Card with Navigation */}
       {games.length > 0 && games[currentGameIndex] && (
         <div className="space-y-4">
-          {/* Game Detail Card with Navigation Arrows */}
-          <div className="rounded-lg shadow p-4 border border-gray-200" style={{ backgroundColor: 'rgba(234, 120, 0, 0.2)' }}>
-            <div className="flex items-center justify-between mb-3">
-              {/* Left Arrow */}
+          {/* Game Card */}
+          <div className="rounded-xl shadow-sm overflow-hidden border border-orange-200" style={{ backgroundColor: 'rgba(234, 120, 0, 0.2)' }}>
+            {/* Navigation + Match Title */}
+            <div className="flex items-center justify-between px-3 py-2">
               <button
                 onClick={() => navigateGame('prev')}
                 disabled={currentGameIndex === 0}
-                className={`p-2 rounded-lg transition-colors ${
-                  currentGameIndex === 0
-                    ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                className={`p-1 rounded transition-colors ${currentGameIndex === 0 ? 'text-gray-300' : 'text-gray-600 hover:bg-white/50'}`}
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
-
-              {/* Game Info */}
               <div className="flex-1 text-center">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <p className="font-bold text-gray-900 text-sm">
                   {selectedTeam?.age_group} {selectedTeam?.name} vs {games[currentGameIndex].opponent}
-                </h3>
-                <span
-                  className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${
-                    games[currentGameIndex].home_away === 'home'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  {games[currentGameIndex].home_away.toUpperCase()}
-                </span>
-                {games.length > 1 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Game {currentGameIndex + 1} of {games.length}
-                  </p>
-                )}
+                </p>
+                <div className="flex items-center justify-center gap-2 mt-0.5">
+                  <span className={`px-1.5 py-0 rounded text-[10px] font-semibold ${games[currentGameIndex].home_away === 'home' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {games[currentGameIndex].home_away.toUpperCase()}
+                  </span>
+                  {games.length > 1 && (
+                    <span className="text-[10px] text-gray-400">{currentGameIndex + 1}/{games.length}</span>
+                  )}
+                </div>
               </div>
-
-              {/* Right Arrow */}
               <button
                 onClick={() => navigateGame('next')}
                 disabled={currentGameIndex === games.length - 1}
-                className={`p-2 rounded-lg transition-colors ${
-                  currentGameIndex === games.length - 1
-                    ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                className={`p-1 rounded transition-colors ${currentGameIndex === games.length - 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-white/50'}`}
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-2 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span>{formatDate(games[currentGameIndex].game_date)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                <span>{formatTime(games[currentGameIndex].game_date)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span>{games[currentGameIndex].venue}</span>
+            {/* Score Display (if recorded) + Date/Location row */}
+            <div className="px-3 pb-2">
+              {games[currentGameIndex].team_score !== null && games[currentGameIndex].team_score !== undefined && (
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <span className="text-2xl font-bold text-gray-900">{games[currentGameIndex].team_score}</span>
+                  <span className="text-sm font-medium text-gray-400">-</span>
+                  <span className="text-2xl font-bold text-gray-900">{games[currentGameIndex].opponent_score}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
+                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(games[currentGameIndex].game_date)}</span>
+                <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatTime(games[currentGameIndex].game_date)}</span>
+                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{games[currentGameIndex].venue}</span>
               </div>
             </div>
           </div>
 
-          {/* Score Recording */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-3">Record Score</h4>
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {selectedTeam?.age_group} {selectedTeam?.name}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={teamScore}
-                  onChange={(e) => setTeamScore(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                  placeholder="0"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {games[currentGameIndex].opponent}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={opponentScore}
-                  onChange={(e) => setOpponentScore(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                  placeholder="0"
-                />
-              </div>
+          {/* Score Recording - compact inline */}
+          <div className="bg-white rounded-lg shadow-sm px-3 py-2 border border-gray-200">
+            <div className="flex gap-2 items-center">
+              <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Score:</span>
+              <input
+                type="number"
+                min="0"
+                value={teamScore}
+                onChange={(e) => setTeamScore(e.target.value)}
+                className="w-14 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0091f3]"
+                placeholder="0"
+              />
+              <span className="text-xs text-gray-400">-</span>
+              <input
+                type="number"
+                min="0"
+                value={opponentScore}
+                onChange={(e) => setOpponentScore(e.target.value)}
+                className="w-14 px-2 py-1 text-center text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#0091f3]"
+                placeholder="0"
+              />
               <button
                 onClick={handleSaveScore}
                 disabled={scoreSaving}
-                className="px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0077cc] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="ml-auto px-3 py-1 text-sm bg-[#0091f3] text-white rounded hover:bg-[#0077cc] transition-colors disabled:opacity-50 flex items-center gap-1"
               >
-                <Save className="w-4 h-4" />
-                {scoreSaving ? 'Saving...' : 'Save'}
+                <Save className="w-3 h-3" />
+                {scoreSaving ? '...' : 'Save'}
               </button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, HelpCircle, Plus } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, HelpCircle, Plus, Users } from 'lucide-react';
 import { eventsApi } from '../lib/events-api';
 import { useAuth } from '../contexts/AuthContext';
 import type { Event, EventRsvp, Team } from '../types/database';
@@ -8,6 +8,7 @@ export function Schedule() {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [rsvps, setRsvps] = useState<Record<string, EventRsvp>>({});
+  const [attendeeCounts, setAttendeeCounts] = useState<Record<string, number>>({});
   const [filter, setFilter] = useState<'all' | 'game' | 'training' | 'general'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,6 +16,10 @@ export function Schedule() {
   const [userTeams, setUserTeams] = useState<Team[]>([]);
   const [allTeams, setAllTeams] = useState<Team[]>([]);
 
+  // Decline reason modal state
+  const [declineModalOpen, setDeclineModalOpen] = useState(false);
+  const [declineEventId, setDeclineEventId] = useState<string | null>(null);
+  const [declineReason, setDeclineReason] = useState<'late' | 'sick' | 'injured' | 'holiday' | 'other'>('sick');
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -49,6 +54,10 @@ export function Schedule() {
         }
       });
       setRsvps(rsvpMap);
+
+      // Load attendee counts
+      const counts = await eventsApi.getAttendeeCounts(data.map(e => e.id));
+      setAttendeeCounts(counts);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load events');
     } finally {
@@ -129,9 +138,38 @@ export function Schedule() {
   };
 
   const handleRsvp = async (eventId: string, status: 'going' | 'not_going' | 'maybe') => {
+    if (status === 'not_going') {
+      setDeclineEventId(eventId);
+      setDeclineReason('sick');
+      setDeclineModalOpen(true);
+      return;
+    }
     try {
+      const oldStatus = rsvps[eventId]?.status;
       const rsvp = await eventsApi.setRsvp(eventId, status);
       setRsvps({ ...rsvps, [eventId]: rsvp });
+      // Update attendee count locally
+      let count = attendeeCounts[eventId] || 0;
+      if (oldStatus === 'going' && status !== 'going') count--;
+      if (oldStatus !== 'going' && status === 'going') count++;
+      setAttendeeCounts({ ...attendeeCounts, [eventId]: Math.max(0, count) });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update RSVP');
+    }
+  };
+
+  const handleDeclineConfirm = async () => {
+    if (!declineEventId) return;
+    try {
+      const oldStatus = rsvps[declineEventId]?.status;
+      const rsvp = await eventsApi.setRsvp(declineEventId, 'not_going', declineReason);
+      setRsvps({ ...rsvps, [declineEventId]: rsvp });
+      if (oldStatus === 'going') {
+        const count = (attendeeCounts[declineEventId] || 1) - 1;
+        setAttendeeCounts({ ...attendeeCounts, [declineEventId]: Math.max(0, count) });
+      }
+      setDeclineModalOpen(false);
+      setDeclineEventId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update RSVP');
     }
@@ -201,7 +239,7 @@ export function Schedule() {
     // Get team name from target_teams
     const teamId = event.target_teams[0];
     const team = userTeams.find(t => t.id === teamId) || allTeams.find(t => t.id === teamId);
-    const teamName = team?.name || 'Your Team';
+    const teamName = team ? `${team.age_group} ${team.name}` : 'Your Team';
 
     if (event.home_away === 'home') {
       return `${teamName} vs ${event.opponent}`;
@@ -292,75 +330,72 @@ export function Schedule() {
       </div>
 
       {/* Events List */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {sortedEvents.map((event) => (
           <div
             key={event.id}
-            className="rounded-lg shadow p-4 border border-gray-200"
+            className="rounded-lg shadow-sm px-3 py-2 border border-gray-200"
             style={{ backgroundColor: 'rgba(6, 182, 212, 0.2)' }}
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-gray-900">{getEventTitle(event)}</h3>
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${getTypeColor(event.event_type)}`}>
-                    {event.event_type}
-                  </span>
-                </div>
+            {/* Title row */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <h3 className="font-semibold text-gray-900 text-sm truncate">{getEventTitle(event)}</h3>
+                <span className={`px-1.5 py-0 rounded text-[10px] font-medium capitalize flex-shrink-0 ${getTypeColor(event.event_type)}`}>
+                  {event.event_type}
+                </span>
               </div>
               {getRsvpIcon(event.id)}
             </div>
 
-            <div className="space-y-2 text-sm text-gray-600 mb-3">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span>{formatDate(event.event_date)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                <span>{formatTime(event.event_date)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span>{event.location}</span>
-              </div>
+            {/* Details row - single line */}
+            <div className="flex items-center gap-3 text-xs text-gray-500 mb-1.5">
+              <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(event.event_date)}</span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatTime(event.event_date)}</span>
+              <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{event.location}</span>
             </div>
 
-            {/* RSVP Buttons */}
-            <div className="pt-3 border-t border-gray-200">
-              <p className="text-xs text-gray-600 mb-2">Your Response:</p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleRsvp(event.id, 'going')}
-                  className={`flex-1 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    rsvps[event.id]?.status === 'going'
-                      ? 'bg-green-100 text-green-700 border border-green-300'
-                      : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  Going
-                </button>
-                <button
-                  onClick={() => handleRsvp(event.id, 'maybe')}
-                  className={`flex-1 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    rsvps[event.id]?.status === 'maybe'
-                      ? 'bg-yellow-100 text-yellow-700 border border-yellow-300'
-                      : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  Maybe
-                </button>
-                <button
-                  onClick={() => handleRsvp(event.id, 'not_going')}
-                  className={`flex-1 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    rsvps[event.id]?.status === 'not_going'
-                      ? 'bg-red-100 text-red-700 border border-red-300'
-                      : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  Can't Go
-                </button>
-              </div>
+            {/* Attendees row */}
+            <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+              <Users className="w-3 h-3" />
+              <span>{attendeeCounts[event.id] || 0} attendees</span>
+            </div>
+
+            {/* RSVP Buttons - compact */}
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => handleRsvp(event.id, 'going')}
+                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  rsvps[event.id]?.status === 'going'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-white/70 text-gray-600 border border-gray-200 hover:bg-green-50'
+                }`}
+              >
+                <CheckCircle className="w-3 h-3" />
+                Going
+              </button>
+              <button
+                onClick={() => handleRsvp(event.id, 'maybe')}
+                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  rsvps[event.id]?.status === 'maybe'
+                    ? 'bg-gray-500 text-white'
+                    : 'bg-white/70 text-gray-600 border border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                <HelpCircle className="w-3 h-3" />
+                Maybe
+              </button>
+              <button
+                onClick={() => handleRsvp(event.id, 'not_going')}
+                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  rsvps[event.id]?.status === 'not_going'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-white/70 text-gray-600 border border-gray-200 hover:bg-red-50'
+                }`}
+              >
+                <XCircle className="w-3 h-3" />
+                Can't Go
+              </button>
             </div>
           </div>
         ))}
@@ -547,6 +582,45 @@ export function Schedule() {
                 </button>
               </div>
             </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Decline Reason Modal */}
+      {declineModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-sm w-full p-5">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Can't make it?</h3>
+            <p className="text-sm text-gray-500 mb-4">Please select a reason:</p>
+            <div className="space-y-2 mb-5">
+              {(['late', 'sick', 'injured', 'holiday', 'other'] as const).map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setDeclineReason(reason)}
+                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    declineReason === reason
+                      ? 'bg-red-500 text-white'
+                      : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  {reason.charAt(0).toUpperCase() + reason.slice(1)}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setDeclineModalOpen(false); setDeclineEventId(null); }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeclineConfirm}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>

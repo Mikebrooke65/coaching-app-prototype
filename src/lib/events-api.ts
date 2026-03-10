@@ -67,10 +67,17 @@ export class EventsApi extends ApiClient {
   // Set user's RSVP for an event
   async setRsvp(
     eventId: string,
-    status: 'going' | 'not_going' | 'maybe' | 'no_response'
+    status: 'going' | 'not_going' | 'maybe' | 'no_response',
+    declineReason?: 'late' | 'sick' | 'injured' | 'holiday' | 'other'
   ): Promise<EventRsvp> {
     const { data: { user } } = await this.supabase.auth.getUser();
     if (!user) throw new ApiError('User not authenticated');
+
+    const now = new Date().toISOString();
+    const updateData: Record<string, unknown> = { 
+      status,
+      decline_reason: status === 'not_going' ? (declineReason || null) : null,
+    };
 
     // Try to update existing RSVP
     const { data: existing } = await this.supabase
@@ -81,15 +88,38 @@ export class EventsApi extends ApiClient {
       .single();
 
     if (existing) {
-      return this.update<EventRsvp>('event_rsvps', existing.id, { status });
+      // Only set responded_at on first real response
+      if (!existing.responded_at && status !== 'no_response') {
+        updateData.responded_at = now;
+      }
+      return this.update<EventRsvp>('event_rsvps', existing.id, updateData);
     }
 
     // Create new RSVP
     return this.insert<EventRsvp>('event_rsvps', {
       event_id: eventId,
       user_id: user.id,
-      status,
+      responded_at: status !== 'no_response' ? now : null,
+      ...updateData,
     });
+  }
+
+  // Get attendee counts (going) for multiple events
+  async getAttendeeCounts(eventIds: string[]): Promise<Record<string, number>> {
+    if (eventIds.length === 0) return {};
+    const { data, error } = await this.supabase
+      .from('event_rsvps')
+      .select('event_id')
+      .in('event_id', eventIds)
+      .eq('status', 'going');
+
+    if (error) return {};
+    
+    const counts: Record<string, number> = {};
+    (data || []).forEach((row: { event_id: string }) => {
+      counts[row.event_id] = (counts[row.event_id] || 0) + 1;
+    });
+    return counts;
   }
 
   // Get user's teams (for event creation targeting)

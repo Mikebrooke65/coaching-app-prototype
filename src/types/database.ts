@@ -315,6 +315,8 @@ export interface EventRsvp {
   event_id: string;
   user_id: string;
   status: 'going' | 'not_going' | 'maybe' | 'no_response';
+  responded_at: string | null;
+  decline_reason: 'late' | 'sick' | 'injured' | 'holiday' | 'other' | null;
   created_at: string;
   updated_at: string;
 }

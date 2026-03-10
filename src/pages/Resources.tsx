@@ -258,7 +258,7 @@ export function Resources() {
             <div className="space-y-4">
               {selectedRuleSet.sections.map((section) => (
                 <div key={section.key} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="px-5 py-4 bg-[#8b5cf6] bg-opacity-20 border-b border-purple-200">
+                  <div className="px-5 py-4 border-b border-purple-200" style={{ backgroundColor: 'rgba(139, 92, 246, 0.2)' }}>
                     <h3 className="text-lg font-bold text-gray-900">{section.title}</h3>
                   </div>
                   <div className="px-5 py-4">
