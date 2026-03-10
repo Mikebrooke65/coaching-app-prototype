@@ -513,7 +513,7 @@ export function Schedule() {
                     <option value="">All teams</option>
                     {(user?.role === 'admin' ? allTeams : userTeams).map(team => (
                       <option key={team.id} value={team.id}>
-                        {team.name} ({team.age_group})
+                        {team.age_group} {team.name}
                       </option>
                     ))}
                   </select>

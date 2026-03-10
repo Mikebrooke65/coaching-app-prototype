@@ -297,6 +297,8 @@ export interface Event {
   location: string;
   opponent?: string;
   home_away?: 'home' | 'away';
+  team_score?: number;
+  opponent_score?: number;
   target_teams: string[];
   target_roles: string[];
   target_divisions: string[];

@@ -112,6 +112,20 @@ export class EventsApi extends ApiClient {
       order: { column: 'name', ascending: true },
     });
   }
+
+  // Update game event score
+  async updateEventScore(
+    eventId: string,
+    teamScore: number,
+    opponentScore: number
+  ): Promise<Event> {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    return this.update<Event>('events', eventId, {
+      team_score: teamScore,
+      opponent_score: opponentScore,
+      updated_by: user?.id,
+    });
+  }
 }
 
 export const eventsApi = new EventsApi();

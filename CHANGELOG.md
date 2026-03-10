@@ -4,6 +4,78 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-10] - Games Page Integration with Events System
+
+### Added
+- **Games Page Connected to Events System**
+  - Games page now queries `events` table instead of `games` table
+  - Filters for `event_type = 'game'` and past dates only
+  - Displays games with navigation arrows (left = older, right = newer)
+  - Shows "Game X of Y" counter when multiple games exist
+  - Team names display as "Age Group + Name" format (e.g., "U9 Lithium")
+
+- **Score Recording to Events**
+  - Migration 024: Added `team_score` and `opponent_score` fields to events table
+  - Created `updateEventScore` method in events API
+  - Score validation allows empty fields (defaults to 0)
+  - Scores persist and display when navigating between games
+
+- **Enhanced Feedback System**
+  - Feedback form clears after saving, ready for next entry
+  - Resets to "Team" selection after save
+  - Loads existing feedback when selecting same team/player
+  - Shows "Update Feedback" button when editing existing feedback
+  - Allows appending to or editing existing feedback
+  - Player dropdown filters out coaches (players only)
+
+- **Database Fixes**
+  - Migration 025: Updated `game_feedback` foreign key to reference `events` table
+  - Fixed constraint to allow feedback on game events
+
+### Changed
+- **Games Page UI Improvements**
+  - Removed dropdown game selector
+  - Added left/right navigation arrows on game card
+  - Cleaner, more intuitive navigation between past games
+  - Arrow buttons disabled at first/last game
+
+- **Events API Extended**
+  - Added `updateEventScore` method for saving game scores
+  - Event type now includes optional score fields
+
+### Fixed
+- **Score Saving Issues**
+  - Fixed "Cannot coerce to single JSON object" error
+  - Fixed validation to handle empty score inputs
+  - Scores now save correctly to events table
+
+- **Player Selection**
+  - Fixed player dropdown to exclude coaches
+  - Added double filter (team_members.role and users.role)
+  - Only actual players appear in feedback dropdown
+
+### Technical Notes
+- Games are events with `event_type = 'game'`
+- Scores stored directly in events table (team_score, opponent_score)
+- Feedback references event IDs via game_id field
+- Navigation uses array index for efficient game switching
+
+### Files Created
+- `supabase/migrations/024_add_scores_to_events.sql`
+- `supabase/migrations/025_fix_game_feedback_for_events.sql`
+
+### Files Modified
+- `src/pages/Games.tsx` - Complete rebuild with events integration and navigation
+- `src/lib/events-api.ts` - Added updateEventScore method
+- `src/lib/games-api.ts` - Fixed getTeamPlayers to filter coaches
+- `src/types/database.ts` - Added score fields to Event type
+
+### Next Steps
+1. Test full workflow with multiple games
+2. Add ability to delete feedback
+3. Consider adding game notes/summary field
+4. Build Schedule page event creation UI (already has basic version)
+
 ## [2026-03-10] - Games and Schedule System Foundation
 
 ### Added

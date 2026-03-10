@@ -1,5 +1,193 @@
 # Conversation History
 
+## Session: March 10, 2026 (Part 3) - Games Page Integration with Events System
+
+### Context
+Continued from Part 2. Games page was built but pulling from wrong table. User created a game event in Schedule, but it wasn't showing in Games page because Games was querying `games` table while events are in `events` table.
+
+### The Journey
+
+#### Problem Discovery
+- User created game event in Schedule successfully
+- Navigated to Games page - showed "No past games found"
+- **Root Cause**: Games page querying `games` table, but games are stored in `events` table with `event_type = 'game'`
+- Architecture: A game is just an event with extra fields (opponent, home_away)
+
+#### Solution 1: Connect Games to Events
+- Updated `loadGames()` in Games.tsx to query `events` table
+- Filter by `event_type = 'game'`
+- Filter by `target_teams` contains selected team ID
+- Filter by past dates only (`event_date < now`)
+- Convert event format to Game format for display
+- Fixed team display to show "U9 Lithium" format (age_group + name)
+
+#### UI Improvement: Navigation Arrows
+- User feedback: Dropdown game selector was clunky
+- **New Design**: Single game card with left/right navigation arrows
+- Left arrow = go back in time (older games)
+- Right arrow = go forward in time (newer games)
+- Shows "Game X of Y" counter
+- Arrows disabled at first/last game
+- Much cleaner UX
+
+#### Problem: Score Saving Failed
+- Error: "Cannot coerce the result to a single JSON object"
+- **Root Cause**: `updateGameScore` in games-api trying to update `games` table
+- But we're using event IDs from `events` table
+- **Solution**: Add score fields to events table
+
+#### Migration 024: Add Scores to Events
+- Added `team_score` and `opponent_score` INTEGER fields to events table
+- Created `updateEventScore` method in events-api.ts
+- Updated Event type to include score fields
+- Games page now saves scores to events table successfully
+
+#### Problem: Score Validation Too Strict
+- Error: "Please enter valid scores"
+- **Root Cause**: Empty string inputs parsed as NaN
+- Input fields start with `''` not `'0'`
+- **Solution**: Handle empty strings as 0 in validation
+- `teamScore === '' ? 0 : parseInt(teamScore)`
+
+#### Problem: Coaches in Player Dropdown
+- User noticed coach appearing in player selection
+- **Root Cause**: `getTeamPlayers` only filtering by team_members.role
+- Coach might have role='player' in team_members but role='coach' in users table
+- **Solution**: Double filter
+  - Filter team_members by role='player'
+  - Filter users by role='player'
+  - Use `!inner` join to ensure user exists
+
+#### Enhancement: Feedback Form Workflow
+- User wanted form to clear after saving
+- User wanted to edit existing feedback by reselecting team/player
+- **Implementation**:
+  - Added `currentFeedbackId` state to track if editing
+  - `handleFeedbackTypeChange` loads existing team feedback if any
+  - `handlePlayerChange` loads existing player feedback if any
+  - After save: clear form, reset to "Team" selection
+  - Button shows "Update Feedback" when editing, "Save Feedback" when creating
+
+#### Problem: Feedback Not Saving
+- Feedback save appeared to do nothing
+- **Root Cause**: `game_feedback.game_id` has foreign key to `games` table
+- But we're passing event IDs (from `events` table)
+- Foreign key constraint failing silently
+
+#### Migration 025: Fix Feedback Foreign Key
+- Dropped constraint `game_feedback_game_id_fkey` to games table
+- Added new constraint to reference `events(id)` instead
+- Feedback now saves successfully with event IDs
+
+### Tasks Completed
+
+#### 1. Connected Games Page to Events System
+- Updated loadGames to query events table
+- Filter by event_type='game', target_teams, past dates
+- Convert events to Game format for display
+- Team display shows "Age Group + Name" format
+
+#### 2. Improved Game Navigation UI
+- Replaced dropdown selector with navigation arrows
+- Left/right arrows to navigate between games
+- Game counter shows current position
+- Cleaner, more intuitive interface
+
+#### 3. Added Score Recording
+- Migration 024: Added score fields to events table
+- Created updateEventScore in events-api
+- Score validation handles empty inputs (defaults to 0)
+- Scores persist and display correctly
+
+#### 4. Enhanced Feedback System
+- Form clears after saving
+- Resets to "Team" selection
+- Loads existing feedback when reselecting team/player
+- Shows "Update" vs "Save" button appropriately
+- Allows editing/appending to existing feedback
+
+#### 5. Fixed Player Filtering
+- Updated getTeamPlayers to double-filter
+- Filters team_members.role='player'
+- Filters users.role='player'
+- Coaches no longer appear in player dropdown
+
+#### 6. Fixed Feedback Database Constraint
+- Migration 025: Updated foreign key to reference events
+- Feedback now saves successfully
+
+### Files Created
+- `supabase/migrations/024_add_scores_to_events.sql`
+- `supabase/migrations/025_fix_game_feedback_for_events.sql`
+
+### Files Modified
+- `src/pages/Games.tsx` - Complete rebuild with events integration
+- `src/lib/events-api.ts` - Added updateEventScore method
+- `src/lib/games-api.ts` - Fixed getTeamPlayers filtering
+- `src/types/database.ts` - Added score fields to Event type
+- `CHANGELOG.md` - Updated with today's work
+- `CONVERSATION-HISTORY.md` - This file
+
+### Technical Decisions
+
+**Architecture Clarification**:
+- Games ARE events (event_type='game')
+- Not separate entities
+- Events table is source of truth
+- game_feedback references events, not games table
+
+**Score Storage**:
+- Scores stored directly in events table
+- Added team_score and opponent_score fields
+- Simpler than separate games table
+- Keeps all game data in one place
+
+**Feedback Workflow**:
+- One feedback record per team/player per game
+- Editing updates existing record
+- No duplicate feedback for same target
+- Form resets after save for quick entry
+
+**Navigation Pattern**:
+- Array-based navigation (index)
+- More efficient than re-querying
+- Arrows provide clear direction
+- Counter shows position
+
+### Current Status
+- ✅ Games page connected to events system
+- ✅ Score recording working
+- ✅ Feedback system working with edit capability
+- ✅ Player filtering correct
+- ✅ Navigation arrows implemented
+- ✅ Team display format correct
+- ✅ All database constraints fixed
+- ⏳ Ready for testing with multiple games
+- ⏳ Schedule page has basic event creation (needs polish)
+
+### Next Steps
+1. Test full workflow with multiple games and players
+2. Add ability to delete feedback
+3. Polish Schedule page event creation UI
+4. Consider adding game notes/summary field
+5. Test with real data (multiple teams, games, players)
+
+### User Feedback
+- User happy with navigation arrow approach
+- Cleaner than dropdown selector
+- Feedback workflow makes sense
+- Ready to test with real data
+
+### Time Breakdown
+- Connecting to events: ~20 minutes
+- Navigation arrows UI: ~15 minutes
+- Score recording: ~20 minutes
+- Feedback enhancements: ~25 minutes
+- Bug fixes: ~20 minutes
+- **Total**: ~1.5 hours
+
+---
+
 ## Session: March 10, 2026 (Part 2) - Games and Schedule System Foundation
 
 ### Context

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Trophy, Clock, ChevronDown, ChevronUp, Save } from 'lucide-react';
+import { Calendar, MapPin, Trophy, Clock, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { gamesApi } from '../lib/games-api';
+import { eventsApi } from '../lib/events-api';
 import type { Game, GameFeedbackRecord, Team, User } from '../types/database';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,7 +10,7 @@ export function Games() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [games, setGames] = useState<Game[]>([]);
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [currentGameIndex, setCurrentGameIndex] = useState(0);
   const [teamPlayers, setTeamPlayers] = useState<User[]>([]);
   const [gameFeedback, setGameFeedback] = useState<GameFeedbackRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +26,7 @@ export function Games() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('');
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackSaving, setFeedbackSaving] = useState(false);
+  const [currentFeedbackId, setCurrentFeedbackId] = useState<string | null>(null);
 
   // Load user's teams
   useEffect(() => {
@@ -43,12 +45,12 @@ export function Games() {
     }
   }, [selectedTeam]);
 
-  // Load game details when game is selected
+  // Load game details when game index changes
   useEffect(() => {
-    if (selectedGame) {
-      loadGameDetails();
+    if (games.length > 0 && games[currentGameIndex]) {
+      loadGameDetails(games[currentGameIndex]);
     }
-  }, [selectedGame]);
+  }, [currentGameIndex, games]);
 
   const loadTeams = async () => {
     if (!user?.id) {
@@ -98,12 +100,40 @@ export function Games() {
 
     try {
       setLoading(true);
-      const pastGames = await gamesApi.getPastGames(selectedTeam.id);
+      
+      // Query events table for game events
+      const { data, error } = await gamesApi.supabase
+        .from('events')
+        .select('*')
+        .eq('event_type', 'game')
+        .contains('target_teams', [selectedTeam.id])
+        .lt('event_date', new Date().toISOString())
+        .order('event_date', { ascending: false });
+
+      if (error) throw error;
+
+      // Convert events to Game format
+      const pastGames: Game[] = (data || []).map(event => ({
+        id: event.id,
+        team_id: selectedTeam.id,
+        opponent: event.opponent || 'Unknown',
+        game_date: event.event_date,
+        venue: event.location,
+        home_away: event.home_away || 'home',
+        status: 'completed' as const,
+        team_score: event.team_score,
+        opponent_score: event.opponent_score,
+        created_at: event.created_at,
+        updated_at: event.updated_at,
+        created_by: event.created_by,
+        updated_by: event.updated_by,
+      }));
+
       setGames(pastGames);
 
-      // Auto-select most recent game
+      // Auto-select most recent game (index 0)
       if (pastGames.length > 0) {
-        setSelectedGame(pastGames[0]);
+        setCurrentGameIndex(0);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load games');
@@ -112,8 +142,8 @@ export function Games() {
     }
   };
 
-  const loadGameDetails = async () => {
-    if (!selectedGame || !selectedTeam) return;
+  const loadGameDetails = async (game: Game) => {
+    if (!game || !selectedTeam) return;
 
     try {
       // Load team players
@@ -121,17 +151,17 @@ export function Games() {
       setTeamPlayers(players);
 
       // Load existing feedback
-      const feedback = await gamesApi.getGameFeedback(selectedGame.id);
+      const feedback = await gamesApi.getGameFeedback(game.id);
       setGameFeedback(feedback);
 
       // Pre-fill score if already recorded
-      if (selectedGame.team_score !== null && selectedGame.team_score !== undefined) {
-        setTeamScore(selectedGame.team_score.toString());
+      if (game.team_score !== null && game.team_score !== undefined) {
+        setTeamScore(game.team_score.toString());
       } else {
         setTeamScore('');
       }
-      if (selectedGame.opponent_score !== null && selectedGame.opponent_score !== undefined) {
-        setOpponentScore(selectedGame.opponent_score.toString());
+      if (game.opponent_score !== null && game.opponent_score !== undefined) {
+        setOpponentScore(game.opponent_score.toString());
       } else {
         setOpponentScore('');
       }
@@ -141,24 +171,35 @@ export function Games() {
   };
 
   const handleSaveScore = async () => {
-    if (!selectedGame) return;
+    const currentGame = games[currentGameIndex];
+    if (!currentGame) return;
 
-    const team = parseInt(teamScore);
-    const opponent = parseInt(opponentScore);
+    // Handle empty strings as 0
+    const team = teamScore === '' ? 0 : parseInt(teamScore);
+    const opponent = opponentScore === '' ? 0 : parseInt(opponentScore);
 
-    if (isNaN(team) || isNaN(opponent) || team < 0 || opponent < 0) {
+    if (isNaN(team) || isNaN(opponent)) {
       setError('Please enter valid scores');
+      return;
+    }
+
+    if (team < 0 || opponent < 0) {
+      setError('Scores cannot be negative');
       return;
     }
 
     try {
       setScoreSaving(true);
       setError(null);
-      const updatedGame = await gamesApi.updateGameScore(selectedGame.id, team, opponent);
-      setSelectedGame(updatedGame);
       
-      // Update in games list
-      setGames(games.map(g => g.id === updatedGame.id ? updatedGame : g));
+      // Update score in events table
+      await eventsApi.updateEventScore(currentGame.id, team, opponent);
+      
+      // Update local state
+      const updatedGame = { ...currentGame, team_score: team, opponent_score: opponent };
+      const updatedGames = [...games];
+      updatedGames[currentGameIndex] = updatedGame;
+      setGames(updatedGames);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save score');
     } finally {
@@ -167,7 +208,8 @@ export function Games() {
   };
 
   const handleSaveFeedback = async () => {
-    if (!selectedGame || !selectedTeam || !feedbackText.trim()) {
+    const currentGame = games[currentGameIndex];
+    if (!currentGame || !selectedTeam || !feedbackText.trim()) {
       setError('Please enter feedback');
       return;
     }
@@ -181,21 +223,88 @@ export function Games() {
       setFeedbackSaving(true);
       setError(null);
 
-      const newFeedback = await gamesApi.createGameFeedback({
-        game_id: selectedGame.id,
-        team_id: selectedTeam.id,
-        feedback_type: feedbackType,
-        player_id: feedbackType === 'player' ? selectedPlayerId : undefined,
-        feedback_text: feedbackText,
-      });
+      let savedFeedback: GameFeedbackRecord;
 
-      setGameFeedback([newFeedback, ...gameFeedback]);
+      if (currentFeedbackId) {
+        // Update existing feedback
+        savedFeedback = await gamesApi.updateGameFeedback(currentFeedbackId, feedbackText);
+        // Update in list
+        setGameFeedback(gameFeedback.map(f => f.id === currentFeedbackId ? savedFeedback : f));
+      } else {
+        // Create new feedback
+        savedFeedback = await gamesApi.createGameFeedback({
+          game_id: currentGame.id,
+          team_id: selectedTeam.id,
+          feedback_type: feedbackType,
+          player_id: feedbackType === 'player' ? selectedPlayerId : undefined,
+          feedback_text: feedbackText,
+        });
+        // Add to list
+        setGameFeedback([savedFeedback, ...gameFeedback]);
+      }
+
+      // Reset form
       setFeedbackText('');
       setSelectedPlayerId('');
+      setCurrentFeedbackId(null);
+      setFeedbackType('team');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save feedback');
     } finally {
       setFeedbackSaving(false);
+    }
+  };
+
+  const navigateGame = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && currentGameIndex > 0) {
+      setCurrentGameIndex(currentGameIndex - 1);
+    } else if (direction === 'next' && currentGameIndex < games.length - 1) {
+      setCurrentGameIndex(currentGameIndex + 1);
+    }
+  };
+
+  const handlePlayerChange = (playerId: string) => {
+    setSelectedPlayerId(playerId);
+    
+    if (!playerId) {
+      setFeedbackText('');
+      setCurrentFeedbackId(null);
+      return;
+    }
+
+    // Find existing feedback for this player in this game
+    const existingFeedback = gameFeedback.find(
+      f => f.feedback_type === 'player' && f.player_id === playerId
+    );
+
+    if (existingFeedback) {
+      setFeedbackText(existingFeedback.feedback_text);
+      setCurrentFeedbackId(existingFeedback.id);
+    } else {
+      setFeedbackText('');
+      setCurrentFeedbackId(null);
+    }
+  };
+
+  const handleFeedbackTypeChange = (type: 'team' | 'player') => {
+    setFeedbackType(type);
+    setSelectedPlayerId('');
+    setCurrentFeedbackId(null);
+    
+    if (type === 'team') {
+      // Load existing team feedback if any
+      const existingTeamFeedback = gameFeedback.find(
+        f => f.feedback_type === 'team'
+      );
+      
+      if (existingTeamFeedback) {
+        setFeedbackText(existingTeamFeedback.feedback_text);
+        setCurrentFeedbackId(existingTeamFeedback.id);
+      } else {
+        setFeedbackText('');
+      }
+    } else {
+      setFeedbackText('');
     }
   };
 
@@ -272,79 +381,77 @@ export function Games() {
       ) : (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-gray-700">
-            <span className="font-medium">Team:</span> {teams[0].name} ({teams[0].age_group})
+            <span className="font-medium">Team:</span> {teams[0].age_group} {teams[0].name}
           </p>
         </div>
       )}
 
-      {/* Games List for Selection */}
-      {games.length > 0 && (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Game
-          </label>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {games.map(game => (
+      {/* Game Card with Navigation */}
+      {games.length > 0 && games[currentGameIndex] && (
+        <div className="space-y-4">
+          {/* Game Detail Card with Navigation Arrows */}
+          <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              {/* Left Arrow */}
               <button
-                key={game.id}
-                onClick={() => setSelectedGame(game)}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                  selectedGame?.id === game.id
-                    ? 'border-[#0091f3] bg-blue-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
+                onClick={() => navigateGame('prev')}
+                disabled={currentGameIndex === 0}
+                className={`p-2 rounded-lg transition-colors ${
+                  currentGameIndex === 0
+                    ? 'text-gray-300 cursor-not-allowed'
+                    : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-gray-900">vs {game.opponent}</p>
-                    <p className="text-sm text-gray-600">{formatDate(game.game_date)}</p>
-                  </div>
-                  {game.team_score !== null && game.opponent_score !== null && (
-                    <span className="text-sm font-semibold text-gray-900">
-                      {game.team_score} - {game.opponent_score}
-                    </span>
-                  )}
-                </div>
+                <ChevronLeft className="w-6 h-6" />
               </button>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Selected Game Details */}
-      {selectedGame && (
-        <div className="space-y-4">
-          {/* Game Detail Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
-            <div className="flex items-start justify-between mb-3">
-              <div>
+              {/* Game Info */}
+              <div className="flex-1 text-center">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {selectedTeam?.name} vs {selectedGame.opponent}
+                  {selectedTeam?.age_group} {selectedTeam?.name} vs {games[currentGameIndex].opponent}
                 </h3>
                 <span
                   className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${
-                    selectedGame.home_away === 'home'
+                    games[currentGameIndex].home_away === 'home'
                       ? 'bg-blue-100 text-blue-700'
                       : 'bg-gray-100 text-gray-700'
                   }`}
                 >
-                  {selectedGame.home_away.toUpperCase()}
+                  {games[currentGameIndex].home_away.toUpperCase()}
                 </span>
+                {games.length > 1 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Game {currentGameIndex + 1} of {games.length}
+                  </p>
+                )}
               </div>
+
+              {/* Right Arrow */}
+              <button
+                onClick={() => navigateGame('next')}
+                disabled={currentGameIndex === games.length - 1}
+                className={`p-2 rounded-lg transition-colors ${
+                  currentGameIndex === games.length - 1
+                    ? 'text-gray-300 cursor-not-allowed'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
             </div>
 
             <div className="space-y-2 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                <span>{formatDate(selectedGame.game_date)}</span>
+                <span>{formatDate(games[currentGameIndex].game_date)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                <span>{formatTime(selectedGame.game_date)}</span>
+                <span>{formatTime(games[currentGameIndex].game_date)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
-                <span>{selectedGame.venue}</span>
+                <span>{games[currentGameIndex].venue}</span>
               </div>
             </div>
           </div>
@@ -355,7 +462,7 @@ export function Games() {
             <div className="flex gap-3 items-end">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {selectedTeam?.name}
+                  {selectedTeam?.age_group} {selectedTeam?.name}
                 </label>
                 <input
                   type="number"
@@ -368,7 +475,7 @@ export function Games() {
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {selectedGame.opponent}
+                  {games[currentGameIndex].opponent}
                 </label>
                 <input
                   type="number"
@@ -397,10 +504,7 @@ export function Games() {
             {/* Feedback Type Selection */}
             <div className="flex gap-2 mb-3">
               <button
-                onClick={() => {
-                  setFeedbackType('team');
-                  setSelectedPlayerId('');
-                }}
+                onClick={() => handleFeedbackTypeChange('team')}
                 className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   feedbackType === 'team'
                     ? 'bg-[#0091f3] text-white'
@@ -410,7 +514,7 @@ export function Games() {
                 Team
               </button>
               <button
-                onClick={() => setFeedbackType('player')}
+                onClick={() => handleFeedbackTypeChange('player')}
                 className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   feedbackType === 'player'
                     ? 'bg-[#0091f3] text-white'
@@ -429,7 +533,7 @@ export function Games() {
                 </label>
                 <select
                   value={selectedPlayerId}
-                  onChange={(e) => setSelectedPlayerId(e.target.value)}
+                  onChange={(e) => handlePlayerChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 >
                   <option value="">Choose a player...</option>
@@ -462,7 +566,7 @@ export function Games() {
               className="w-full px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0077cc] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
-              {feedbackSaving ? 'Saving...' : 'Save Feedback'}
+              {feedbackSaving ? 'Saving...' : currentFeedbackId ? 'Update Feedback' : 'Save Feedback'}
             </button>
           </div>
 
