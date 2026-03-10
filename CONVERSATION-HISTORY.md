@@ -1,5 +1,191 @@
 # Conversation History
 
+## Session: March 10, 2026 (Part 2) - Games and Schedule System Foundation
+
+### Context
+User wanted to build the Games feature for recording match feedback and scores. This evolved into understanding the relationship between Schedule (events) and Games (match-specific data with feedback).
+
+### The Journey
+
+#### Initial Approach: Standalone Games System
+- Created `games` table with match details (opponent, venue, home/away, scores)
+- Created `game_feedback` table for team and player feedback
+- Built Games API service with CRUD operations
+- Built Games page UI with score recording and feedback sections
+
+#### Discovery: Table Confusion
+- **Problem**: Games page showed "No teams assigned" even though user was assigned to U9 Lithium
+- **Root Cause**: App has BOTH `user_teams` and `team_members` tables
+- **Investigation**: 
+  - Teams Management uses `team_members`
+  - AuthContext uses `user_teams` for profile loading
+  - Games page initially used `user_teams` (wrong!)
+- **Fix**: Updated Games page to use `team_members` consistently
+- **Result**: Team now displays correctly
+
+#### Architecture Clarification
+- User explained: "A game is just an event, but with extra details"
+- Schedule shows all events (training, matches, meetings, social)
+- Games filters to match events and adds feedback capability
+- Match/Game are the same thing (use "Game" in UI)
+
+#### Events System Design
+- Created `events` table for schedule management
+- Event types: game, training, general
+- Game events have opponent and home/away fields
+- Flexible targeting (teams, roles, divisions, age groups)
+- Coaches/Managers can only create events for their teams
+- Admins have full targeting (except games = single team only)
+- Event display: "Your Team vs Opposition" (home) or "Opposition vs Your Team" (away)
+
+### Tasks Completed
+
+#### 1. Games Database (Migration 022)
+- **Tables**:
+  - `games` - Match details, opponent, venue, home/away, scores
+  - `game_feedback` - Team and player-specific feedback
+- **RLS Policies**:
+  - Admins see/manage all
+  - Coaches/Managers see/manage their team's games
+  - Users can only update/delete their own feedback
+- **Status**: ✅ Complete and deployed
+
+#### 2. Events Database (Migration 023)
+- **Tables**:
+  - `events` - Schedule items (game, training, general)
+  - `event_rsvps` - Attendance tracking
+- **Features**:
+  - Game events include opponent and home/away
+  - Flexible targeting arrays (teams, roles, divisions, age groups)
+  - Empty targeting = visible to all
+- **RLS Policies**:
+  - Users see events targeted to them
+  - Coaches/Managers can only create events for their teams
+  - Admins have full access
+- **Type Casting Fix**: Added `::text` casts for enum comparisons
+- **Status**: ✅ Complete and deployed
+
+#### 3. Games API Service
+- **File**: `src/lib/games-api.ts`
+- **Functions**:
+  - Get games by team
+  - Update game scores
+  - Get team players (for feedback)
+  - Create/read/update/delete feedback
+  - Get most recent past game
+- **Status**: ✅ Complete
+
+#### 4. Games Page UI
+- **File**: `src/pages/Games.tsx`
+- **Features**:
+  - Team selection (loads from team_members)
+  - Game list display
+  - Score recording inputs
+  - Team/Player feedback toggle
+  - Player roster dropdown
+  - Feedback textarea
+  - Previous feedback display
+- **Current State**: Shows team correctly, waiting for game data
+- **Limitation**: UI sections only show when game is selected
+- **Status**: ⚠️ Partially complete - needs event data
+
+#### 5. Database Types
+- **File**: `src/types/database.ts`
+- **Added**:
+  - `TeamMember` - Team roster assignments
+  - `Game` - Match details
+  - `GameFeedbackRecord` - Feedback records
+  - `Event` - Schedule items
+  - `EventRsvp` - Attendance tracking
+- **Status**: ✅ Complete
+
+### Issues Encountered and Resolved
+
+1. **Table Confusion (user_teams vs team_members)**
+   - Multiple attempts to fix team loading
+   - Finally discovered Teams Management uses team_members
+   - Updated Games page to match
+   - Added debug logging to troubleshoot
+
+2. **Type Casting in RLS Policies**
+   - Error: "operator does not exist: user_role = text"
+   - Root cause: role column is enum type
+   - Fix: Added `::text` casts to all role comparisons
+   - Applied to all policies in migration 023
+
+3. **Context Loss**
+   - User noted I was "starting with no information"
+   - Reminded to read conversation history and changelog
+   - Important for maintaining continuity across sessions
+
+### Technical Decisions
+
+**Architecture**:
+- `events` table = base for all schedule items
+- `games` table = extended data for match events
+- Schedule page shows all events
+- Games page filters to matches and adds feedback
+
+**Table Usage**:
+- `team_members` = primary table for team assignments (used by Teams Management)
+- `user_teams` = used by AuthContext for profile loading
+- Both exist but serve different purposes
+
+**Event Display Logic**:
+- Home game: "Your Team vs Opposition"
+- Away game: "Opposition vs Your Team"
+- Training/General: Standard display
+
+### Files Created
+- `supabase/migrations/022_create_games_and_feedback.sql`
+- `supabase/migrations/023_create_events.sql`
+- `src/lib/games-api.ts`
+- `GAMES-FEATURE-SUMMARY.md`
+- `SESSION-SUMMARY-2026-03-10.md`
+- `supabase/seed_games.sql`
+- `supabase/seed_games_test.sql`
+
+### Files Modified
+- `src/pages/Games.tsx` - Complete rebuild with real data
+- `src/types/database.ts` - Added Game and Event types
+- `CHANGELOG.md` - Updated with today's work
+- `CONVERSATION-HISTORY.md` - This file
+
+### Current Status
+- ✅ Games database complete
+- ✅ Events database complete
+- ✅ Games API complete
+- ✅ Games page shows team correctly
+- ⏳ Schedule page needs event creation UI
+- ⏳ Need to connect Games to events data
+- ⏳ Need to test full workflow
+
+### Next Steps
+1. Build Schedule page with event creation UI
+2. Add "New Event" button at top
+3. Create event modal with:
+   - Event type selector (Game/Training/General)
+   - Conditional fields (opponent + home/away for games)
+   - Targeting options (teams, roles, divisions, age groups)
+   - Coach/Manager restrictions (only their teams)
+4. Connect Games page to pull from events (type='game')
+5. Test workflow: Create game → View in Games → Record score → Add feedback
+
+### Time Breakdown
+- Games feature: ~2 hours
+- Table confusion debugging: ~30 minutes
+- Events system: ~1 hour
+- Documentation: ~30 minutes
+- **Total**: ~4 hours
+
+### User Feedback
+- User patient through table confusion debugging
+- Appreciated documentation updates for context preservation
+- Confirmed architecture: games are events with extra details
+- Ready to continue with Schedule UI next session
+
+---
+
 ## Session: March 10, 2026 - User Management Automation (FINALLY Working!)
 
 ### Context

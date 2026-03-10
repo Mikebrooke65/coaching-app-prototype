@@ -4,6 +4,86 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-10] - Games and Schedule System Foundation
+
+### Added
+- **Games Feedback System (Migration 022)**
+  - Created `games` table for match details (opponent, venue, home/away, scores)
+  - Created `game_feedback` table for team and player-specific feedback
+  - RLS policies for role-based access (Admin/Coach/Manager)
+  - Game API service with CRUD operations
+  - Score recording functionality
+  - Team and player feedback with text input
+  - Feedback history display
+
+- **Events/Schedule System (Migration 023)**
+  - Created `events` table for schedule management
+  - Event types: game, training, general
+  - Game events include opponent and home/away fields
+  - Flexible targeting system (teams, roles, divisions, age groups)
+  - Created `event_rsvps` table for attendance tracking
+  - RLS policies for event visibility and management
+  - Coaches/Managers can only create events for their teams
+  - Admins have full targeting capabilities
+
+- **Games Page UI**
+  - Team selection (loads from team_members table)
+  - Game list display (ready for data)
+  - Score recording section
+  - Team/Player feedback toggle
+  - Player roster dropdown
+  - Feedback textarea and save functionality
+  - Previous feedback display
+
+### Changed
+- **Database Types Updated**
+  - Added `TeamMember`, `Game`, `GameFeedbackRecord` types
+  - Added `Event`, `EventRsvp` types
+  - Updated to use `team_members` table consistently
+
+### Fixed
+- **Games Page Team Loading**
+  - Fixed to use `team_members` table (same as Teams Management)
+  - Was incorrectly using `user_teams` initially
+  - Team now displays correctly when assigned
+  - Added debug logging for troubleshooting
+
+- **Events Migration Type Casting**
+  - Fixed `user_role` enum comparison with text arrays
+  - Added `::text` casts to all role comparisons in RLS policies
+
+### Technical Notes
+- Games table stores match-specific data (opponent, scores, home/away)
+- Events table is base for all schedule items
+- Game events can be linked to games table for extended functionality
+- RLS policies enforce that coaches/managers can only manage their team's events
+- Event targeting uses array fields for flexible filtering
+
+### Known Limitations
+- Games page UI sections only show when a game is selected
+- Need to populate events/games data to test full workflow
+- Schedule page still uses mock data (needs connection to events table)
+
+### Files Created
+- `supabase/migrations/022_create_games_and_feedback.sql`
+- `supabase/migrations/023_create_events.sql`
+- `src/lib/games-api.ts`
+- `GAMES-FEATURE-SUMMARY.md`
+- `SESSION-SUMMARY-2026-03-10.md`
+- `supabase/seed_games.sql`
+- `supabase/seed_games_test.sql`
+
+### Files Modified
+- `src/pages/Games.tsx` - Complete rebuild with real data integration
+- `src/types/database.ts` - Added Game, Event, and RSVP types
+
+### Next Steps
+1. Build Schedule page with event creation UI
+2. Connect Games page to events (type='game')
+3. Add "New Event" button to Schedule
+4. Implement event creation modal with targeting
+5. Test full workflow: Create game event → View in Games → Record score → Add feedback
+
 ## [2026-03-10] - User Management Automation Complete
 
 ### Added

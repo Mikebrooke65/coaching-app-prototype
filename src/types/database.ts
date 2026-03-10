@@ -287,3 +287,32 @@ export interface GameFeedbackRecord {
   created_by: string;
   updated_by?: string;
 }
+
+// Event model
+export interface Event {
+  id: string;
+  title: string;
+  event_type: 'game' | 'training' | 'general';
+  event_date: string;
+  location: string;
+  opponent?: string;
+  home_away?: 'home' | 'away';
+  target_teams: string[];
+  target_roles: string[];
+  target_divisions: string[];
+  target_age_groups: string[];
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+// Event RSVP model
+export interface EventRsvp {
+  id: string;
+  event_id: string;
+  user_id: string;
+  status: 'going' | 'not_going' | 'maybe' | 'no_response';
+  created_at: string;
+  updated_at: string;
+}
