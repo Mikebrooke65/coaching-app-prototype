@@ -1,7 +1,6 @@
 import { Outlet, NavLink } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
-import { SyncStatusIndicator } from '../components/SyncStatusIndicator';
 import { LogoutButton } from '../components/LogoutButton';
 import gannetWhite from '../assets/e2b3da3f33b0748e111b306a15bee82b12f28232.png';
 
@@ -38,7 +37,6 @@ export function MainLayout() {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-3">
-            <SyncStatusIndicator />
             <LogoutButton className="text-white hover:bg-white/10 p-2 rounded-md transition-colors" />
           </div>
         </div>

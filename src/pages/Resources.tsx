@@ -194,7 +194,7 @@ export function Resources() {
         <div className="border-l-8 border-[#8b5cf6] pl-4 mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Resources</h1>
           <p className="text-gray-600 text-sm">
-            Coaching materials and reference documents
+            Guides for Coaches and Managers
           </p>
         </div>
       </div>

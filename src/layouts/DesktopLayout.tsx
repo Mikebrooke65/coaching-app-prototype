@@ -1,7 +1,6 @@
 import { Outlet, NavLink, useLocation } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppStore } from '../stores/appStore';
-import { SyncStatusIndicator } from '../components/SyncStatusIndicator';
 import { LogoutButton } from '../components/LogoutButton';
 import gannetLogo from '../assets/cdb7544de20d133944374bb8948c71879fef34b4.png';
 
@@ -403,7 +402,6 @@ export function DesktopLayout() {
           </div>
           <div className="relative flex items-center justify-between">
             <h1 className="text-2xl font-bold text-white">Urrah</h1>
-            <SyncStatusIndicator />
           </div>
         </header>
 

@@ -226,6 +226,7 @@ export function Schedule() {
       <div className="flex items-center justify-between mb-4">
         <div className="border-l-8 border-[#06b6d4] pl-4">
           <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
+          <p className="text-gray-600 text-sm">Team Events</p>
         </div>
         
         {/* New Event Button */}
@@ -295,7 +296,8 @@ export function Schedule() {
         {sortedEvents.map((event) => (
           <div
             key={event.id}
-            className="bg-white rounded-lg shadow p-4 border border-gray-200"
+            className="rounded-lg shadow p-4 border border-gray-200"
+            style={{ backgroundColor: 'rgba(6, 182, 212, 0.2)' }}
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
@@ -373,9 +375,10 @@ export function Schedule() {
 
       {/* Create Event Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+          <div className="min-h-full flex items-start justify-center p-4 py-8">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Create Event</h2>
 
               <div className="space-y-4">

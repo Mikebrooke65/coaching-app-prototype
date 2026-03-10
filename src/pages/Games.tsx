@@ -390,7 +390,7 @@ export function Games() {
       {games.length > 0 && games[currentGameIndex] && (
         <div className="space-y-4">
           {/* Game Detail Card with Navigation Arrows */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
+          <div className="rounded-lg shadow p-4 border border-gray-200" style={{ backgroundColor: 'rgba(234, 120, 0, 0.2)' }}>
             <div className="flex items-center justify-between mb-3">
               {/* Left Arrow */}
               <button
