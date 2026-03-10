@@ -42,18 +42,17 @@ export class GamesApi extends ApiClient {
   // Get team members (players) for a team
   async getTeamPlayers(teamId: string): Promise<User[]> {
     const { data, error } = await this.supabase
-      .from('user_teams')
+      .from('team_members')
       .select(`
         user:users(*)
       `)
-      .eq('team_id', teamId);
+      .eq('team_id', teamId)
+      .eq('role', 'player');
 
     if (error) throw new ApiError(error.message);
     
-    // Filter to only players and extract user objects
-    return data
-      .map((ut: any) => ut.user)
-      .filter((user: User) => user && user.role === 'player');
+    // Extract user objects
+    return data.map((tm: any) => tm.user).filter(Boolean);
   }
 
   // Get feedback for a game

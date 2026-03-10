@@ -64,9 +64,9 @@ export function Games() {
       
       console.log('Games: Fetching teams for user:', user.id);
       
-      // Get teams based on user role - using user_teams table
+      // Get teams based on user role - using team_members table (same as TeamsManagement)
       const { data, error } = await gamesApi.supabase
-        .from('user_teams')
+        .from('team_members')
         .select('team:teams(*)')
         .eq('user_id', user.id);
 
@@ -74,7 +74,7 @@ export function Games() {
 
       if (error) throw error;
 
-      const userTeams = data.map((ut: any) => ut.team).filter(Boolean);
+      const userTeams = data.map((tm: any) => tm.team).filter(Boolean);
       console.log('Games: User teams:', userTeams);
       setTeams(userTeams);
 
@@ -229,21 +229,6 @@ export function Games() {
     );
   }
 
-  if (teams.length === 0) {
-    return (
-      <div className="p-4 pb-20">
-        <div className="border-l-8 border-[#ea7800] pl-4 mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Games</h1>
-        </div>
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600">No teams assigned</p>
-          <p className="text-sm text-gray-500 mt-1">Contact your administrator</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 pb-20">
       <div className="border-l-8 border-[#ea7800] pl-4 mb-4">
@@ -257,7 +242,13 @@ export function Games() {
       )}
 
       {/* Team Selection */}
-      {teams.length > 1 && (
+      {teams.length === 0 ? (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800 text-sm">
+            No teams assigned. Please contact your administrator or assign yourself to a team in Teams Management.
+          </p>
+        </div>
+      ) : teams.length > 1 ? (
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Select Team
@@ -277,6 +268,12 @@ export function Games() {
               </option>
             ))}
           </select>
+        </div>
+      ) : (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-gray-700">
+            <span className="font-medium">Team:</span> {teams[0].name} ({teams[0].age_group})
+          </p>
         </div>
       )}
 
