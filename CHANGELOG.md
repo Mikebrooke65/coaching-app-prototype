@@ -76,6 +76,16 @@ All notable changes to the football coaching app prototype will be documented in
 3. Consider adding game notes/summary field
 4. Build Schedule page event creation UI (already has basic version)
 
+### Deployment Issue Resolved
+- **Problem**: Code pushed but Netlify not deploying
+- **Root Cause**: Pushing to wrong repository (`coaching-app-prototype` instead of `.kiro`)
+- **Solution**: 
+  - Added `kiro` remote: `git remote add kiro https://github.com/Mikebrooke65/.kiro.git`
+  - Set as default push remote: `git config --local remote.pushDefault kiro`
+  - Created `DEPLOYMENT-GUIDE.md` with full deployment workflow
+  - Created `.kiro/steering/project-standards.md` for automatic context inclusion
+- **Standard Practice**: Always push to BOTH remotes: `git push kiro prototype && git push origin prototype`
+
 ## [2026-03-10] - Games and Schedule System Foundation
 
 ### Added

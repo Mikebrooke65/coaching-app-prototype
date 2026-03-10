@@ -184,7 +184,20 @@ Continued from Part 2. Games page was built but pulling from wrong table. User c
 - Score recording: ~20 minutes
 - Feedback enhancements: ~25 minutes
 - Bug fixes: ~20 minutes
-- **Total**: ~1.5 hours
+- Deployment issue resolution: ~15 minutes
+- **Total**: ~2 hours
+
+### Deployment Configuration
+- **Issue**: Netlify not deploying after git push
+- **Root Cause**: Two repositories exist:
+  - `github.com/Mikebrooke65/.kiro` (Netlify watches this)
+  - `github.com/Mikebrooke65/coaching-app-prototype` (backup)
+- **Solution**: 
+  - Added `kiro` remote to local git config
+  - Set as default push remote
+  - Created DEPLOYMENT-GUIDE.md
+  - Created .kiro/steering/project-standards.md for automatic context
+- **Standard Practice**: Push to both: `git push kiro prototype && git push origin prototype`
 
 ---
 
