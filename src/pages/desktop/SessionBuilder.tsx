@@ -68,7 +68,8 @@ export function SessionBuilder() {
   const filteredSessions = sessions.filter((session) => {
     const matchesType = filterType === 'all' || session.session_type === filterType;
     const matchesAge = filterAge === 'all' || session.age_group === filterAge;
-    const matchesDivision = filterDivision === 'all'; // TODO: Add division field to sessions table
+    const sessionDivision = session.session_name.startsWith('session-academy-') ? 'Academy' : 'Community';
+    const matchesDivision = filterDivision === 'all' || sessionDivision === filterDivision;
     const matchesSearch = session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          session.session_name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesType && matchesAge && matchesDivision && matchesSearch;

@@ -444,11 +444,11 @@ export function LessonDetail() {
 
                 {/* Pitch Diagram */}
                 {session.diagram_url && (
-                  <div className="mb-3">
+                  <div className="mb-3 flex justify-center">
                     <img 
                       src={session.diagram_url} 
                       alt={`${session.title} pitch layout`}
-                      className="w-full rounded-lg border border-gray-200"
+                      className="max-w-full max-h-80 rounded-lg border border-gray-200 object-contain"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
