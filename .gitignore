@@ -17,6 +17,16 @@ dist-ssr
 .env.development
 .env.production
 
+# Bailey slides - keep XML/rels for mapping, ignore images
+media/
+slides/
+slideLayouts/
+slideMasters/
+notesMasters/
+theme/
+_rels/
+bailey-image-mapping.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
