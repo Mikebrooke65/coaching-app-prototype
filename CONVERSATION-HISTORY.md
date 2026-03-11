@@ -1144,3 +1144,94 @@ feat: Add Resources and Announcements management systems
 ```
 
 Pushed to: `origin prototype:prototype`
+
+---
+
+## Session: March 11, 2026 (Part 2) - Bailey Academy Lesson Image Mapping & Schema Migration
+
+### Context
+Continuation from Part 1 (same day). Previous session completed the Bailey lesson analysis, deduplication, field mapping, gap analysis, and header-to-scrape mapping. This session focused on: committing outstanding analysis docs, creating the schema migration for Academy/Community division support, generating the first Academy lesson SQL, and building the image-to-session mapping from the original Google Slides `.pptx` export.
+
+### Tasks Completed
+
+#### 1. Committed Outstanding Analysis Documents
+- Committed `BAILEY-HEADER-TO-SCRAPE-MAPPING.md` (new), `BAILEY-LESSON-ANALYSIS.md` (updated with Step 9), and `bailey-slide-headers.md` (new)
+- Pushed to both `kiro` and `origin` remotes
+- Commit: `a68fb79`
+
+#### 2. Schema Migration: Division and Team Type (Migration 027)
+- Created `supabase/migrations/027_add_division_and_team_type.sql`
+- Added `division` column to lessons table: `Community` or `Academy` (CHECK constraint, default `Community`)
+- Added `team_type` column to lessons table: `First Kicks`, `Fun Football`, `Junior Football`, `Youth Football`, `Senior`
+- Updated all existing U9 lessons to `division='Community'`, `team_type='Junior Football'`
+- Added indexes for filtering
+
+#### 3. First Academy Lesson SQL (Migration 028)
+- Created `supabase/migrations/028_academy-shielding-lesson-01.sql`
+- Converted Bailey's Slide 1 (Shielding, 10.1.25) to full framework format
+- 4 sessions: Ball Mastery & Juggling (15min), Shark Attack (10min), 1v1 Shielding (15min), Game (20min)
+- Bailey's coaching points, objectives, focus, and durations preserved exactly
+- Generated missing fields: organisation, equipment, steps, pitch layout descriptions
+- Lesson tagged as `division='Academy'`, `team_type='Junior Football'`, `skill_category='Shielding'`
+- Total duration: 60 minutes (Bailey's original, not standardised to 65)
+
+#### 4. Image-to-Session Mapping from .pptx Export
+- User unzipped the original Google Slides `.pptx` file and copied `slides/`, `media/`, etc. into project root
+- Created `scripts/parse-slide-images.cjs` — parses all 61 `slides/_rels/*.xml.rels` files to extract image references per slide
+- Created `scripts/map-images-to-sessions.cjs` — parses slide XML to determine image x-position, maps each image to session column (1-4) based on the 4-column slide layout
+- Identified `image7.png` as template logo (on all 61 slides — excluded)
+- Discovered Bailey heavily reuses images: `image5.png` (standard warmup) on 28 slides, `image43.png` (standard game layout) on 22 slides
+- Generated complete mapping: `BAILEY-IMAGE-MAPPING.md` (readable table) and `bailey-image-mapping.json` (machine-readable)
+- 82 unique content images across 47 slides (excluding template logo)
+
+#### 5. Gitignore Updates
+- Added `media/`, `slides/`, `slideLayouts/`, `slideMasters/`, `notesMasters/`, `theme/`, `_rels/`, `bailey-image-mapping.json` to `.gitignore`
+- Images stay local only (will be uploaded to Supabase Storage), XML/rels tracked for mapping reference
+
+### Files Created
+- `supabase/migrations/027_add_division_and_team_type.sql`
+- `supabase/migrations/028_academy-shielding-lesson-01.sql`
+- `scripts/parse-slide-images.cjs`
+- `scripts/map-images-to-sessions.cjs`
+- `BAILEY-IMAGE-MAPPING.md`
+- `bailey-image-mapping.json` (gitignored)
+
+### Files Modified
+- `.gitignore` — added pptx export folders and image mapping json
+- `BAILEY-LESSON-ANALYSIS.md` — committed with Step 9 (slide headers)
+- `BAILEY-HEADER-TO-SCRAPE-MAPPING.md` — committed (was untracked)
+- `bailey-slide-headers.md` — committed (was untracked)
+
+### Technical Decisions
+- **Bailey's durations preserved** — not standardised to 20/15/15/15. His 15/10/15/20 pattern for Shielding kept as-is.
+- **Session naming convention**: `session-academy-{topic}-{session-name}-junior` for Academy lessons
+- **Skill category**: Using Bailey's topic name (e.g. `Shielding`) even though it's not in the current 8-skill CHECK constraint — the constraint is TEXT NOT NULL with no CHECK in the actual schema
+- **Image reuse**: Many images shared across slides. Upload once to Supabase Storage, reference from multiple sessions.
+
+### Git Commits
+- `a68fb79` — Bailey analysis docs (header-to-scrape mapping, slide headers, updated analysis)
+- `03e49b3` — Image mapping, schema migration, first Academy lesson
+
+---
+
+## NEXT STEPS (for next session)
+
+### Immediate
+1. **User to decide**: Proceed with the 34 scraped slides we have, or re-scrape the 13 missing ones first?
+   - Missing slides: 11, 13, 14, 16, 17, 20, 41, 42, 43, 44, 45, 46, 47
+2. **User to review** the first Academy lesson (Migration 028 — Shielding) and confirm the format/quality is right before batch-generating the rest
+3. **Run Migration 027** in Supabase to add `division` and `team_type` columns
+
+### Once Approved
+4. **Batch-generate remaining Academy lessons** — convert each scraped slide to full framework SQL using Bailey's content as the prompt
+5. **Upload images to Supabase Storage** — use the image mapping to rename and upload the 82 content images
+6. **Update session `diagram_url`** fields to point to uploaded images
+7. **Run all lesson migrations** in Supabase
+
+### Parked for Later
+- General lessons (Slides 1–10, no specific age group) — 10 lessons
+- U11/U12 specific lessons (Slides 14, 19, 40) — 3 lessons
+- Summer Academy lessons (Slides 45–47) — 3 lessons
+- Expanding skill categories (wait for Bailey to review and confirm)
+- U10 Community lessons (16 lessons, same 8 skills as U9)
+- Resolving header-to-scrape name mismatches (slides 18–33 have offset numbering)

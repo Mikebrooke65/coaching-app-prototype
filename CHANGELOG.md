@@ -4,6 +4,51 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-11] - Bailey Academy Lesson Import: Analysis, Schema & Image Mapping
+
+### Added
+- **Bailey Lesson Analysis Documents**
+  - `BAILEY-LESSON-ANALYSIS.md` — Full deduplication, field mapping, gap analysis, schema changes, decisions
+  - `BAILEY-HEADER-TO-SCRAPE-MAPPING.md` — Maps 61 slide headers to scraped content, identifies 13 missing slides
+  - `BAILEY-LESSON-MAPPING-TASK.md` — Original task description and field mapping table
+  - `bailey-slide-headers.md` — Raw slide headers with metadata (team type, date, player count)
+
+- **Schema Migration 027: Division and Team Type**
+  - Added `division` column to lessons table (`Community` / `Academy`)
+  - Added `team_type` column (`First Kicks`, `Fun Football`, `Junior Football`, `Youth Football`, `Senior`)
+  - Updated existing 16 U9 lessons to `Community` / `Junior Football`
+  - Indexes for filtering
+
+- **First Academy Lesson (Migration 028: Shielding)**
+  - Converted Bailey's Slide 1 to full framework format
+  - 4 sessions: Ball Mastery & Juggling (15min), Shark Attack (10min), 1v1 Shielding (15min), Game (20min)
+  - Bailey's coaching points, objectives, focus, durations preserved exactly
+  - Generated missing fields: organisation, equipment, steps, pitch layout
+
+- **Image-to-Session Mapping from .pptx Export**
+  - Parsed all 61 slide XML files to map `imageN.png` to session positions (1-4)
+  - `BAILEY-IMAGE-MAPPING.md` — Complete mapping table for all 47 unique slides
+  - `scripts/parse-slide-images.cjs` — Extracts image references from slide rels files
+  - `scripts/map-images-to-sessions.cjs` — Maps images to session columns by x-coordinate
+  - Identified 82 unique content images, 1 template logo (excluded)
+  - Discovered heavy image reuse: `image5.png` (warmup) on 28 slides, `image43.png` (game) on 22 slides
+
+### Decisions Made
+- **Option C chosen**: Focus on Junior Academy lessons first, park general/U11-U12/Summer for later
+- **Bailey's content is ground truth**: His coaching points, objectives, focus, durations preserved exactly
+- **Existing 16 U9 lessons = Community programme; Bailey's = Academy programme**
+- **Skill categorisation TBD**: Wait for Bailey to review before assigning categories
+- **Bailey's durations preserved**: Not standardised to 20/15/15/15
+
+### Files Created
+- `supabase/migrations/027_add_division_and_team_type.sql`
+- `supabase/migrations/028_academy-shielding-lesson-01.sql`
+- `scripts/parse-slide-images.cjs`
+- `scripts/map-images-to-sessions.cjs`
+- `BAILEY-IMAGE-MAPPING.md`
+- `BAILEY-HEADER-TO-SCRAPE-MAPPING.md`
+- `BAILEY-LESSON-MAPPING-TASK.md`
+
 ## [2026-03-11] - Mobile UI Polish and RSVP System
 
 ### Added
