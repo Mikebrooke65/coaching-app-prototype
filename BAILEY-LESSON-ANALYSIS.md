@@ -253,6 +253,14 @@ But some lessons break this pattern (e.g., Slide 4 puts Games as Session 2).
 3. Whether to add new skill categories or map to existing ones (Bailey to confirm)
 4. How to handle lessons with only 3 sessions (Slides 4, 8, 20)
 
+### Important Discovery: Slide Title Metadata Lost in Scrape
+The original printout slide titles follow a structure: **[Age Group / Team Type / Event] — [Lesson Name] — [Date Created]**. However, the scraping process only captured the lesson name portion. This means:
+- Slides 1–33 likely DO have age group / team type info — it just wasn't captured
+- The later slides (34+) only have it because it was embedded in the lesson name itself
+- Bailey or the user needs to go back to the original printouts and note the full slide titles
+- This would tell us which team type (First Kicks, Fun Football, Junior, Youth, Senior) each lesson belongs to
+- The date created could also be useful for versioning
+
 
 ---
 
