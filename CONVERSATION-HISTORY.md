@@ -1,5 +1,87 @@
 # Conversation History
 
+## Session: March 11, 2026 - Mobile UI Polish and RSVP System
+
+### Context
+Continuation of prototype UI refinement. Focus on mobile page polish, compact card designs, RSVP functionality, and establishing visual standards across all pages.
+
+### Tasks Completed
+
+#### 1. Mobile Resources Page UI Improvements
+- Added `window.scrollTo(0, 0)` on mount so page loads at top
+- Changed nav labels: "Rules, Field Setup, Coach Support, General" → "Rules, Pitch, Guides, General"
+- Changed nav layout from `flex overflow-x-auto` to `grid grid-cols-4` for even mobile fit
+- Added `categoryMapping` to translate display names back to DB values
+- Fixed rule section header background: inline `rgba(139, 92, 246, 0.2)` instead of Tailwind `bg-opacity`
+- Changed subtitle to "Guides for Coaches and Managers"
+
+#### 2. Removed Sync Status Indicator
+- Removed "idle" sync status from mobile (MainLayout) and desktop (DesktopLayout) headers
+- Was a placeholder for unimplemented offline sync — not useful to users
+
+#### 3. Mobile Schedule Page UI Improvements
+- Added "Team Events" subtitle under Schedule heading
+- Fixed modal scrolling so event creation form is fully accessible
+- Added light cyan background to event cards: `rgba(6, 182, 212, 0.2)`
+- Fixed missing `</div>` that caused build failure
+
+#### 4. Mobile Games Page Card Styling
+- Added 20% orange background: `rgba(234, 120, 0, 0.2)`
+- Redesigned game card to be compact: title + badges on one line, date/time/location on single row
+- Score displays prominently on card when recorded
+- Score recording section reduced to slim single-line row
+
+#### 5. Steering Document Updates
+- Added complete colour reference table with hex + rgba for 20% shading
+- Added font families (Inter/Aktiv Grotesk Corp for headings, Exo 2 for body)
+- Added card/section shading standard: always use 20% opacity via inline `rgba()`
+- Strengthened team name display rule: always include age_group prefix
+- Fixed Schedule page `getEventTitle` to use `${team.age_group} ${team.name}`
+
+#### 6. RSVP Decline Reasons and Response Tracking
+- Migration 026: Added `responded_at` and `decline_reason` to `event_rsvps`
+- Decline reason options: Late, Sick, Injured, Holiday, Other
+- Modal popup on "Can't Go" to capture reason
+- `responded_at` recorded on first response for time-to-respond reporting
+- Restyled RSVP buttons: Going = green + tick, Can't Go = red + cross, Maybe = grey + question mark
+
+#### 7. Compact Schedule Event Cards with Attendee Count
+- Added `getAttendeeCounts` method to events-api
+- Users icon + "X attendees" line on each event card
+- Compacted event cards: reduced padding, smaller text, smaller RSVP buttons
+- Attendee count updates locally on RSVP for instant feedback
+
+#### 8. Mobile Coaching Page Lesson List Redesign
+- 20% green background on "Past Lessons" and "Next Lesson" section headers
+- Two-line lesson rows: title on line 1, date/checkbox + skill badge on line 2
+- Consistent skill badge sizing, reduced row padding
+
+#### 9. Lesson Detail Page Improvements
+- Removed "Session Plan" heading
+- Restructured session block headers: grey subtitle + bold black session title
+- Green glow border on session blocks
+- Reduced lesson title size, removed non-functional star icon
+
+### Files Modified
+- `src/pages/Resources.tsx`, `src/pages/Schedule.tsx`, `src/pages/Games.tsx`
+- `src/pages/Coaching.tsx`, `src/pages/LessonDetail.tsx`
+- `src/layouts/MainLayout.tsx`, `src/layouts/DesktopLayout.tsx`
+- `src/lib/events-api.ts`, `src/types/database.ts`
+- `.kiro/steering/project-standards.md`
+- `supabase/migrations/026_add_rsvp_response_tracking.sql`
+
+### Technical Decisions
+- **20% rgba shading standard**: Tailwind `bg-opacity` unreliable with hex colours; inline `rgba()` is the standard
+- **Each page has its own brand colour** for card/section shading (see steering doc table)
+- **Team names always include age_group prefix** as the unique identifier
+
+### User Corrections
+- Team names must ALWAYS be "Age Group + Team Name" (e.g., "U9 Lithium")
+- Always push to BOTH remotes: `git push kiro prototype; git push origin prototype`
+- Migration 026 was run manually in Supabase
+
+---
+
 ## Session: March 10, 2026 (Part 3) - Games Page Integration with Events System
 
 ### Context

@@ -4,6 +4,89 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-11] - Mobile UI Polish and RSVP System
+
+### Added
+- **RSVP Decline Reasons and Response Tracking**
+  - Migration 026: Added `responded_at` timestamp and `decline_reason` to `event_rsvps` table
+  - Decline reason options: Late, Sick, Injured, Holiday, Other
+  - Modal popup when selecting "Can't Go" to capture reason
+  - `responded_at` recorded on first response for time-to-respond reporting
+  - Decline reason cleared when changing to Going/Maybe
+
+- **Attendee Count on Schedule Cards**
+  - Added `getAttendeeCounts` method to events-api (bulk query for "going" RSVPs)
+  - Users icon + "X attendees" line on each event card
+  - Count updates locally on RSVP for instant feedback
+
+- **Schedule Page Improvements**
+  - Added "Team Events" subtitle under Schedule heading
+  - Light cyan background on event cards: `rgba(6, 182, 212, 0.2)`
+  - Fixed modal scrolling: full overlay now scrollable so form is accessible
+
+- **Coaching Page Lesson List Redesign**
+  - 20% green background shading on "Past Lessons" and "Next Lesson" section headers
+  - Two-line lesson rows: title on line 1, date/checkbox + skill badge on line 2
+  - Consistent skill badge sizing (`text-[10px]` rounded pill)
+  - Reduced row padding for compact display
+
+- **Lesson Detail Page Improvements**
+  - Removed "Session Plan" heading
+  - Restructured session block headers: grey subtitle + bold black session title
+  - Green glow border on session blocks: `rgba(34, 197, 94, 0.2)` bg + `rgba(34, 197, 94, 0.4)` border
+  - Reduced lesson title from `text-2xl` to `text-lg`
+  - Removed non-functional favourite/star icon
+
+### Changed
+- **Resources Page Navigation**
+  - Nav labels changed: "Rules, Field Setup, Coach Support, General" → "Rules, Pitch, Guides, General"
+  - Nav layout changed from `flex overflow-x-auto` to `grid grid-cols-4` for even mobile fit
+  - Added `categoryMapping` to translate display names back to DB values
+  - Subtitle changed to "Guides for Coaches and Managers"
+  - Rule section header background fixed: inline `rgba(139, 92, 246, 0.2)` instead of Tailwind `bg-opacity`
+
+- **RSVP Button Styling**
+  - Going: bright green with white text + tick icon
+  - Can't Go: bright red with cross icon
+  - Maybe: grey with question mark icon
+
+- **Games Page Card Styling**
+  - Added 20% orange background: `rgba(234, 120, 0, 0.2)`
+  - Compact card design: title + badges on one line, date/time/location on single row
+  - Score displays prominently on card when recorded
+  - Score recording reduced to slim single-line row
+
+- **Schedule Event Title Format**
+  - Fixed `getEventTitle` to use `${team.age_group} ${team.name}` (e.g., "U9 Lithium")
+
+- **Steering Document Updated**
+  - Added complete colour reference table with hex + rgba values
+  - Added font families (Inter/Aktiv Grotesk Corp for headings, Exo 2 for body)
+  - Added card/section shading standard: always use 20% opacity via inline `rgba()`
+  - Strengthened team name display rule
+
+### Removed
+- **Sync Status Indicator** removed from both mobile and desktop headers (was placeholder for unimplemented offline sync)
+
+### Fixed
+- Resources page loads at top on mount (`window.scrollTo(0, 0)`)
+- Schedule page missing `</div>` causing build failure (commit ba8747b)
+
+### Files Created
+- `supabase/migrations/026_add_rsvp_response_tracking.sql`
+
+### Files Modified
+- `src/pages/Resources.tsx` - Nav labels, layout, section headers, subtitle
+- `src/pages/Schedule.tsx` - RSVP system, decline modal, attendee counts, event cards
+- `src/pages/Games.tsx` - Compact card, orange shading, score display
+- `src/pages/Coaching.tsx` - Compact lesson lists, green section headers
+- `src/pages/LessonDetail.tsx` - Session block redesign, green glow borders
+- `src/layouts/MainLayout.tsx` - Removed sync status indicator
+- `src/layouts/DesktopLayout.tsx` - Removed sync status indicator
+- `src/lib/events-api.ts` - Attendee counts, RSVP decline reasons
+- `src/types/database.ts` - EventRsvp type with responded_at and decline_reason
+- `.kiro/steering/project-standards.md` - Colours, fonts, shading standards
+
 ## [2026-03-10] - Games Page Integration with Events System
 
 ### Added
