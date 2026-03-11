@@ -324,3 +324,96 @@ Before we can import Academy lessons, the schema needs two additions:
 - Summer Academy lessons (Slides 46–50) — 5 lessons
 - Expanding skill_category to include new Bailey skills
 - U10 Community lessons (16 lessons, same 8 skills as U9)
+
+
+---
+
+## Step 9: Full Slide Headers (from original Google Slides)
+
+Retrieved from `slide headedrs.md` on Bailey branch. Format: `[Team Type / Age Group] | [Lesson Name] | [Date] | [Player Count]`
+
+```
+1.  2025 Junior Academy ID | Shielding | 10.1.25 | #8-12 players
+2.  2025 Junior Academy ID | 2 v 2s / Games | 12.1.25 | #8-12 players
+3.  2025 Junior Academy ID | 1 v 1 – Defending | 17.1.25 | #8-12 players
+4.  2025 Junior Academy ID | Pass & Control / Games | 19.1.25 | #8-12 players
+5.  Junior Academy | 1 v 1 – 50/50 Contest | 26.2.25
+6.  Junior Academy | Pass & Control | 3.2.25
+7.  Junior Academy | Shooting Technique – Laces | 5.3.25
+8.  Junior Academy | Pass & Control | 10.3.25
+9.  2025 Junior Academy ID | 2 v 1 / 3 v 2 – Defending | 17.1.25 | #8-12 players
+10. Junior Academy | Pass & Control | 24.3.25
+11. Junior Academy | Ways to Break the Line | 31.3.25
+12. Junior Academy | 1 v 1 – Turns | 7.4.25
+13. U9 & U10 | 1 v 1 – Shielding | 28.4.25
+14. U11 & U12 | 1 v 1 – Shielding | 28.4.25
+15. Junior Academy | Pass & Control | 30.4.25
+16. U9 & U10 | 1 v 1 – Beating the Defender | 5.5.25
+17. Junior Academy | Pass & Control – Building Up | 7.5.25
+18. Junior Academy | 1 v 1 – Dribbling | 12.5.25
+19. U11 / U12 | Kicking Techniques / Game Training | 14.5.25
+20. Junior Academy | Pass & Control – Receiving Under Pressure | 19.5.25
+21. Junior Academy | Pass & Control | 21.5.25
+22. Junior Academy | 1 v 1 – Attacking | 26.5.25
+23. Junior Academy U9 / U10 | 1 v 1 – Defending
+24. Junior Academy | 1 v 1 – Travelling with the Ball | 9.6.25
+25. Junior Academy | Shooting Technique – Laces | 11.6.25
+26. Junior Academy | 1 v 1 Competitiveness | 16.6.25
+27. 2025 Junior Academy ID | 2 v 1 / 3 v 2 – Defending | 18.6.25 | #8-12 players
+28. Junior Academy | Pass & Control | 23.6.25
+29. Junior Academy | 1 v 1 – Dribbling (Escaping Pressure) | 14.7.24
+30. Junior Academy | Pass & Control – Escaping Pressure | 16.7.25
+31. Junior Academy | 1 v 1 – Finishing | 28.7.25
+32. Junior Academy | Pass & Control | 4.8.25
+33. Junior Academy | Pass & Control – Building Up | 6.8.25
+34. U9 & U10 | 1 v 1 – Attacking | 11.8.25
+35. Junior Academy | Ways to Break the Line | 13.8.25
+36. Junior Academy | Ways to Break the Line | 13.8.25 (duplicate)
+37. Junior Academy | Pass & Control – Crossing & Finishing | 20.8.25
+38. Junior Academy | 1 v 1 – Defending | 25.8.25
+39. U9 & U10 | Defending Transition (snippet) | 27.8.25
+40. U11 & U12 | Pass & Control – Defending Process | 27.8.25
+41. Junior Academy | 1 v 1 – 50/50 Contest | 1.9.25
+42. Junior Academy | 1 v 1 Finishing | 3.9.25
+43. Junior Academy | Shooting Technique | 8.9.25
+44. Junior Academy | Attacking Transition | 10.9.25
+45. 2025 Junior Summer Academy | Shielding | 13.10.25 | #8-12 players
+46. Youth Summer Academy | 1 v 1 Competitiveness | 14.10.25
+47. Youth Summer Academy | Defending 1 v 1 + Underload | 16.10.25
+48–61: DUPLICATES of earlier slides (48=12, 49=25, 50=26, 51=27, 52=28, 53=29, 54=30, 55=31, 56=32, 57=33, 58=34, 59=35, 60=36, 61=37)
+```
+
+### Key Observations
+
+1. **ALL slides are Academy** — no Community lessons in this set
+2. **Most are "Junior Academy"** (U9–U12 range)
+3. **Age-specific variants exist**: U9 & U10 (slides 13, 16, 23, 34, 39, 58), U11 & U12 (slides 14, 19, 40)
+4. **Two Youth Summer Academy** slides (46, 47) — different programme
+5. **One Junior Summer Academy** slide (45)
+6. **Slides 48–61 are duplicates** of slides 12–37 (from overlapping scrape batches)
+7. **Dates range**: Jan 2025 to Oct 2025 — this is a full year's curriculum
+8. **Some slides note #8-12 players** — useful for organisation descriptions
+9. **Lesson names in headers are MORE specific** than in scraped content:
+   - Header: "1 v 1 – Turns" vs Scrape: "1 v 1 Attacking"
+   - Header: "1 v 1 – Travelling with the Ball" vs Scrape: "1 v 1 Attacking (Wide)"
+   - Header: "Pass & Control – Receiving Under Pressure" vs Scrape: "Passing & Receiving (Movement)"
+   - Header: "1 v 1 – Dribbling (Escaping Pressure)" vs Scrape: "1 v 1 Defending (Recovery)"
+
+### Revised Unique Lesson Count (after removing slides 48–61 duplicates)
+
+**47 slides → remove 14 duplicates (48–61) → 47 unique slide positions**
+But some within 1–47 are also duplicates (slide 35 = slide 36).
+
+**Estimated unique lessons: ~44**
+
+### Programme Breakdown
+| Programme | Slides | Count |
+|-----------|--------|-------|
+| Junior Academy | Most of 1–44 | ~38 |
+| U9 & U10 specific | 13, 16, 23, 34, 39 | 5 |
+| U11 & U12 specific | 14, 19, 40 | 3 |
+| Junior Summer Academy | 45 | 1 |
+| Youth Summer Academy | 46, 47 | 2 |
+
+### Action: Header-to-Scrape Mapping Needed
+The slide numbers in the headers don't perfectly match the slide numbers in the scraped content (the scrape lost some slides and renumbered). Next step is to match each header to its scraped content by lesson name, then we have the complete picture: Bailey's content + proper metadata (team type, date, player count).
