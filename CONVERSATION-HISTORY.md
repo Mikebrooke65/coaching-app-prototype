@@ -1,5 +1,84 @@
 # Conversation History
 
+## Session: March 12, 2026 - Game Day Subs Bug Fixes & User Role Discovery
+
+### Context
+Continuing from previous session where the full Game Day Subs feature was implemented and committed. This session focused on bug fixes found during live testing and uncovered a user role management gap.
+
+### The Journey
+
+#### Bug Fix 1: Schedule X/Y Attendee Count
+- Schedule event cards showed "1 attendee" instead of "1/11 attending"
+- Added `getTotalMemberCounts()` to `events-api.ts` — counts team_members per event's target_teams
+- Updated `Schedule.tsx` to display "X/Y attending" format
+
+#### Bug Fix 2: Subs Attendance Only Showing RSVP'd Users
+- Attendance section only showed users who had RSVP'd (just the coach)
+- Changed `SubsPage.tsx` to query ALL team members from `team_members` table
+- Merged with RSVP status, defaulting to `no_response` for members without RSVPs
+
+#### Bug Fix 3: Coaches in Game Day Squad
+- Coach was appearing in the game day squad and starting lineup
+- Added `.eq('role', 'player')` filter to team_members query in SubsPage
+- Only players now appear in attendance/squad sections
+
+#### Bug Fix 4: Attendance Upsert Failing (ON CONFLICT)
+- Clicking "Present" button showed error: "unique or exclusion constraint matching the ON CONFLICT specification"
+- Root cause: Migration 031 created a partial unique index (`WHERE user_id IS NOT NULL`) but PostgREST upsert needs a real unique constraint
+- Created migration 032 to add proper `UNIQUE (event_id, user_id)` constraint
+- Postgres treats NULLs as distinct in unique constraints, so guest rows (user_id=NULL) don't conflict
+
+#### Discovery: User Role Management Gap
+- User appeared in attendance block despite being a coach
+- Investigation: `team_members.role = 'player'` but `users.role = 'admin'`
+- Two independent role systems:
+  - `users.role` = app-level permission (admin/coach/manager/player/caregiver) — shown on Users page
+  - `team_members.role` = team-level function (coach/manager/player) — no UI to manage this
+- When users are added to teams, `team_members.role` defaults to 'player' regardless of their app role
+- Fixed user's record manually via SQL: `UPDATE team_members SET role = 'coach' WHERE user_id = ...`
+- **Needs scoping**: Admin UI should allow setting/editing team_members.role when assigning users to teams
+
+### Tasks Completed
+1. Fixed Schedule X/Y attendee count
+2. Fixed Subs attendance to show all team members
+3. Excluded coaches from game day squad
+4. Fixed attendance upsert with proper unique constraint (migration 032)
+5. Identified and documented user role management gap
+6. All fixes committed and pushed to both remotes
+
+### Files Created
+- `supabase/migrations/032_fix_attendance_unique_constraint.sql`
+
+### Files Modified
+- `src/pages/SubsPage.tsx` — Player-only filter, all-members query
+- `src/pages/Schedule.tsx` — X/Y attendee count
+- `src/lib/events-api.ts` — getTotalMemberCounts method
+
+### Technical Decisions
+- **Partial index vs real constraint**: PostgREST requires actual unique constraints for upsert onConflict. Partial indexes don't work. Keep both: the partial index for query performance, the constraint for upsert support.
+- **Two role systems are correct**: App-level role controls permissions; team-level role controls function within a team. A user can be admin in the app but coach on one team and manager on another.
+
+### Next Steps
+
+#### Subs Feature Testing (Continue)
+1. Test starting lineup selection (select players, verify X/Y counter)
+2. Test Random strategy (kick-off time, rotation windows, confirm subs)
+3. Test Coach strategy (manual player swaps, game minute calculation)
+4. Test playing time bars (update during active play)
+5. Test guest players in lineup and substitutions
+6. Test edge cases: zero subs, all players present, partial attendance
+
+#### User Role Management (New Scope)
+1. Scope out the problem: `team_members.role` has no admin UI
+2. Options to consider:
+   - Add role picker when assigning members to teams in Teams Management
+   - Auto-set `team_members.role` based on `users.role` when adding to team
+   - Show/edit team roles in Users detail view
+   - Allow different roles per team (coach on Team A, manager on Team B)
+3. Create spec if needed, or handle as a quick fix in Teams Management page
+
+---
+
 ## Session: March 11, 2026 - Mobile UI Polish and RSVP System
 
 ### Context

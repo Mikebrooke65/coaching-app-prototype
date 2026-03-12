@@ -4,6 +4,61 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-12] - Game Day Subs Feature & Bug Fixes
+
+### Added
+- **Game Day Subs Feature (Complete)**
+  - Database migration `031_game_day_subs.sql`: `event_attendance`, `game_times`, `substitution_events` tables
+  - Added `game_players` and `half_duration` columns to `teams` table with age-group defaults
+  - RLS policies for all new tables (admin full access, coach/manager read/write, player read own)
+  - TypeScript types: `EventAttendance`, `GameTime`, `SubstitutionEvent`, `SquadMember`
+  - Pure logic modules: `rotation-engine.ts`, `attendance-utils.ts`, `game-time-utils.ts`, `lineup-utils.ts`, `substitution-state.ts`
+  - API services: `attendance-api.ts`, `subs-api.ts`, `teams-api.ts`
+  - UI Components: `AttendanceView`, `LineupSelector`, `SubstitutionManager`, `RandomStrategy`, `CoachStrategy`, `PlayingTimeBar`
+  - `SubsPage.tsx` with full integration at `/games/:eventId/subs`
+  - "Subs" button on game cards in `Games.tsx`
+  - Team config fields (game_players, half_duration) in `TeamsManagement.tsx`
+  - Route registered in `src/routes/index.tsx`
+
+### Fixed
+- **Schedule X/Y attendee count**: Shows "X/Y attending" where Y = total team members (coaches + managers + players, not caregivers)
+- **Subs attendance showing all team members**: Changed from only RSVP'd users to ALL team members with RSVP status merged (default `no_response`)
+- **Coaches excluded from game day squad**: Added `.eq('role', 'player')` filter so only players appear in attendance/squad on Subs page
+- **Attendance upsert failing**: Migration `032_fix_attendance_unique_constraint.sql` adds proper UNIQUE constraint on `(event_id, user_id)` — partial unique index didn't work with PostgREST upsert `onConflict`
+
+### Technical Notes
+- `users.role` = app-level permission (admin, coach, manager, player, caregiver)
+- `team_members.role` = team-level role (coach, manager, player) — independent of app role
+- Attendance on Subs page is players-only; coaches/managers don't appear
+- Game Day Squad = players marked present + guest players
+- Discovered: when adding users to teams, `team_members.role` must be set correctly (currently defaults to 'player' regardless of `users.role`)
+
+### Known Issue — User Role Management
+- `team_members.role` is set independently from `users.role`
+- No UI currently exists to manage team-level roles
+- Users page only manages app-level role
+- Teams Management page doesn't expose team_members.role for editing
+- **Needs scoping**: Add team-level role management to admin UI
+
+### Files Created
+- `supabase/migrations/031_game_day_subs.sql`
+- `supabase/migrations/032_fix_attendance_unique_constraint.sql`
+- `src/lib/rotation-engine.ts`, `src/lib/attendance-utils.ts`, `src/lib/game-time-utils.ts`
+- `src/lib/lineup-utils.ts`, `src/lib/substitution-state.ts`
+- `src/lib/attendance-api.ts`, `src/lib/subs-api.ts`, `src/lib/teams-api.ts`
+- `src/components/subs/AttendanceView.tsx`, `src/components/subs/LineupSelector.tsx`
+- `src/components/subs/SubstitutionManager.tsx`, `src/components/subs/RandomStrategy.tsx`
+- `src/components/subs/CoachStrategy.tsx`, `src/components/subs/PlayingTimeBar.tsx`
+- `src/pages/SubsPage.tsx`
+
+### Files Modified
+- `src/pages/Games.tsx` — Added Subs button to game cards
+- `src/pages/Schedule.tsx` — X/Y attendee count display
+- `src/pages/desktop/TeamsManagement.tsx` — Team config fields
+- `src/routes/index.tsx` — Subs route
+- `src/types/database.ts` — New types + Team extension
+- `src/lib/events-api.ts` — `getTotalMemberCounts()` method
+
 ## [2026-03-11] - Bailey Academy Lesson Import: Analysis, Schema & Image Mapping
 
 ### Added
