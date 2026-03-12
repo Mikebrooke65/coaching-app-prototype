@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Calendar, Clock, MapPin, Users, Plus, Search, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Plus, Search, CheckCircle, XCircle, HelpCircle, Bell } from 'lucide-react';
+import { MessagingProvider } from '../../contexts/MessagingContext';
+import { ComposeForm } from '../../components/messaging/ComposeForm';
+
+// Note: DesktopSchedule currently uses mock data. The "Send Reminder" button
+// opens a ComposeForm pre-filled with event details. Once this page is
+// connected to real data (with target_teams), the prefillTeamId will be
+// populated from the event's target_teams array.
 
 interface Event {
   id: string;
@@ -77,6 +84,7 @@ export function DesktopSchedule() {
   const [filter, setFilter] = useState<'all' | 'training' | 'match' | 'meeting'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [reminderEvent, setReminderEvent] = useState<Event | null>(null);
 
   const filteredEvents = mockEvents.filter((event) => {
     const matchesFilter = filter === 'all' || event.type === filter;
@@ -313,7 +321,14 @@ export function DesktopSchedule() {
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-gray-200">
+                <div className="pt-6 border-t border-gray-200 space-y-3">
+                  <button
+                    onClick={() => setReminderEvent(selectedEvent)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#06b6d4]/10 text-[#06b6d4] border border-[#06b6d4]/30 hover:bg-[#06b6d4]/20 transition-colors"
+                  >
+                    <Bell className="w-4 h-4" />
+                    Send Reminder
+                  </button>
                   <button className="w-full px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0081d9] transition-colors">
                     View Attendee List
                   </button>
@@ -330,6 +345,22 @@ export function DesktopSchedule() {
           )}
         </div>
       </div>
+
+      {/* Send Reminder Modal */}
+      {reminderEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="max-w-lg w-full">
+            <MessagingProvider>
+              <ComposeForm
+                prefillTitle={`Reminder: ${reminderEvent.title}`}
+                prefillBody={`Hi team,\n\nThis is a reminder about ${reminderEvent.title} on ${formatDate(reminderEvent.date)} at ${reminderEvent.time}.\n\nLocation: ${reminderEvent.location}\n\nPlease update your RSVP if you haven't already.`}
+                onClose={() => setReminderEvent(null)}
+                onSent={() => setReminderEvent(null)}
+              />
+            </MessagingProvider>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

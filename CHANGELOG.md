@@ -4,6 +4,28 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-13] - Team Messaging Feature
+
+### Added
+- **Team Messaging (Complete)**
+  - Database migrations `033_team_messaging.sql` and `034_auto_unarchive_on_reply.sql`
+  - Tables: `messages`, `message_recipients`, `message_read_receipts`, `message_reactions`, `message_archives`, `device_tokens`
+  - RLS policies for all messaging tables
+  - Auto-read receipt trigger for message senders
+  - Auto-unarchive trigger when replies are added to archived threads
+  - TypeScript interfaces for all messaging types in `database.ts`
+  - `messaging-api.ts` API service extending ApiClient with full CRUD, reactions, archiving, search, and Realtime subscriptions
+  - `MessagingContext.tsx` with Realtime subscriptions, polling fallback, and optimistic updates
+  - UI components: MessageCard, ComposeForm, ThreadView, ReplyForm, ReadDetailModal, ReactionPicker, SearchBar, UnreadBadge
+  - Mobile `Messaging.tsx` with thread list, search, compose, archive/unarchive, pull-to-refresh
+  - Desktop `DesktopMessaging.tsx` with two-panel layout (thread list + thread detail)
+  - "Send Reminder" button on Schedule event cards (mobile and desktop) pre-filling compose form with event details
+  - Targeting types: individual, whole_team, management_team, club_admin
+  - Read receipt tracking with X/Y read count indicators
+  - Emoji reactions with toggle behaviour
+  - Thread archiving with swipe gesture (mobile) and context menu (desktop)
+  - Debounced search across message titles, bodies, and sender names
+
 ## [2026-03-12] - Game Day Subs Feature & Bug Fixes
 
 ### Added

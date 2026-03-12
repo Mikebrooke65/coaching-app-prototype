@@ -1,5 +1,77 @@
 # Conversation History
 
+## Session: March 13, 2026 - Team Messaging Feature Implementation
+
+### Context
+Implemented the full Team Messaging feature from spec to code-complete. The spec was created first (requirements, design, tasks), then all required tasks were executed sequentially.
+
+### The Journey
+
+#### Database Schema (Migrations 033 + 034)
+- Created 6 tables: messages, message_recipients, message_read_receipts, message_reactions, message_archives, device_tokens
+- RLS policies for all tables scoped to authenticated users
+- Auto-read receipt trigger for senders on message creation
+- Auto-unarchive trigger (034) removes archive records when a reply is added to an archived thread
+- Indexes on team_id+created_at, parent_message_id, sender_id, GIN on recipient_user_ids
+
+#### API Service Layer
+- `messaging-api.ts` extending ApiClient with methods for threads, thread detail, compose, reply, read receipts, reactions, archiving, search, and Realtime subscriptions
+- Recipient resolution logic for individual, whole_team, management_team, club_admin targeting types
+- Read receipt retry with exponential backoff (3 retries)
+
+#### Context and State Management
+- `MessagingContext.tsx` provides threads, archived threads, unread count, selected thread state
+- Supabase Realtime subscriptions with polling fallback on channel errors (30s interval)
+- Optimistic UI updates with rollback on failure
+
+#### UI Components
+- MessageCard, ComposeForm, ThreadView, ReplyForm, ReadDetailModal, ReactionPicker, SearchBar, UnreadBadge
+- Brand colour Dark Grey #545859 with 20% shading rgba(84, 88, 89, 0.2)
+
+#### Page Integration
+- Mobile Messaging.tsx: thread list, search, compose FAB, swipe-to-archive, pull-to-refresh
+- Desktop DesktopMessaging.tsx: two-panel layout with thread list and detail view
+- "Send Reminder" button added to Schedule.tsx and DesktopSchedule.tsx event cards
+
+### Tasks Completed
+1. Database schema and types (migration 033, 034, TypeScript interfaces)
+2. API service layer (messaging-api.ts with all methods)
+3. Messaging context with Realtime and polling fallback
+4. All shared UI components (8 components)
+5. Mobile and desktop page integration
+6. Event reminder integration on Schedule pages
+7. Auto-unarchive on reply and error handling
+
+### Files Created
+- `supabase/migrations/033_team_messaging.sql`
+- `supabase/migrations/034_auto_unarchive_on_reply.sql`
+- `src/lib/messaging-api.ts`
+- `src/contexts/MessagingContext.tsx`
+- `src/components/messaging/MessageCard.tsx`
+- `src/components/messaging/ComposeForm.tsx`
+- `src/components/messaging/ThreadView.tsx`
+- `src/components/messaging/ReplyForm.tsx`
+- `src/components/messaging/ReadDetailModal.tsx`
+- `src/components/messaging/ReactionPicker.tsx`
+- `src/components/messaging/SearchBar.tsx`
+- `src/components/messaging/UnreadBadge.tsx`
+
+### Files Modified
+- `src/types/database.ts` (added messaging interfaces)
+- `src/pages/Messaging.tsx` (replaced placeholder with real implementation)
+- `src/pages/desktop/DesktopMessaging.tsx` (replaced placeholder with two-panel layout)
+- `src/pages/Schedule.tsx` (added Send Reminder button)
+- `src/pages/desktop/DesktopSchedule.tsx` (added Send Reminder button)
+
+### Technical Decisions
+- Used Supabase Realtime for live message updates with polling fallback for reliability
+- Optimistic UI updates for send/reply/react/archive actions
+- Recipient resolution at send time (not stored as individual rows per user)
+- GIN index on recipient_user_ids array for efficient recipient queries
+- Auto-unarchive via database trigger to ensure consistency regardless of client
+
+---
+
 ## Session: March 12, 2026 - Game Day Subs Bug Fixes & User Role Discovery
 
 ### Context

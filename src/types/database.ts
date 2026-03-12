@@ -377,3 +377,97 @@ export interface SquadMember {
   is_guest: boolean;
   rsvp_status?: 'going' | 'not_going' | 'maybe' | 'no_response';
 }
+
+// Messaging targeting types
+export type MessageTargetingType = 'individual' | 'whole_team' | 'management_team' | 'club_admin';
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  team_id: string;
+  parent_message_id: string | null;
+  title: string;
+  body: string;
+  created_at: string;
+}
+
+export interface MessageRecipient {
+  id: string;
+  message_id: string;
+  targeting_type: MessageTargetingType;
+  recipient_user_ids: string[];
+  notification_pending: boolean;
+}
+
+export interface MessageReadReceipt {
+  id: string;
+  message_id: string;
+  user_id: string;
+  read_at: string;
+}
+
+export interface MessageReaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
+}
+
+export interface MessageArchive {
+  id: string;
+  message_id: string;
+  user_id: string;
+  archived_at: string;
+}
+
+export interface DeviceToken {
+  id: string;
+  user_id: string;
+  device_token: string;
+  platform: 'web' | 'android' | 'ios';
+  created_at: string;
+}
+
+// Composed view types for UI
+export interface Thread {
+  message: Message;
+  sender: { first_name: string; last_name: string };
+  recipient: MessageRecipient;
+  reply_count: number;
+  last_activity: string;
+  read_count: number;
+  total_recipients: number;
+  is_read: boolean;
+  is_archived: boolean;
+  reactions: ReactionGroup[];
+}
+
+export interface ThreadDetail {
+  thread: Thread;
+  replies: (Message & { sender: { first_name: string; last_name: string }; reactions: ReactionGroup[] })[];
+}
+
+export interface ReactionGroup {
+  emoji: string;
+  count: number;
+  user_ids: string[];
+}
+
+export interface CreateMessagePayload {
+  team_id: string;
+  targeting_type: MessageTargetingType;
+  title: string;
+  body: string;
+  individual_user_id?: string;
+}
+
+export interface CreateReplyPayload {
+  body: string;
+}
+
+export interface SearchResult {
+  thread: Thread;
+  match_context: string;
+  is_archived: boolean;
+}

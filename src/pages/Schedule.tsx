@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, HelpCircle, Plus, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, HelpCircle, Plus, Users, Bell } from 'lucide-react';
 import { eventsApi } from '../lib/events-api';
 import { useAuth } from '../contexts/AuthContext';
+import { MessagingProvider } from '../contexts/MessagingContext';
+import { ComposeForm } from '../components/messaging/ComposeForm';
 import type { Event, EventRsvp, Team } from '../types/database';
 
 export function Schedule() {
@@ -16,6 +18,9 @@ export function Schedule() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userTeams, setUserTeams] = useState<Team[]>([]);
   const [allTeams, setAllTeams] = useState<Team[]>([]);
+
+  // Send Reminder modal state
+  const [reminderEvent, setReminderEvent] = useState<Event | null>(null);
 
   // Decline reason modal state
   const [declineModalOpen, setDeclineModalOpen] = useState(false);
@@ -402,6 +407,17 @@ export function Schedule() {
                 Can't Go
               </button>
             </div>
+
+            {/* Send Reminder Button - visible to coach/manager/admin */}
+            {(user?.role === 'coach' || user?.role === 'manager' || user?.role === 'admin') && (
+              <button
+                onClick={() => setReminderEvent(event)}
+                className="mt-1.5 w-full flex items-center justify-center gap-1 px-2 py-1 rounded text-xs font-medium bg-[#06b6d4]/20 text-[#06b6d4] border border-[#06b6d4]/30 hover:bg-[#06b6d4]/30 transition-colors"
+              >
+                <Bell className="w-3 h-3" />
+                Send Reminder
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -626,6 +642,25 @@ export function Schedule() {
               >
                 Confirm
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Send Reminder Modal */}
+      {reminderEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+          <div className="min-h-full flex items-start justify-center p-4 py-8">
+            <div className="max-w-md w-full">
+              <MessagingProvider>
+                <ComposeForm
+                  prefillTitle={`Reminder: ${getEventTitle(reminderEvent)}`}
+                  prefillBody={`Hi team,\n\nThis is a reminder about ${getEventTitle(reminderEvent)} on ${formatDate(reminderEvent.event_date)} at ${formatTime(reminderEvent.event_date)}.\n\nLocation: ${reminderEvent.location}\n\nPlease update your RSVP if you haven't already.`}
+                  prefillTeamId={reminderEvent.target_teams[0]}
+                  onClose={() => setReminderEvent(null)}
+                  onSent={() => setReminderEvent(null)}
+                />
+              </MessagingProvider>
             </div>
           </div>
         </div>
