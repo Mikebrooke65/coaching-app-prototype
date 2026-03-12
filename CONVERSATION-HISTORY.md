@@ -45,6 +45,10 @@ Continuing from previous session where the full Game Day Subs feature was implem
 4. Fixed attendance upsert with proper unique constraint (migration 032)
 5. Identified and documented user role management gap
 6. All fixes committed and pushed to both remotes
+7. Added live count-up timer to Substitutions section (MM:SS format, 1st/2nd Half label)
+8. Added recorded time display below kick-off and 2nd half buttons
+9. Added substitution alert system — flashing orange banner + three-beep audio when rotation window is due
+10. Rotation window cards now pulse with stronger highlight when their minute is reached
 
 ### Files Created
 - `supabase/migrations/032_fix_attendance_unique_constraint.sql`
@@ -53,6 +57,8 @@ Continuing from previous session where the full Game Day Subs feature was implem
 - `src/pages/SubsPage.tsx` — Player-only filter, all-members query
 - `src/pages/Schedule.tsx` — X/Y attendee count
 - `src/lib/events-api.ts` — getTotalMemberCounts method
+- `src/components/subs/SubstitutionManager.tsx` — Live timer, alert listener, recorded time display
+- `src/components/subs/RandomStrategy.tsx` — Game-minute-tick listener, sub-alert dispatch, due-window pulse
 
 ### Technical Decisions
 - **Partial index vs real constraint**: PostgREST requires actual unique constraints for upsert onConflict. Partial indexes don't work. Keep both: the partial index for query performance, the constraint for upsert support.
@@ -61,14 +67,15 @@ Continuing from previous session where the full Game Day Subs feature was implem
 ### Next Steps
 
 #### Subs Feature Testing (Continue)
-1. Test starting lineup selection (select players, verify X/Y counter)
-2. Test Random strategy (kick-off time, rotation windows, confirm subs)
-3. Test Coach strategy (manual player swaps, game minute calculation)
-4. Test playing time bars (update during active play)
+1. Test live count-up timer (kick-off, 2nd half start, timer resets for 2nd half)
+2. Test substitution alerts (flashing banner + beep sound when rotation window minute is reached)
+3. Test Coach strategy mode (manual player swaps — select player off, player on, confirm)
+4. Test playing time bars (update during active play, correct percentages)
 5. Test guest players in lineup and substitutions
 6. Test edge cases: zero subs, all players present, partial attendance
+7. General UI/UX review of the Subs page flow
 
-#### User Role Management (New Scope)
+#### User Role Management (New Scope — Separate Piece)
 1. Scope out the problem: `team_members.role` has no admin UI
 2. Options to consider:
    - Add role picker when assigning members to teams in Teams Management

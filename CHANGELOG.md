@@ -19,6 +19,10 @@ All notable changes to the football coaching app prototype will be documented in
   - "Subs" button on game cards in `Games.tsx`
   - Team config fields (game_players, half_duration) in `TeamsManagement.tsx`
   - Route registered in `src/routes/index.tsx`
+  - Live count-up timer on Substitutions section (MM:SS, ticks every second, shows 1st/2nd Half label)
+  - Recorded kick-off and 2nd half start times shown in small grey text below buttons
+  - Substitution alert system: orange flashing "⚽ SUBSTITUTION TIME ⚽" banner + three-beep audio alert via Web Audio API when rotation window minute is reached
+  - Rotation window cards pulse with stronger orange highlight when due
 
 ### Fixed
 - **Schedule X/Y attendee count**: Shows "X/Y attending" where Y = total team members (coaches + managers + players, not caregivers)
