@@ -28,6 +28,8 @@ export interface Team {
   division?: string;
   training_ground: string;
   training_time: string;
+  game_players?: number;
+  half_duration?: number;
   created_at: string;
 }
 
@@ -319,4 +321,59 @@ export interface EventRsvp {
   decline_reason: 'late' | 'sick' | 'injured' | 'holiday' | 'other' | null;
   created_at: string;
   updated_at: string;
+}
+
+// Event attendance record
+export interface EventAttendance {
+  id: string;
+  event_id: string;
+  user_id: string | null;
+  guest_name: string | null;
+  attended: boolean;
+  recorded_at: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+// Game time record
+export interface GameTime {
+  id: string;
+  event_id: string;
+  kick_off_time: string | null;
+  second_half_start_time: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+// Substitution event record
+export interface SubstitutionEvent {
+  id: string;
+  event_id: string;
+  player_off_id: string | null;
+  player_off_guest_name: string | null;
+  player_on_id: string | null;
+  player_on_guest_name: string | null;
+  game_minute: number;
+  half: 1 | 2;
+  strategy_used: 'random' | 'coach';
+  recorded_at: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+// Squad member (joined view for Subs page)
+export interface SquadMember {
+  id: string;
+  user_id: string | null;
+  guest_name: string | null;
+  display_name: string;
+  attended: boolean;
+  is_guest: boolean;
+  rsvp_status?: 'going' | 'not_going' | 'maybe' | 'no_response';
 }

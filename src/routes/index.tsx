@@ -19,6 +19,7 @@ import { Resources } from '../pages/Resources';
 import { Schedule } from '../pages/Schedule';
 import { Messaging } from '../pages/Messaging';
 import { AICoach } from '../pages/AICoach';
+import { SubsPage } from '../pages/SubsPage';
 
 // Desktop admin pages
 import { DesktopLanding } from '../pages/desktop/DesktopLanding';
@@ -91,6 +92,16 @@ export const router = createBrowserRouter([
             allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH]}
           >
             <Games />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'games/:eventId/subs',
+        element: (
+          <ProtectedRoute
+            allowedRoles={[UserRole.ADMIN, UserRole.MANAGER, UserRole.COACH]}
+          >
+            <SubsPage />
           </ProtectedRoute>
         ),
       },

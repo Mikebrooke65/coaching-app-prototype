@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Trophy, Clock, ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Calendar, MapPin, Trophy, Clock, ChevronLeft, ChevronRight, Save, ArrowRightCircle } from 'lucide-react';
 import { gamesApi } from '../lib/games-api';
 import { eventsApi } from '../lib/events-api';
 import type { Game, GameFeedbackRecord, Team, User } from '../types/database';
@@ -7,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export function Games() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [games, setGames] = useState<Game[]>([]);
@@ -435,6 +437,16 @@ export function Games() {
                 <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(games[currentGameIndex].game_date)}</span>
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatTime(games[currentGameIndex].game_date)}</span>
                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{games[currentGameIndex].venue}</span>
+              </div>
+              {/* Subs link */}
+              <div className="flex justify-center mt-2">
+                <button
+                  onClick={() => navigate(`/games/${games[currentGameIndex].id}/subs`)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-[#ea7800] text-white hover:bg-[#d06e00] transition-colors"
+                >
+                  <ArrowRightCircle className="w-3.5 h-3.5" />
+                  Subs
+                </button>
               </div>
             </div>
           </div>

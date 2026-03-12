@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { getDefaultHalfDuration } from '../../lib/attendance-utils';
+import { teamsApi } from '../../lib/teams-api';
 
 interface Team {
   id: string;
@@ -10,6 +12,8 @@ interface Team {
   division: string;
   training_ground: string;
   training_time: string;
+  game_players?: number;
+  half_duration?: number;
   coach?: {
     id: string;
     first_name: string;
@@ -60,7 +64,10 @@ export function TeamsManagement() {
     training_ground: '',
     training_time: '',
     coach_id: '',
+    game_players: '' as string,
+    half_duration: '' as string,
   });
+  const [configErrors, setConfigErrors] = useState<{ game_players?: string; half_duration?: string }>({});
 
   // Fetch teams and coaches
   useEffect(() => {
@@ -143,9 +150,29 @@ export function TeamsManagement() {
     return matchesSearch && matchesAge && matchesDivision;
   });
 
+  const validateConfigFields = (gamePlayers: string, halfDuration: string) => {
+    const errors: { game_players?: string; half_duration?: string } = {};
+    if (gamePlayers !== '') {
+      const val = Number(gamePlayers);
+      if (!Number.isInteger(val) || val < 1) {
+        errors.game_players = 'Must be a whole number ≥ 1';
+      }
+    }
+    if (halfDuration !== '') {
+      const val = Number(halfDuration);
+      if (!Number.isInteger(val) || val < 1) {
+        errors.half_duration = 'Must be a whole number ≥ 1';
+      }
+    }
+    return errors;
+  };
+
+  const hasConfigErrors = Object.keys(configErrors).length > 0;
+
   const handleOpenModal = (team?: Team) => {
     if (team) {
       setEditingTeam(team);
+      const defaultHalf = getDefaultHalfDuration(team.age_group);
       setFormData({
         name: team.name,
         age_group: team.age_group,
@@ -153,6 +180,8 @@ export function TeamsManagement() {
         training_ground: team.training_ground,
         training_time: team.training_time,
         coach_id: team.coach?.id || '',
+        game_players: team.game_players != null ? String(team.game_players) : '',
+        half_duration: team.half_duration != null ? String(team.half_duration) : String(defaultHalf),
       });
     } else {
       setEditingTeam(null);
@@ -163,8 +192,11 @@ export function TeamsManagement() {
         training_ground: '',
         training_time: '',
         coach_id: '',
+        game_players: '',
+        half_duration: String(getDefaultHalfDuration('U9')),
       });
     }
+    setConfigErrors({});
     setIsModalOpen(true);
   };
 
@@ -174,6 +206,11 @@ export function TeamsManagement() {
   };
 
   const handleSave = async () => {
+    // Validate config fields before saving
+    const errors = validateConfigFields(formData.game_players, formData.half_duration);
+    setConfigErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     try {
       if (editingTeam) {
         // Update existing team
@@ -190,18 +227,33 @@ export function TeamsManagement() {
           .eq('id', editingTeam.id);
 
         if (error) throw error;
+
+        // Save game config if values are provided
+        const gp = formData.game_players !== '' ? Number(formData.game_players) : null;
+        const hd = formData.half_duration !== '' ? Number(formData.half_duration) : null;
+        if (gp != null && hd != null) {
+          await teamsApi.updateTeamConfig(editingTeam.id, gp, hd);
+        }
       } else {
         // Create new team
+        const insertData: Record<string, unknown> = {
+          name: formData.name,
+          age_group: formData.age_group,
+          division: formData.division,
+          training_ground: formData.training_ground,
+          training_time: formData.training_time,
+          coach_id: formData.coach_id || null,
+        };
+        if (formData.game_players !== '') {
+          insertData.game_players = Number(formData.game_players);
+        }
+        if (formData.half_duration !== '') {
+          insertData.half_duration = Number(formData.half_duration);
+        }
+
         const { error } = await supabase
           .from('teams')
-          .insert({
-            name: formData.name,
-            age_group: formData.age_group,
-            division: formData.division,
-            training_ground: formData.training_ground,
-            training_time: formData.training_time,
-            coach_id: formData.coach_id || null,
-          });
+          .insert(insertData);
 
         if (error) throw error;
       }
@@ -504,7 +556,20 @@ export function TeamsManagement() {
                   </label>
                   <select
                     value={formData.age_group}
-                    onChange={(e) => setFormData({ ...formData, age_group: e.target.value })}
+                    onChange={(e) => {
+                      const newAgeGroup = e.target.value;
+                      const currentDefault = getDefaultHalfDuration(formData.age_group);
+                      const newDefault = getDefaultHalfDuration(newAgeGroup);
+                      // Auto-update half_duration if it matches the old default or is empty
+                      const shouldUpdateHalf =
+                        formData.half_duration === '' ||
+                        formData.half_duration === String(currentDefault);
+                      setFormData({
+                        ...formData,
+                        age_group: newAgeGroup,
+                        half_duration: shouldUpdateHalf ? String(newDefault) : formData.half_duration,
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                   >
                     <option value="U4">U4</option>
@@ -585,6 +650,63 @@ export function TeamsManagement() {
                   Both coaches and admins can be assigned to teams
                 </p>
               </div>
+
+              {/* Game Configuration */}
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Game Configuration</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Game Players
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={formData.game_players}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, game_players: val });
+                        setConfigErrors(validateConfigFields(val, formData.half_duration));
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3] ${
+                        configErrors.game_players ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="e.g., 7 or 11"
+                    />
+                    {configErrors.game_players && (
+                      <p className="mt-1 text-xs text-red-600">{configErrors.game_players}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Half Duration (mins)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={formData.half_duration}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, half_duration: val });
+                        setConfigErrors(validateConfigFields(formData.game_players, val));
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3] ${
+                        configErrors.half_duration ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="e.g., 25"
+                    />
+                    {configErrors.half_duration && (
+                      <p className="mt-1 text-xs text-red-600">{configErrors.half_duration}</p>
+                    )}
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Used for substitution calculations on the Subs page
+                </p>
+              </div>
             </div>
 
             <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
@@ -596,7 +718,12 @@ export function TeamsManagement() {
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-[#0091f3] text-white rounded-lg font-medium hover:bg-[#0077cc]"
+                disabled={hasConfigErrors}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  hasConfigErrors
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-[#0091f3] text-white hover:bg-[#0077cc]'
+                }`}
               >
                 {editingTeam ? 'Save Changes' : 'Create Team'}
               </button>
