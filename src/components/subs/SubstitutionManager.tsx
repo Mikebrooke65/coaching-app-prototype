@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Clock, Play, Shuffle, UserCog } from 'lucide-react';
 import { subsApi } from '../../lib/subs-api';
 import { RandomStrategy } from './RandomStrategy';
@@ -34,9 +34,92 @@ export function SubstitutionManager({
 }: SubstitutionManagerProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState<string>('00:00');
+  const [subAlert, setSubAlert] = useState(false);
+  const alertedMinutesRef = useRef<Set<number>>(new Set());
 
   const kickedOff = !!gameTime?.kick_off_time;
   const secondHalfStarted = !!gameTime?.second_half_start_time;
+
+  // Compute current game minute from kick-off or 2nd half start
+  const getElapsedSeconds = useCallback((): number => {
+    if (!gameTime) return 0;
+    const now = Date.now();
+    if (secondHalfStarted && gameTime.second_half_start_time) {
+      return Math.floor((now - new Date(gameTime.second_half_start_time).getTime()) / 1000);
+    }
+    if (kickedOff && gameTime.kick_off_time) {
+      return Math.floor((now - new Date(gameTime.kick_off_time).getTime()) / 1000);
+    }
+    return 0;
+  }, [gameTime, kickedOff, secondHalfStarted]);
+
+  const getCurrentGameMinute = useCallback((): number => {
+    const secs = getElapsedSeconds();
+    const halfMin = Math.floor(secs / 60);
+    return secondHalfStarted ? halfDuration + halfMin : halfMin;
+  }, [getElapsedSeconds, secondHalfStarted, halfDuration]);
+
+  // Live timer tick — updates every second
+  useEffect(() => {
+    if (!kickedOff) return;
+    const tick = () => {
+      const secs = getElapsedSeconds();
+      const mins = Math.floor(secs / 60);
+      const s = secs % 60;
+      setElapsed(`${String(mins).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [kickedOff, getElapsedSeconds]);
+
+  // Substitution alert — check if current minute matches a rotation window
+  useEffect(() => {
+    if (!kickedOff || strategy !== 'random') return;
+    const check = () => {
+      const gameMin = getCurrentGameMinute();
+      // We'll broadcast an event that RandomStrategy can also use
+      // Check rotation windows via a custom event
+      window.dispatchEvent(new CustomEvent('game-minute-tick', { detail: { gameMinute: gameMin } }));
+    };
+    check();
+    const id = setInterval(check, 1000);
+    return () => clearInterval(id);
+  }, [kickedOff, strategy, getCurrentGameMinute]);
+
+  // Listen for sub-alert events from RandomStrategy
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { minute } = (e as CustomEvent).detail;
+      if (alertedMinutesRef.current.has(minute)) return;
+      alertedMinutesRef.current.add(minute);
+      setSubAlert(true);
+      // Play alert sound
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = 'square';
+        gain.gain.value = 0.3;
+        osc.start();
+        // Three short beeps
+        setTimeout(() => { gain.gain.value = 0; }, 150);
+        setTimeout(() => { gain.gain.value = 0.3; }, 250);
+        setTimeout(() => { gain.gain.value = 0; }, 400);
+        setTimeout(() => { gain.gain.value = 0.3; }, 500);
+        setTimeout(() => { gain.gain.value = 0; }, 650);
+        setTimeout(() => { osc.stop(); ctx.close(); }, 700);
+      } catch { /* audio not available */ }
+      // Flash for 5 seconds
+      setTimeout(() => setSubAlert(false), 5000);
+    };
+    window.addEventListener('sub-alert', handler);
+    return () => window.removeEventListener('sub-alert', handler);
+  }, []);
 
   const handleRecordKickOff = async () => {
     try {
@@ -84,34 +167,64 @@ export function SubstitutionManager({
         </div>
       )}
 
+      {/* Sub alert flash */}
+      {subAlert && (
+        <div className="p-3 bg-orange-500 text-white text-center rounded-lg animate-pulse font-bold text-sm">
+          ⚽ SUBSTITUTION TIME ⚽
+        </div>
+      )}
+
       {/* Game time controls */}
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Game Time</p>
+
+        {/* Live timer display */}
+        {kickedOff && (
+          <div className="text-center py-2">
+            <span className="text-3xl font-mono font-bold text-gray-900">{elapsed}</span>
+            <span className="ml-2 text-sm text-gray-400">{secondHalfStarted ? '2nd Half' : '1st Half'}</span>
+          </div>
+        )}
+
         <div className="flex gap-2">
-          <button
-            onClick={handleRecordKickOff}
-            disabled={kickedOff || saving}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-              kickedOff
-                ? 'bg-green-100 text-green-700 cursor-default'
-                : 'bg-[#ea7800] text-white hover:bg-[#d06e00] disabled:opacity-50'
-            }`}
-          >
-            <Play className="w-4 h-4" />
-            {kickedOff ? `Kicked off ${new Date(gameTime!.kick_off_time!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Record Kick-off'}
-          </button>
-          <button
-            onClick={handleRecordSecondHalf}
-            disabled={!kickedOff || secondHalfStarted || saving}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-              secondHalfStarted
-                ? 'bg-green-100 text-green-700 cursor-default'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
-            }`}
-          >
-            <Clock className="w-4 h-4" />
-            {secondHalfStarted ? `2nd half ${new Date(gameTime!.second_half_start_time!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '2nd Half Start'}
-          </button>
+          <div className="flex-1">
+            <button
+              onClick={handleRecordKickOff}
+              disabled={kickedOff || saving}
+              className={`w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                kickedOff
+                  ? 'bg-green-100 text-green-700 cursor-default'
+                  : 'bg-[#ea7800] text-white hover:bg-[#d06e00] disabled:opacity-50'
+              }`}
+            >
+              <Play className="w-4 h-4" />
+              {kickedOff ? 'Kicked Off' : 'Record Kick-off'}
+            </button>
+            {kickedOff && gameTime?.kick_off_time && (
+              <p className="text-[10px] text-gray-400 text-center mt-1">
+                {new Date(gameTime.kick_off_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </p>
+            )}
+          </div>
+          <div className="flex-1">
+            <button
+              onClick={handleRecordSecondHalf}
+              disabled={!kickedOff || secondHalfStarted || saving}
+              className={`w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                secondHalfStarted
+                  ? 'bg-green-100 text-green-700 cursor-default'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              {secondHalfStarted ? '2nd Half Started' : '2nd Half Start'}
+            </button>
+            {secondHalfStarted && gameTime?.second_half_start_time && (
+              <p className="text-[10px] text-gray-400 text-center mt-1">
+                {new Date(gameTime.second_half_start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { ArrowRightLeft, Check } from 'lucide-react';
 import { calculateRotationPlan } from '../../lib/rotation-engine';
 import { calculateGameMinute } from '../../lib/game-time-utils';
@@ -47,6 +47,35 @@ export function RandomStrategy({
       subs: subs.map(m => m.user_id || m.id),
     });
   }, [squad.length, gamePlayers, halfDuration, lineup, subs]);
+
+  // Track which window minutes we've already alerted for
+  const alertedRef = useRef<Set<number>>(new Set());
+
+  // Listen for game-minute-tick and fire sub-alert when a rotation window is due
+  useEffect(() => {
+    if (!plan) return;
+    const allWindows: Array<{ minute: number; half: 1 | 2; idx: number }> = [];
+    plan.firstHalf.forEach((w, idx) => allWindows.push({ minute: w.minute, half: 1, idx }));
+    plan.secondHalf.forEach((w, idx) => allWindows.push({ minute: w.minute + halfDuration, half: 2, idx }));
+
+    const handler = (e: Event) => {
+      const { gameMinute } = (e as CustomEvent).detail;
+      for (const w of allWindows) {
+        // Check if this window's minute has been reached and not yet confirmed
+        const confirmedCount = w.half === 1
+          ? substitutionEvents.filter(s => s.half === 1).length
+          : substitutionEvents.filter(s => s.half === 2).length;
+        if (w.idx < confirmedCount) continue; // already done
+        if (gameMinute >= w.minute && !alertedRef.current.has(w.minute)) {
+          alertedRef.current.add(w.minute);
+          window.dispatchEvent(new CustomEvent('sub-alert', { detail: { minute: w.minute } }));
+          break; // one alert at a time
+        }
+      }
+    };
+    window.addEventListener('game-minute-tick', handler);
+    return () => window.removeEventListener('game-minute-tick', handler);
+  }, [plan, halfDuration, substitutionEvents]);
 
   // Determine current half and game minute
   const getCurrentHalf = (): 1 | 2 => {
@@ -114,12 +143,14 @@ export function RandomStrategy({
         const isDone = idx < confirmedCount;
         const isCurrent = !isDone && halfNum === currentHalf && (idx === confirmedCount);
         const adjustedMinute = halfNum === 2 ? w.minute + halfDuration : w.minute;
+        const isDue = isCurrent && currentMinute >= adjustedMinute;
 
         return (
           <div
             key={idx}
             className={`p-3 rounded-lg border ${
               isDone ? 'bg-gray-50 border-gray-200 opacity-60' :
+              isDue ? 'bg-orange-100 border-orange-400 ring-2 ring-orange-300 animate-pulse' :
               isCurrent ? 'bg-orange-50 border-orange-300 ring-1 ring-orange-200' :
               'bg-white border-gray-200'
             }`}
