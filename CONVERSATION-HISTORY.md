@@ -1,5 +1,48 @@
 # Conversation History
 
+## Outstanding Tasks (as of March 13, 2026)
+
+### 1. Team Messaging — Testing & Review
+- Test messaging end-to-end: compose, send, receive, reply, reactions, archive/unarchive, search
+- Test Realtime subscriptions (live message delivery)
+- Test "Send Reminder" button on Schedule event cards
+- Test desktop two-panel layout
+- UnreadBadge integration into MainLayout bottom nav (MainLayout doesn't have MessagingContext access — needs separate work)
+
+### 2. User Role Management — Dual Role Issue
+- `users.role` (app-level permission) and `team_members.role` (team-level function) are independent
+- When users are added to teams, `team_members.role` defaults to 'player' regardless of app role
+- No admin UI exists to set/edit `team_members.role`
+- Options to scope:
+  - Add role picker when assigning members to teams in Teams Management
+  - Auto-set `team_members.role` based on `users.role` when adding to team
+  - Show/edit team roles in Users detail view
+  - Allow different roles per team (coach on Team A, manager on Team B)
+- Needs spec or quick fix in Teams Management page
+
+### 3. Game Day Subs — Testing & Finishing
+- Test live count-up timer (kick-off, 2nd half start, timer resets for 2nd half)
+- Test substitution alerts (flashing banner + beep sound when rotation window minute is reached)
+- Test Coach strategy mode (manual player swaps — select player off, player on, confirm)
+- Test playing time bars (update during active play, correct percentages)
+- Test guest players in lineup and substitutions
+- Test edge cases: zero subs, all players present, partial attendance
+- General UI/UX review of the Subs page flow
+
+### 4. Academy Lessons — Remaining Work
+- User to decide: proceed with 34 scraped slides or re-scrape the 13 missing ones first
+- User to review first Academy lesson (Migration 028 — Shielding) and confirm format
+- Batch-generate remaining Academy lessons from Bailey's slides
+- Upload pitch diagram images to Supabase Storage
+- U10 lessons not yet started (16 lessons remaining)
+
+### 5. General Outstanding Items
+- Bulk CSV user import function (created but not yet integrated into UI)
+- Session Builder save functionality (create/update sessions in database)
+- Lesson delivery refetch issue (noted in earlier session)
+
+---
+
 ## Session: March 13, 2026 - Team Messaging Feature Implementation
 
 ### Context
