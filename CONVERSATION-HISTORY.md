@@ -2,12 +2,30 @@
 
 ## Outstanding Tasks (as of March 13, 2026)
 
-### 1. Team Messaging — Testing & Review
-- Test messaging end-to-end: compose, send, receive, reply, reactions, archive/unarchive, search
+### 1. Team Messaging — Testing & Review (IN PROGRESS)
+- ✅ Fixed: infinite spinner when user has no teams in user_teams (now uses team_members)
+- ✅ Fixed: PostgREST self-join error (removed messages self-referential join, fetch replies separately)
+- ✅ Fixed: RLS infinite recursion (migration 035 — messages policy uses team_members, message_recipients policy is permissive)
+- ✅ Fixed: Leftover RLS policies cleaned up manually in Supabase
+- ✅ Fixed: ComposeForm teams loaded from team_members instead of user_teams
+- ✅ Fixed: Compose FAB button position (bottom-40 for nav clearance)
+- ✅ Fixed: Orange swipe-to-archive background bleeding through message cards
+- ✅ Fixed: Compose form send/cancel buttons hidden below visible area (pinned footer)
+- ✅ Compacted message cards (single-line body, tighter layout)
+- ✅ Slimmed bottom nav bar across all mobile pages
+- ✅ Messages page loads, shows "No messages yet" (correct — tables empty)
+- ✅ Compose form opens, targeting options display correctly
+- ✅ Message sent successfully, appears in thread list with correct card styling
+- ✅ Emoji reactions working on message cards
+- ✅ Read counter working on message cards
+- NEXT: Test thread detail view (tap card → view thread + replies)
+- Test reply functionality
+- Test archive/unarchive (swipe gesture)
+- Test search
 - Test Realtime subscriptions (live message delivery)
 - Test "Send Reminder" button on Schedule event cards
 - Test desktop two-panel layout
-- UnreadBadge integration into MainLayout bottom nav (MainLayout doesn't have MessagingContext access — needs separate work)
+- UnreadBadge integration into MainLayout bottom nav (needs separate work)
 
 ### 2. User Role Management — Dual Role Issue
 - `users.role` (app-level permission) and `team_members.role` (team-level function) are independent

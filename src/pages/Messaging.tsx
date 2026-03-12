@@ -60,6 +60,7 @@ function SwipeableCard({
       </div>
       <div
         ref={containerRef}
+        className="relative bg-white rounded-lg"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -254,7 +255,7 @@ function MessagingContent() {
   // ---- Compose view (full screen on mobile) ----
   if (showCompose) {
     return (
-      <div className="h-screen flex flex-col pb-20">
+      <div className="flex flex-col" style={{ height: 'calc(100vh - 5rem)' }}>
         <ComposeForm
           onClose={() => setShowCompose(false)}
           onSent={() => setShowCompose(false)}
@@ -388,7 +389,7 @@ function MessagingContent() {
 
       <button
         onClick={() => setShowCompose(true)}
-        className="fixed bottom-24 right-4 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white transition-transform hover:scale-105 active:scale-95 z-10"
+        className="fixed bottom-32 right-4 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white transition-transform hover:scale-105 active:scale-95 z-10"
         style={{ backgroundColor: '#545859' }}
         aria-label="Compose new message"
       >

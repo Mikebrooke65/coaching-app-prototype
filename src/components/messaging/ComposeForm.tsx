@@ -56,24 +56,32 @@ export function ComposeForm({
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  // Derive teams from user profile
-  const teams = useMemo(
-    () =>
-      user?.teams?.map((ut) => ({
-        id: ut.team_id,
-        name: `${ut.team.age_group} ${ut.team.name}`,
-      })) ?? [],
-    [user]
-  );
+  // Derive teams from team_members (source of truth)
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
 
-  // Auto-select team if user has only one, or use prefill
   useEffect(() => {
-    if (prefillTeamId) {
-      setSelectedTeamId(prefillTeamId);
-    } else if (teams.length === 1) {
-      setSelectedTeamId(teams[0].id);
-    }
-  }, [teams, prefillTeamId]);
+    if (!user?.id) return;
+    supabase
+      .from('team_members')
+      .select('team_id, teams!inner(name, age_group)')
+      .eq('user_id', user.id)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Failed to fetch teams for compose:', error);
+          return;
+        }
+        const t = (data || []).map((row: any) => ({
+          id: row.team_id,
+          name: `${row.teams.age_group} ${row.teams.name}`,
+        }));
+        setTeams(t);
+        if (prefillTeamId) {
+          setSelectedTeamId(prefillTeamId);
+        } else if (t.length === 1) {
+          setSelectedTeamId(t[0].id);
+        }
+      });
+  }, [user?.id, prefillTeamId]);
 
   // Fetch team members when individual targeting is selected and team is chosen
   useEffect(() => {
@@ -84,6 +92,8 @@ export function ComposeForm({
 
     let cancelled = false;
     setIsLoadingMembers(true);
+    // Auto-show the dropdown when members load
+    setShowUserDropdown(true);
 
     async function fetchMembers() {
       try {
@@ -101,26 +111,6 @@ export function ComposeForm({
           last_name: row.users.last_name,
           role: row.users.role,
         }));
-
-        // Also fetch users from user_teams who might not be in team_members
-        const { data: utData } = await supabase
-          .from('user_teams')
-          .select('user_id, users:user_id(first_name, last_name, role)')
-          .eq('team_id', selectedTeamId);
-
-        if (!cancelled && utData) {
-          const existingIds = new Set(members.map((m) => m.user_id));
-          for (const row of utData as any[]) {
-            if (!existingIds.has(row.user_id) && row.users) {
-              members.push({
-                user_id: row.user_id,
-                first_name: row.users.first_name,
-                last_name: row.users.last_name,
-                role: row.users.role,
-              });
-            }
-          }
-        }
 
         if (!cancelled) {
           // Exclude current user from the list
@@ -226,7 +216,7 @@ export function ComposeForm({
     <div className="flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 rounded-t-lg"
+        className="flex items-center justify-between px-4 py-2 rounded-t-lg"
         style={{ backgroundColor: '#545859' }}
       >
         <h2 className="text-white font-semibold text-lg">New Message</h2>
@@ -241,11 +231,11 @@ export function ComposeForm({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {/* Targeting type selector */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Send to</label>
-          <div className="grid grid-cols-2 gap-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Send to</label>
+          <div className="grid grid-cols-2 gap-1.5">
             {TARGETING_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
@@ -255,7 +245,7 @@ export function ComposeForm({
                   setSelectedUserId('');
                   clearFieldError('targeting');
                 }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors ${
+                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-sm transition-colors ${
                   targetingType === opt.value
                     ? 'border-[#545859] bg-[#545859]/10 text-gray-900'
                     : 'border-gray-200 text-gray-600 hover:border-gray-300'
@@ -263,10 +253,7 @@ export function ComposeForm({
                 aria-pressed={targetingType === opt.value}
               >
                 {opt.icon}
-                <div className="text-left">
-                  <div className="font-medium">{opt.label}</div>
-                  <div className="text-xs text-gray-500">{opt.description}</div>
-                </div>
+                <span className="font-medium">{opt.label}</span>
               </button>
             ))}
           </div>
@@ -409,7 +396,7 @@ export function ComposeForm({
               clearFieldError('body');
             }}
             placeholder="Write your message..."
-            rows={5}
+            rows={2}
             className={`w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none resize-y focus:ring-1 ${
               errors.body
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
@@ -420,12 +407,13 @@ export function ComposeForm({
             <p className="mt-1 text-sm text-red-600" role="alert">{errors.body}</p>
           )}
         </div>
+
       </div>
 
-      {/* Footer with send button and error */}
-      <div className="px-4 py-3 border-t border-gray-200">
+      {/* Footer — always visible, pinned at bottom */}
+      <div className="border-t border-gray-200 px-3 py-2 bg-white rounded-b-lg">
         {sendError && (
-          <div className="mb-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700" role="alert">
+          <div className="px-3 py-2 mb-2 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700" role="alert">
             {sendError}
           </div>
         )}
@@ -443,7 +431,7 @@ export function ComposeForm({
             type="button"
             onClick={handleSend}
             disabled={isSending}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
             style={{ backgroundColor: '#545859' }}
           >
             <Send className="w-4 h-4" />

@@ -23,13 +23,14 @@ export class MessagingApi extends ApiClient {
    */
   async getThreads(userId: string, teamIds: string[]): Promise<Thread[]> {
     // Fetch top-level messages (parent_message_id IS NULL) for the user's teams
+    // NOTE: Cannot self-join messages for replies — PostgREST doesn't support it.
+    // We fetch reply counts in a separate query.
     const { data: messages, error } = await this.supabase
       .from('messages')
       .select(`
         *,
         sender:users!messages_sender_id_fkey(first_name, last_name),
         recipients:message_recipients(id, message_id, targeting_type, recipient_user_ids, notification_pending),
-        replies:messages!messages_parent_message_id_fkey(id, created_at),
         read_receipts:message_read_receipts(id, user_id),
         reactions:message_reactions(emoji, user_id),
         archives:message_archives(id, user_id)
@@ -40,6 +41,30 @@ export class MessagingApi extends ApiClient {
 
     if (error) throw new ApiError(error.message);
     if (!messages) return [];
+
+    // Fetch reply counts and last reply dates for these top-level messages
+    const messageIds = messages.map((m: any) => m.id);
+    let repliesByParent: Record<string, { count: number; lastReplyAt: string }> = {};
+
+    if (messageIds.length > 0) {
+      const { data: replies } = await this.supabase
+        .from('messages')
+        .select('parent_message_id, created_at')
+        .in('parent_message_id', messageIds);
+
+      if (replies) {
+        for (const r of replies) {
+          const pid = r.parent_message_id as string;
+          if (!repliesByParent[pid]) {
+            repliesByParent[pid] = { count: 0, lastReplyAt: r.created_at };
+          }
+          repliesByParent[pid].count++;
+          if (r.created_at > repliesByParent[pid].lastReplyAt) {
+            repliesByParent[pid].lastReplyAt = r.created_at;
+          }
+        }
+      }
+    }
 
     const threads: Thread[] = messages
       .map((msg: any) => {
@@ -61,14 +86,14 @@ export class MessagingApi extends ApiClient {
 
         if (!isInRecipientSet) return null;
 
-        const replies = msg.replies || [];
+        const replyInfo = repliesByParent[msg.id];
         const readReceipts = msg.read_receipts || [];
         const reactions = msg.reactions || [];
 
-        // Calculate last activity: max of message created_at and all reply created_at
-        const replyDates = replies.map((r: any) => new Date(r.created_at).getTime());
+        // Calculate last activity: max of message created_at and last reply
         const messageDateMs = new Date(msg.created_at).getTime();
-        const lastActivityMs = Math.max(messageDateMs, ...replyDates);
+        const lastReplyMs = replyInfo ? new Date(replyInfo.lastReplyAt).getTime() : 0;
+        const lastActivityMs = Math.max(messageDateMs, lastReplyMs);
         const lastActivity = new Date(lastActivityMs).toISOString();
 
         // Count read receipts and check if user has read
@@ -94,7 +119,7 @@ export class MessagingApi extends ApiClient {
             last_name: msg.sender?.last_name || '',
           },
           recipient,
-          reply_count: replies.length,
+          reply_count: replyInfo?.count ?? 0,
           last_activity: lastActivity,
           read_count: readCount,
           total_recipients: totalRecipients,
@@ -534,14 +559,13 @@ export class MessagingApi extends ApiClient {
 
     const archivedMessageIds = archives.map((a: any) => a.message_id);
 
-    // Fetch those messages with all related data
+    // Fetch those messages with all related data (no self-join for replies)
     const { data: messages, error } = await this.supabase
       .from('messages')
       .select(`
         *,
         sender:users!messages_sender_id_fkey(first_name, last_name),
         recipients:message_recipients(id, message_id, targeting_type, recipient_user_ids, notification_pending),
-        replies:messages!messages_parent_message_id_fkey(id, created_at),
         read_receipts:message_read_receipts(id, user_id),
         reactions:message_reactions(emoji, user_id)
       `)
@@ -552,18 +576,41 @@ export class MessagingApi extends ApiClient {
     if (error) throw new ApiError(error.message);
     if (!messages) return [];
 
+    // Fetch reply counts for archived messages
+    let repliesByParent: Record<string, { count: number; lastReplyAt: string }> = {};
+    const msgIds = messages.map((m: any) => m.id);
+    if (msgIds.length > 0) {
+      const { data: replies } = await this.supabase
+        .from('messages')
+        .select('parent_message_id, created_at')
+        .in('parent_message_id', msgIds);
+
+      if (replies) {
+        for (const r of replies) {
+          const pid = r.parent_message_id as string;
+          if (!repliesByParent[pid]) {
+            repliesByParent[pid] = { count: 0, lastReplyAt: r.created_at };
+          }
+          repliesByParent[pid].count++;
+          if (r.created_at > repliesByParent[pid].lastReplyAt) {
+            repliesByParent[pid].lastReplyAt = r.created_at;
+          }
+        }
+      }
+    }
+
     const threads: Thread[] = messages
       .map((msg: any) => {
         const recipient: MessageRecipient | undefined = msg.recipients?.[0];
         if (!recipient) return null;
 
-        const replies = msg.replies || [];
+        const replyInfo = repliesByParent[msg.id];
         const readReceipts = msg.read_receipts || [];
         const reactions = msg.reactions || [];
 
-        const replyDates = replies.map((r: any) => new Date(r.created_at).getTime());
         const messageDateMs = new Date(msg.created_at).getTime();
-        const lastActivityMs = Math.max(messageDateMs, ...replyDates);
+        const lastReplyMs = replyInfo ? new Date(replyInfo.lastReplyAt).getTime() : 0;
+        const lastActivityMs = Math.max(messageDateMs, lastReplyMs);
 
         return {
           message: {
@@ -580,7 +627,7 @@ export class MessagingApi extends ApiClient {
             last_name: msg.sender?.last_name || '',
           },
           recipient,
-          reply_count: replies.length,
+          reply_count: replyInfo?.count ?? 0,
           last_activity: new Date(lastActivityMs).toISOString(),
           read_count: readReceipts.length,
           total_recipients: recipient.recipient_user_ids.length,
@@ -608,14 +655,13 @@ export class MessagingApi extends ApiClient {
   async searchMessages(query: string, userId: string): Promise<SearchResult[]> {
     const searchTerm = `%${query}%`;
 
-    // Fetch all top-level messages the user can see, with sender info
+    // Fetch all top-level messages the user can see, with sender info (no self-join for replies)
     const { data: messages, error } = await this.supabase
       .from('messages')
       .select(`
         *,
         sender:users!messages_sender_id_fkey(first_name, last_name),
         recipients:message_recipients(id, message_id, targeting_type, recipient_user_ids, notification_pending),
-        replies:messages!messages_parent_message_id_fkey(id, created_at),
         read_receipts:message_read_receipts(id, user_id),
         reactions:message_reactions(emoji, user_id),
         archives:message_archives(id, user_id)
@@ -627,27 +673,47 @@ export class MessagingApi extends ApiClient {
     if (error) throw new ApiError(error.message);
     if (!messages) return [];
 
+    // Fetch reply counts for matched messages
+    const msgIds = messages.map((m: any) => m.id);
+    let repliesByParent: Record<string, { count: number; lastReplyAt: string }> = {};
+    if (msgIds.length > 0) {
+      const { data: replies } = await this.supabase
+        .from('messages')
+        .select('parent_message_id, created_at')
+        .in('parent_message_id', msgIds);
+      if (replies) {
+        for (const r of replies) {
+          const pid = r.parent_message_id as string;
+          if (!repliesByParent[pid]) {
+            repliesByParent[pid] = { count: 0, lastReplyAt: r.created_at };
+          }
+          repliesByParent[pid].count++;
+          if (r.created_at > repliesByParent[pid].lastReplyAt) {
+            repliesByParent[pid].lastReplyAt = r.created_at;
+          }
+        }
+      }
+    }
+
     const results: SearchResult[] = messages
       .map((msg: any) => {
         const recipient: MessageRecipient | undefined = msg.recipients?.[0];
         if (!recipient) return null;
 
-        // Check if user is sender or in recipient set
         const isInRecipientSet =
           msg.sender_id === userId ||
           (recipient.recipient_user_ids || []).includes(userId);
         if (!isInRecipientSet) return null;
 
-        const replies = msg.replies || [];
+        const replyInfo = repliesByParent[msg.id];
         const readReceipts = msg.read_receipts || [];
         const reactions = msg.reactions || [];
         const isArchived = (msg.archives || []).some((a: any) => a.user_id === userId);
 
-        const replyDates = replies.map((r: any) => new Date(r.created_at).getTime());
         const messageDateMs = new Date(msg.created_at).getTime();
-        const lastActivityMs = Math.max(messageDateMs, ...replyDates);
+        const lastReplyMs = replyInfo ? new Date(replyInfo.lastReplyAt).getTime() : 0;
+        const lastActivityMs = Math.max(messageDateMs, lastReplyMs);
 
-        // Determine match context
         const titleLower = (msg.title || '').toLowerCase();
         const bodyLower = (msg.body || '').toLowerCase();
         const queryLower = query.toLowerCase();
@@ -674,7 +740,7 @@ export class MessagingApi extends ApiClient {
             last_name: msg.sender?.last_name || '',
           },
           recipient,
-          reply_count: replies.length,
+          reply_count: replyInfo?.count ?? 0,
           last_activity: new Date(lastActivityMs).toISOString(),
           read_count: readReceipts.length,
           total_recipients: recipient.recipient_user_ids.length,
@@ -690,78 +756,6 @@ export class MessagingApi extends ApiClient {
         } as SearchResult;
       })
       .filter((r: SearchResult | null): r is SearchResult => r !== null);
-
-    // Also search by sender name (not possible via Supabase .or on joined table,
-    // so we do a second query if needed)
-    const { data: senderMatches, error: senderError } = await this.supabase
-      .from('messages')
-      .select(`
-        *,
-        sender:users!messages_sender_id_fkey(first_name, last_name),
-        recipients:message_recipients(id, message_id, targeting_type, recipient_user_ids, notification_pending),
-        replies:messages!messages_parent_message_id_fkey(id, created_at),
-        read_receipts:message_read_receipts(id, user_id),
-        reactions:message_reactions(emoji, user_id),
-        archives:message_archives(id, user_id)
-      `)
-      .is('parent_message_id', null)
-      .order('created_at', { ascending: false });
-
-    if (!senderError && senderMatches) {
-      const existingIds = new Set(results.map((r) => r.thread.message.id));
-
-      for (const msg of senderMatches) {
-        if (existingIds.has(msg.id)) continue;
-
-        const senderName = `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`;
-        if (!senderName.toLowerCase().includes(query.toLowerCase())) continue;
-
-        const recipient: MessageRecipient | undefined = msg.recipients?.[0];
-        if (!recipient) continue;
-
-        const isInRecipientSet =
-          msg.sender_id === userId ||
-          (recipient.recipient_user_ids || []).includes(userId);
-        if (!isInRecipientSet) continue;
-
-        const replies = msg.replies || [];
-        const readReceipts = msg.read_receipts || [];
-        const reactions = msg.reactions || [];
-        const isArchived = (msg.archives || []).some((a: any) => a.user_id === userId);
-
-        const replyDates = replies.map((r: any) => new Date(r.created_at).getTime());
-        const messageDateMs = new Date(msg.created_at).getTime();
-        const lastActivityMs = Math.max(messageDateMs, ...replyDates);
-
-        results.push({
-          thread: {
-            message: {
-              id: msg.id,
-              sender_id: msg.sender_id,
-              team_id: msg.team_id,
-              parent_message_id: msg.parent_message_id,
-              title: msg.title,
-              body: msg.body,
-              created_at: msg.created_at,
-            },
-            sender: {
-              first_name: msg.sender?.first_name || '',
-              last_name: msg.sender?.last_name || '',
-            },
-            recipient,
-            reply_count: replies.length,
-            last_activity: new Date(lastActivityMs).toISOString(),
-            read_count: readReceipts.length,
-            total_recipients: recipient.recipient_user_ids.length,
-            is_read: readReceipts.some((r: any) => r.user_id === userId),
-            is_archived: isArchived,
-            reactions: groupReactions(reactions),
-          },
-          match_context: senderName,
-          is_archived: isArchived,
-        });
-      }
-    }
 
     return results;
   }

@@ -4,6 +4,26 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-13] - Team Messaging Bug Fixes & UI Polish
+
+### Fixed
+- **RLS infinite recursion**: Migration 035 fixes all messaging table policies to use `team_members` instead of cross-referencing `messages ↔ message_recipients` (which caused infinite recursion)
+- **Infinite spinner on Messages page**: MessagingContext now fetches team IDs from `team_members` (source of truth) instead of empty `user_teams` table
+- **PostgREST self-join error**: Removed `messages!messages_parent_message_id_fkey` self-referential joins from `getThreads`, `getArchivedThreads`, `searchMessages` — reply counts now fetched in separate queries
+- **ComposeForm teams**: Loaded from `team_members` instead of `user_teams`
+- **Orange card bleed-through**: Added `bg-white` to swipeable card inner container so archive background only shows during swipe gesture
+- **Compose form send button hidden**: Moved send/cancel buttons to pinned footer outside scroll area; adjusted compose view height to `calc(100vh - 5rem)` for proper nav clearance
+
+### Changed
+- **Compact message cards**: Tighter padding, single-line body preview, smaller icons, sender/reactions/read-count on one row
+- **Slimmer bottom nav bar**: Reduced icon size (w-5→w-4), label size (10px→9px), padding (py-3→py-1.5), gap and rounding — applies to all mobile pages
+- **Compose form**: More compact targeting buttons (icon + label only, no descriptions), reduced spacing, textarea rows 3→2
+- **Compose FAB**: Repositioned from bottom-40 to bottom-32 to match slimmer nav
+
+### Technical Notes
+- Migration 035 must be run in Supabase SQL Editor (already done)
+- Leftover RLS policies from intermediate 035 versions were manually dropped in Supabase
+
 ## [2026-03-13] - Team Messaging Feature
 
 ### Added

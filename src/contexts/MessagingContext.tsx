@@ -63,23 +63,50 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
 
-  // Derive team IDs from user profile
-  const teamIds = user?.teams?.map((ut) => ut.team_id) ?? [];
   const userId = user?.id ?? '';
+
+  // Derive team IDs from team_members (source of truth) rather than user_teams
+  const [teamIds, setTeamIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!userId) {
+      setTeamIds([]);
+      return;
+    }
+    supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', userId)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[MessagingContext] Failed to fetch team_members:', error);
+          setTeamIds([]);
+          return;
+        }
+        const ids = (data || []).map((r: any) => r.team_id as string);
+        console.log('[MessagingContext] team_members team IDs:', ids);
+        setTeamIds(ids);
+      });
+  }, [userId]);
 
   // ---------------------------------------------------------------------------
   // Data fetching helpers
   // ---------------------------------------------------------------------------
 
   const fetchThreads = useCallback(async () => {
-    if (!userId || teamIds.length === 0) return;
+    if (!userId || teamIds.length === 0) {
+      console.log('[MessagingContext] Skipping fetch — no userId or no teams');
+      return;
+    }
     try {
+      console.log('[MessagingContext] Fetching threads for user:', userId, 'teams:', teamIds);
       const [active, archived, count] = await Promise.all([
         messagingApi.getThreads(userId, teamIds),
         messagingApi.getArchivedThreads(userId),
         messagingApi.getUnreadCount(userId),
       ]);
       if (!mountedRef.current) return;
+      console.log('[MessagingContext] Loaded:', active.length, 'active,', archived.length, 'archived,', count, 'unread');
       setThreads(active);
       setArchivedThreads(archived);
       setUnreadCount(count);
@@ -236,6 +263,9 @@ export function MessagingProvider({ children }: { children: React.ReactNode }) {
         if (mountedRef.current) setIsLoading(false);
       });
       setupSubscriptions();
+    } else {
+      // No user or no teams — nothing to load, clear the spinner
+      setIsLoading(false);
     }
 
     return () => {

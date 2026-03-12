@@ -35,7 +35,7 @@ export function MessageCard({
   return (
     <div
       onClick={onClick}
-      className="rounded-lg p-4 cursor-pointer transition-colors border border-gray-200"
+      className="rounded-lg px-3 py-2 cursor-pointer transition-colors border border-gray-200"
       style={{ backgroundColor: 'rgba(84, 88, 89, 0.2)' }}
       role="button"
       tabIndex={0}
@@ -46,94 +46,74 @@ export function MessageCard({
         }
       }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2">
         {/* Type icon */}
-        <div className="flex-shrink-0 mt-1 text-gray-600">
+        <div className="flex-shrink-0 mt-0.5 text-gray-600">
           {isIndividual ? (
-            <User className="w-5 h-5" aria-label="Individual message" />
+            <User className="w-4 h-4" aria-label="Individual message" />
           ) : (
-            <Users className="w-5 h-5" aria-label="Group message" />
+            <Users className="w-4 h-4" aria-label="Group message" />
           )}
         </div>
 
         <div className="flex-1 min-w-0">
           {/* Title + date row */}
-          <div className="flex items-start justify-between gap-2 mb-1">
+          <div className="flex items-center justify-between gap-2">
             <h3
-              className={`truncate text-gray-900 ${is_read ? 'font-normal' : 'font-bold'}`}
+              className={`truncate text-sm text-gray-900 ${is_read ? 'font-normal' : 'font-bold'}`}
             >
               {message.title}
             </h3>
-            <span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
+            <span className="text-[10px] text-gray-500 flex-shrink-0 whitespace-nowrap">
               {formatMessageDate(thread.last_activity)}
             </span>
           </div>
 
-          {/* Body - truncated to 2 lines */}
-          <p
-            className="text-sm text-gray-600 mb-1"
-            style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
+          {/* Body - single line truncated */}
+          <p className="text-xs text-gray-600 truncate">
             {message.body}
           </p>
 
-          {/* Sender + read count row */}
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-500">{senderName}</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onReadCountClick?.();
-              }}
-              className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
-              aria-label={`Read by ${read_count} of ${total_recipients}`}
-            >
-              {read_count}/{total_recipients}
-            </button>
-          </div>
-
-          {/* Reactions row */}
-          {reactions.length > 0 && (
-            <div className="flex items-center gap-1 flex-wrap mt-1">
-              {reactions.map((reaction) => (
-                <span
-                  key={reaction.emoji}
-                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-white/60 rounded-full text-xs"
-                >
-                  {reaction.emoji} {reaction.count}
-                </span>
-              ))}
+          {/* Sender + read count + reactions row */}
+          <div className="flex items-center justify-between mt-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-gray-500">{senderName}</span>
+              {reactions.length > 0 && (
+                <div className="flex items-center gap-0.5">
+                  {reactions.map((reaction) => (
+                    <span
+                      key={reaction.emoji}
+                      className="inline-flex items-center gap-0.5 px-1 bg-white/60 rounded-full text-[10px]"
+                    >
+                      {reaction.emoji}{reaction.count > 1 && reaction.count}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onReactionClick?.();
                 }}
-                className="inline-flex items-center p-1 rounded-full hover:bg-white/60 text-gray-500 hover:text-gray-700 transition-colors"
+                className="p-0.5 rounded-full hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors"
                 aria-label="Add reaction"
               >
-                <SmilePlus className="w-3.5 h-3.5" />
+                <SmilePlus className="w-3 h-3" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReadCountClick?.();
+                }}
+                className="text-[10px] text-gray-500 hover:text-gray-700 hover:underline"
+                aria-label={`Read by ${read_count} of ${total_recipients}`}
+              >
+                {read_count}/{total_recipients}
               </button>
             </div>
-          )}
-
-          {/* Reaction button when no reactions yet */}
-          {reactions.length === 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onReactionClick?.();
-              }}
-              className="inline-flex items-center p-1 rounded-full hover:bg-white/60 text-gray-400 hover:text-gray-600 transition-colors mt-1"
-              aria-label="Add reaction"
-            >
-              <SmilePlus className="w-3.5 h-3.5" />
-            </button>
-          )}
+          </div>
         </div>
       </div>
     </div>
