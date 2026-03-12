@@ -9,6 +9,7 @@ export function Schedule() {
   const [events, setEvents] = useState<Event[]>([]);
   const [rsvps, setRsvps] = useState<Record<string, EventRsvp>>({});
   const [attendeeCounts, setAttendeeCounts] = useState<Record<string, number>>({});
+  const [totalMemberCounts, setTotalMemberCounts] = useState<Record<string, number>>({});
   const [filter, setFilter] = useState<'all' | 'game' | 'training' | 'general'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +59,10 @@ export function Schedule() {
       // Load attendee counts
       const counts = await eventsApi.getAttendeeCounts(data.map(e => e.id));
       setAttendeeCounts(counts);
+
+      // Load total eligible member counts
+      const totals = await eventsApi.getTotalMemberCounts(data);
+      setTotalMemberCounts(totals);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load events');
     } finally {
@@ -358,7 +363,7 @@ export function Schedule() {
             {/* Attendees row */}
             <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
               <Users className="w-3 h-3" />
-              <span>{attendeeCounts[event.id] || 0} attendees</span>
+              <span>{attendeeCounts[event.id] || 0}/{totalMemberCounts[event.id] || '?'} attending</span>
             </div>
 
             {/* RSVP Buttons - compact */}

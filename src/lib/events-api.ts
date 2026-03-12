@@ -122,6 +122,52 @@ export class EventsApi extends ApiClient {
     return counts;
   }
 
+  // Get total eligible member counts for events (coaches + players, not caregivers)
+  // Returns { eventId: totalMembers } based on each event's target_teams
+  async getTotalMemberCounts(events: Event[]): Promise<Record<string, number>> {
+    const counts: Record<string, number> = {};
+    if (events.length === 0) return counts;
+
+    // Collect all unique team IDs across events
+    const allTeamIds = new Set<string>();
+    for (const event of events) {
+      if (event.target_teams) {
+        for (const tid of event.target_teams) {
+          allTeamIds.add(tid);
+        }
+      }
+    }
+
+    if (allTeamIds.size === 0) return counts;
+
+    // Get member counts per team in one query
+    const { data, error } = await this.supabase
+      .from('team_members')
+      .select('team_id')
+      .in('team_id', Array.from(allTeamIds));
+
+    if (error || !data) return counts;
+
+    // Count members per team
+    const teamCounts: Record<string, number> = {};
+    for (const row of data) {
+      teamCounts[row.team_id] = (teamCounts[row.team_id] || 0) + 1;
+    }
+
+    // Map to events — sum members across target_teams (usually just one team)
+    for (const event of events) {
+      let total = 0;
+      if (event.target_teams) {
+        for (const tid of event.target_teams) {
+          total += teamCounts[tid] || 0;
+        }
+      }
+      counts[event.id] = total;
+    }
+
+    return counts;
+  }
+
   // Get user's teams (for event creation targeting)
   async getUserTeams(): Promise<Team[]> {
     const { data: { user } } = await this.supabase.auth.getUser();

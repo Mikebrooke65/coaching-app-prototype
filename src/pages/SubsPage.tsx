@@ -87,29 +87,65 @@ export function SubsPage() {
         setEvent(eventData);
 
         // Load team (first target team)
+        let teamData: Team | null = null;
         if (eventData.target_teams && eventData.target_teams.length > 0) {
-          const teamData = await teamsApi.getTeam(eventData.target_teams[0]);
+          teamData = await teamsApi.getTeam(eventData.target_teams[0]);
           setTeam(teamData);
         }
 
-        // Load RSVP data with player info
+        // Load ALL team members who are PLAYERS (not coaches/managers)
+        const teamIds = eventData.target_teams || [];
+        let allMembers: Array<{ user_id: string; first_name: string; last_name: string }> = [];
+        if (teamIds.length > 0) {
+          const { data: memberData, error: memberError } = await eventsApi.supabase
+            .from('team_members')
+            .select(`
+              user_id,
+              role,
+              user:users!team_members_user_id_fkey(first_name, last_name)
+            `)
+            .in('team_id', teamIds)
+            .eq('role', 'player');
+
+          if (!memberError && memberData) {
+            allMembers = memberData.map((m: any) => ({
+              user_id: m.user_id,
+              first_name: m.user?.first_name || '',
+              last_name: m.user?.last_name || '',
+            }));
+          }
+        }
+
+        // Load RSVP data
+        const rsvpMap: Record<string, string> = {};
         const { data: rsvpData, error: rsvpError } = await eventsApi.supabase
           .from('event_rsvps')
-          .select(`
-            user_id,
-            status,
-            user:users!event_rsvps_user_id_fkey(first_name, last_name)
-          `)
+          .select('user_id, status')
           .eq('event_id', eventId);
 
         if (!rsvpError && rsvpData) {
-          setRsvpPlayers(rsvpData.map((r: any) => ({
-            user_id: r.user_id,
-            first_name: r.user?.first_name || '',
-            last_name: r.user?.last_name || '',
-            rsvp_status: r.status || 'no_response',
-          })));
+          for (const r of rsvpData) {
+            rsvpMap[r.user_id] = r.status;
+          }
         }
+
+        // Merge: all team members with their RSVP status (default to no_response)
+        // Deduplicate by user_id in case a member is in multiple target teams
+        const seen = new Set<string>();
+        const players = allMembers
+          .filter(m => {
+            if (seen.has(m.user_id)) return false;
+            seen.add(m.user_id);
+            return true;
+          })
+          .map(m => ({
+            user_id: m.user_id,
+            first_name: m.first_name,
+            last_name: m.last_name,
+            rsvp_status: (rsvpMap[m.user_id] || 'no_response') as 'going' | 'not_going' | 'maybe' | 'no_response',
+          }));
+
+        setRsvpPlayers(players);
 
         // Load attendance records
         const attendance = await attendanceApi.getEventAttendance(eventId);
