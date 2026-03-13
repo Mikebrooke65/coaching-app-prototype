@@ -4,6 +4,26 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-13] - Schedule Page Improvements
+
+### Added
+- **Event editing**: Coaches/managers/admins can now edit existing events via Edit button on event cards
+- **Simplified time picker**: Dropdown with common times (8:00 AM - 7:30 PM, 30-min intervals) instead of free-form time input
+- **Venue dropdown**: Common venues (Fred Taylor Park, Huapai Domain, etc.) with Custom option for free text
+- **Field number for games**: Optional field number input for game events (e.g., "Huapai Domain No 5")
+- **Auto-hide title for games**: Title field hidden for game events, auto-populated as "Game"
+- **Event change notifications**: Framework for automatic team notifications when event details change (logs to console, messaging integration pending)
+
+### Changed
+- **Create Event modal**: Improved scrolling with pinned footer buttons, increased z-index to appear above mobile nav
+- **Team selection first**: Moved team selection to top of event creation form
+- **Modal height**: Reduced from 90vh to 85vh for better mobile spacing
+
+### Technical Notes
+- Event edit uses existing `updateEvent` method in events-api
+- Change notification compares old/new event data and generates change summary
+- Venue list currently hardcoded (admin configuration pending)
+
 ## [2026-03-13] - Typography Standardization
 
 ### Changed
