@@ -16,6 +16,8 @@ export interface ComposeFormProps {
   prefillTitle?: string;
   prefillBody?: string;
   prefillTeamId?: string;
+  prefillTargeting?: MessageTargetingType;
+  hideTargetingOptions?: boolean;
   onClose?: () => void;
   onSent?: () => void;
 }
@@ -31,6 +33,8 @@ export function ComposeForm({
   prefillTitle = '',
   prefillBody = '',
   prefillTeamId,
+  prefillTargeting,
+  hideTargetingOptions = false,
   onClose,
   onSent,
 }: ComposeFormProps) {
@@ -38,8 +42,8 @@ export function ComposeForm({
   const { sendMessage } = useMessaging();
 
   // Form state
-  const [targetingType, setTargetingType] = useState<MessageTargetingType | null>(null);
-  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+  const [targetingType, setTargetingType] = useState<MessageTargetingType | null>(prefillTargeting || null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(prefillTeamId || '');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [title, setTitle] = useState(prefillTitle);
   const [body, setBody] = useState(prefillBody);
@@ -233,34 +237,36 @@ export function ComposeForm({
 
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {/* Targeting type selector */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Send to</label>
-          <div className="grid grid-cols-2 gap-1.5">
-            {TARGETING_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => {
-                  setTargetingType(opt.value);
-                  setSelectedUserId('');
-                  clearFieldError('targeting');
-                }}
-                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-sm transition-colors ${
-                  targetingType === opt.value
-                    ? 'border-[#545859] bg-[#545859]/10 text-gray-900'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}
-                aria-pressed={targetingType === opt.value}
-              >
-                {opt.icon}
-                <span className="font-medium">{opt.label}</span>
-              </button>
-            ))}
+        {!hideTargetingOptions && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Send to</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {TARGETING_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setTargetingType(opt.value);
+                    setSelectedUserId('');
+                    clearFieldError('targeting');
+                  }}
+                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-sm transition-colors ${
+                    targetingType === opt.value
+                      ? 'border-[#545859] bg-[#545859]/10 text-gray-900'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                  aria-pressed={targetingType === opt.value}
+                >
+                  {opt.icon}
+                  <span className="font-medium">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+            {errors.targeting && (
+              <p className="mt-1 text-sm text-red-600" role="alert">{errors.targeting}</p>
+            )}
           </div>
-          {errors.targeting && (
-            <p className="mt-1 text-sm text-red-600" role="alert">{errors.targeting}</p>
-          )}
-        </div>
+        )}
 
         {/* Team selector — show when user has multiple teams and targeting is not club_admin */}
         {teams.length > 1 && targetingType && targetingType !== 'club_admin' && (

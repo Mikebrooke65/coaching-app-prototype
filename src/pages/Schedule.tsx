@@ -827,6 +827,8 @@ export function Schedule() {
                   prefillTitle={`Reminder: ${getEventTitle(reminderEvent)}`}
                   prefillBody={`Hi team,\n\nWe've only had ${attendeeCounts[reminderEvent.id] || 0} replies so far. Please get your response in!\n\nThis is a reminder about ${getEventTitle(reminderEvent)} on ${formatDate(reminderEvent.event_date)} at ${formatTime(reminderEvent.event_date)}.\n\nLocation: ${reminderEvent.location}\n\nPlease update your RSVP if you haven't already.`}
                   prefillTeamId={reminderEvent.target_teams[0]}
+                  prefillTargeting="whole_team"
+                  hideTargetingOptions={true}
                   onClose={() => setReminderEvent(null)}
                   onSent={() => setReminderEvent(null)}
                 />
