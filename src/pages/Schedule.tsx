@@ -821,11 +821,11 @@ export function Schedule() {
       {reminderEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
           <div className="min-h-full flex items-start justify-center p-4 py-8">
-            <div className="max-w-md w-full">
+            <div className="max-w-lg w-full">
               <MessagingProvider>
                 <ComposeForm
                   prefillTitle={`Reminder: ${getEventTitle(reminderEvent)}`}
-                  prefillBody={`Hi team,\n\nThis is a reminder about ${getEventTitle(reminderEvent)} on ${formatDate(reminderEvent.event_date)} at ${formatTime(reminderEvent.event_date)}.\n\nLocation: ${reminderEvent.location}\n\nPlease update your RSVP if you haven't already.`}
+                  prefillBody={`Hi team,\n\nWe've only had ${attendeeCounts[reminderEvent.id] || 0} replies so far. Please get your response in!\n\nThis is a reminder about ${getEventTitle(reminderEvent)} on ${formatDate(reminderEvent.event_date)} at ${formatTime(reminderEvent.event_date)}.\n\nLocation: ${reminderEvent.location}\n\nPlease update your RSVP if you haven't already.`}
                   prefillTeamId={reminderEvent.target_teams[0]}
                   onClose={() => setReminderEvent(null)}
                   onSent={() => setReminderEvent(null)}

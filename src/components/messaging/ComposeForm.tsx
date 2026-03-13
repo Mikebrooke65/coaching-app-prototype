@@ -396,7 +396,7 @@ export function ComposeForm({
               clearFieldError('body');
             }}
             placeholder="Write your message..."
-            rows={2}
+            rows={6}
             className={`w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none resize-y focus:ring-1 ${
               errors.body
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
