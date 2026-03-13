@@ -214,7 +214,7 @@ export function Landing() {
                     className="w-full h-32 object-cover rounded-lg mb-3"
                   />
                 )}
-                <h1 className="font-bold text-gray-900 text-[30px] mb-2" style={{ fontFamily: 'Aktiv Grotesk Corp, Inter, sans-serif' }}>
+                <h1 className="font-bold text-gray-900 text-2xl mb-2">
                   {announcement.title}
                   {announcement.is_ongoing && (
                     <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full ml-2 align-middle">

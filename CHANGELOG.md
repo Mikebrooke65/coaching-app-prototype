@@ -4,6 +4,18 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-13] - Typography Standardization
+
+### Changed
+- **Removed inline font-family styles**: Removed all inline `style={{ fontFamily: ... }}` declarations — now rely on theme.css defaults (Inter for headings/body, Exo 2 for subtitles)
+- **Standardized heading sizes**: Changed MainLayout header from `text-xl` to `text-2xl`, Landing announcement from `text-[30px]` to `text-2xl`
+- **Consistent typography**: All page headings now use standard Tailwind classes without custom overrides
+
+### Technical Notes
+- theme.css defines default typography: Inter for headings (h1, h3), Exo 2 for subtitles (h2)
+- Removed unnecessary font-family overrides from MainLayout, Landing, CompetitionsPage, LiteLandingPage, CaregiverApprovalPage
+- Created TYPOGRAPHY-AUDIT.md documenting remaining inconsistencies and recommendations
+
 ## [2026-03-13] - User Role Management Feature
 
 ### Added

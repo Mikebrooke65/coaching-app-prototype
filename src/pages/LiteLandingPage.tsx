@@ -85,7 +85,7 @@ export function LiteLandingPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <div className="text-4xl mb-4">⚠️</div>
-          <h1 className="text-xl font-bold mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>{err.title}</h1>
+          <h1 className="text-xl font-bold mb-2">{err.title}</h1>
           <p className="text-gray-600">{err.message}</p>
         </div>
       </div>
@@ -98,7 +98,7 @@ export function LiteLandingPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
           <div className="text-4xl mb-4">✅</div>
-          <h1 className="text-xl font-bold mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>Welcome!</h1>
+          <h1 className="text-xl font-bold mb-2">Welcome!</h1>
           <p className="text-gray-600 mb-4">
             You've been added to {validation.team?.age_group} {validation.team?.name}. You can now log in to the app.
           </p>
@@ -115,7 +115,7 @@ export function LiteLandingPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
         <div className="text-center mb-6">
-          <h1 className="text-xl font-bold" style={{ fontFamily: "'Inter', sans-serif" }}>Join {validation.team?.age_group} {validation.team?.name}</h1>
+          <h1 className="text-xl font-bold">Join {validation.team?.age_group} {validation.team?.name}</h1>
           <p className="text-sm text-gray-500 mt-1">Create your account to get started</p>
         </div>
 

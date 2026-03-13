@@ -26,10 +26,10 @@ export function MainLayout() {
               />
             </div>
             <div className="relative z-10 pl-10">
-              <h1 className="font-bold text-xl leading-tight" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+              <h1 className="font-bold text-2xl leading-tight">
                 Urrah
               </h1>
-              <p className="text-xs opacity-90" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+              <p className="text-xs opacity-90">
                 {user?.first_name} {user?.last_name} • {user?.role}
               </p>
             </div>

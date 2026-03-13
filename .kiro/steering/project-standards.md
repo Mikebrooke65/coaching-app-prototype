@@ -75,6 +75,29 @@ git push kiro prototype && git push origin prototype
 - Apply via inline style: `style={{ backgroundColor: 'rgba(r, g, b, 0.2)' }}`
 - Do NOT use Tailwind `bg-opacity-20` with hex colours (unreliable)
 
+### Typography Standards
+
+**Font Families** (defined in theme.css):
+- Headings (h1, h3): Inter (substitute for Aktiv Grotesk Corp)
+- Subtitles (h2): Exo 2
+- Body text, labels, buttons: Inter (default)
+- Do NOT use inline `style={{ fontFamily: ... }}` — rely on theme.css defaults
+
+**Typography Hierarchy**:
+- Page heading (h1): `text-2xl font-bold text-gray-900`
+- Section heading (h2): `text-lg font-semibold text-gray-900`
+- Card/component heading (h3): `text-sm font-semibold text-gray-900`
+- Body text: `text-sm text-gray-600`
+- Labels: `text-sm font-medium text-gray-700`
+- Metadata/helper text: `text-xs text-gray-500`
+- Buttons: `text-sm font-medium`
+
+**Rules**:
+- Use standard Tailwind text size classes (text-xs, text-sm, text-base, text-lg, text-xl, text-2xl)
+- Avoid custom sizes like `text-[30px]` or `text-[9px]` unless absolutely necessary
+- Never override font-family with inline styles — theme.css handles this
+- Use font-bold (700) for page headings, font-semibold (600) for section headings, font-medium (500) for labels/buttons
+
 ## Code Conventions
 
 ### File Organization

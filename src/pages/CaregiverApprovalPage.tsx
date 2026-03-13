@@ -40,7 +40,7 @@ export function CaregiverApprovalPage() {
 
   return (
     <div className="p-4 pb-20">
-      <h1 className="text-xl font-bold mb-4" style={{ fontFamily: "'Inter', sans-serif" }}>Caregiver Approvals</h1>
+      <h1 className="text-xl font-bold mb-4">Caregiver Approvals</h1>
 
       {approvals.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
