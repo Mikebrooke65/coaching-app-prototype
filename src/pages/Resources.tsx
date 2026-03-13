@@ -224,22 +224,22 @@ export function Resources() {
           <div>
             {/* Rule Set Selector */}
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-3">Select Age Group</h2>
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">Select Age Group</h2>
               <div className="relative">
                 <button
                   onClick={() => setShowRuleDropdown(!showRuleDropdown)}
-                  className="w-full flex items-center justify-between px-5 py-4 bg-white rounded-xl border-2 border-[#8b5cf6] hover:bg-purple-50 transition-colors shadow-sm"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-lg border border-gray-300 hover:bg-purple-50 transition-colors shadow-sm"
                 >
-                  <span className="text-lg font-semibold text-gray-900">{selectedRuleSet.label}</span>
-                  <ChevronDown className={`w-6 h-6 text-[#8b5cf6] transition-transform ${showRuleDropdown ? 'rotate-180' : ''}`} />
+                  <span className="text-sm font-medium text-gray-900">{selectedRuleSet.label}</span>
+                  <ChevronDown className={`w-4 h-4 text-[#8b5cf6] transition-transform ${showRuleDropdown ? 'rotate-180' : ''}`} />
                 </button>
                 {showRuleDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border-2 border-gray-200 z-50 overflow-hidden">
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
                     {ruleSets.map((ruleSet) => (
                       <button
                         key={ruleSet.id}
-                        className={`block w-full text-left px-5 py-4 text-base hover:bg-purple-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                          ruleSet.id === selectedRuleSet.id ? 'bg-purple-50 text-[#8b5cf6] font-semibold' : 'text-gray-700'
+                        className={`block w-full text-left px-4 py-3 text-sm hover:bg-purple-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                          ruleSet.id === selectedRuleSet.id ? 'bg-purple-50 text-[#8b5cf6] font-medium' : 'text-gray-700'
                         }`}
                         onClick={() => {
                           setSelectedRuleSet(ruleSet);
@@ -257,15 +257,15 @@ export function Resources() {
             {/* Rule Sections */}
             <div className="space-y-4">
               {selectedRuleSet.sections.map((section) => (
-                <div key={section.key} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-purple-200" style={{ backgroundColor: 'rgba(139, 92, 246, 0.2)' }}>
-                    <h3 className="text-lg font-bold text-gray-900">{section.title}</h3>
+                <div key={section.key} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-purple-200" style={{ backgroundColor: 'rgba(139, 92, 246, 0.2)' }}>
+                    <h3 className="text-sm font-semibold text-gray-900">{section.title}</h3>
                   </div>
-                  <div className="px-5 py-4">
-                    <ul className="space-y-3">
+                  <div className="px-4 py-3">
+                    <ul className="space-y-2">
                       {section.items.map((item, index) => (
-                        <li key={index} className="flex items-center text-sm text-gray-700 leading-relaxed">
-                          <span className="text-[#8b5cf6] mr-3 flex-shrink-0">•</span>
+                        <li key={index} className="flex items-start text-sm text-gray-600 leading-relaxed">
+                          <span className="text-[#8b5cf6] mr-2 flex-shrink-0 mt-0.5">•</span>
                           <span>{item}</span>
                         </li>
                       ))}
