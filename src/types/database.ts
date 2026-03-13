@@ -7,6 +7,12 @@ export enum UserRole {
   ADMIN = 'admin',
 }
 
+// Team-level role (independent of App_Role)
+export type TeamRole = 'player' | 'coach' | 'manager';
+
+// User type (full club member vs temporary lite access)
+export type UserType = 'full' | 'lite';
+
 // User model
 export interface User {
   id: string;
@@ -15,9 +21,11 @@ export interface User {
   last_name: string;
   cellphone: string;
   role: UserRole;
+  user_type: UserType;
   active: boolean;
   created_at: string;
   last_login?: string;
+  privacy_consent_at?: string;
 }
 
 // Team model
@@ -42,9 +50,10 @@ export interface UserTeam {
   created_at: string;
 }
 
-// User profile with team assignments
+// User profile with team assignments (uses team_members as source of truth)
 export interface UserProfile extends User {
-  teams: (UserTeam & { team: Team })[];
+  teams: (UserTeam & { team: Team })[]; // legacy — kept for backward compat during migration
+  teamMemberships: (TeamMember & { team: Team })[];
   defaultTeam?: Team;
 }
 
@@ -249,14 +258,122 @@ export interface PlayerCaregiver {
   created_at: string;
 }
 
-// Team member
+// Team member (source of truth for team assignments)
 export interface TeamMember {
   id: string;
   team_id: string;
   user_id: string;
-  role: 'player' | 'coach';
+  role: TeamRole;
   created_at: string;
   updated_at: string;
+}
+
+// Joined types for API responses
+export interface TeamMemberWithUser extends TeamMember {
+  user: User;
+}
+
+export interface TeamMemberWithTeam extends TeamMember {
+  team: Team;
+}
+
+// Competition
+export interface Competition {
+  id: string;
+  name: string;
+  competition_type: 'wcr' | 'other';
+  status: 'active' | 'closed';
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Competition-Team link
+export interface CompetitionTeam {
+  id: string;
+  competition_id: string;
+  team_id: string;
+  created_at: string;
+}
+
+// Invite code
+export interface InviteCode {
+  id: string;
+  code: string;
+  team_id: string;
+  competition_id: string | null;
+  created_by: string;
+  recipient_email: string;
+  recipient_phone: string | null;
+  redeemed_by: string | null;
+  redeemed_at: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
+// Invite code validation result
+export interface InviteCodeValidation {
+  valid: boolean;
+  error?: 'invalid' | 'expired' | 'redeemed' | 'already_member';
+  invite?: InviteCode;
+  team?: Team;
+}
+
+// Lite user registration data
+export interface LiteRegistrationData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  privacy_consent: boolean;
+}
+
+// Invite player data (mid-season)
+export interface InvitePlayerData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+}
+
+// Caregiver approval
+export interface CaregiverApproval {
+  id: string;
+  player_id: string;
+  new_caregiver_email: string;
+  new_caregiver_first_name: string;
+  new_caregiver_last_name: string;
+  requested_by: string;
+  status: 'pending' | 'approved' | 'denied' | 'escalated';
+  responded_by: string | null;
+  responded_at: string | null;
+  created_at: string;
+}
+
+// New caregiver data for approval request
+export interface NewCaregiverData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+}
+
+// Lite user report row
+export interface LiteUserReport {
+  user: User;
+  team_name: string;
+  team_age_group: string;
+  date_added: string;
+  days_since_creation: number;
+}
+
+// Competition creation payload
+export interface CreateCompetitionPayload {
+  name: string;
+  competition_type: 'wcr' | 'other';
+  start_date: string;
+  end_date: string;
 }
 
 // Game model

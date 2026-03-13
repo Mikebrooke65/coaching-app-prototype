@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { rolesApi } from '../../lib/roles-api';
+import { invitesApi } from '../../lib/invites-api';
+import type { TeamMemberWithTeam, TeamRole, InviteCode } from '../../types/database';
 
 interface User {
   id: string;
@@ -10,6 +13,7 @@ interface User {
   last_name: string;
   cellphone?: string;
   role: string;
+  user_type?: string;
   active: boolean;
   last_login?: string;
 }
@@ -40,6 +44,11 @@ export function UserManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterUserType, setFilterUserType] = useState('all');
+  const [userMemberships, setUserMemberships] = useState<Record<string, TeamMemberWithTeam[]>>({});
+  const [pendingInvites, setPendingInvites] = useState<InviteCode[]>([]);
+  const [editMemberships, setEditMemberships] = useState<TeamMemberWithTeam[]>([]);
+  const [newAssignment, setNewAssignment] = useState({ teamId: '', role: 'player' as TeamRole });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -114,19 +123,20 @@ export function UserManagement() {
       user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = filterRole === 'all' || user.role === filterRole;
     const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
-    return matchesSearch && matchesRole && matchesStatus;
+    const matchesUserType = filterUserType === 'all' || user.user_type === filterUserType;
+    return matchesSearch && matchesRole && matchesStatus && matchesUserType;
   });
 
   const handleOpenModal = async (user?: any) => {
     if (user) {
       setEditingUser(user);
       
-      // Fetch current team assignment
-      const { data: teamMember } = await supabase
-        .from('team_members')
-        .select('team_id')
-        .eq('user_id', user.id)
-        .single();
+      // Fetch all team assignments for this user
+      const memberships = await rolesApi.getUserTeamMemberships(user.id);
+      setEditMemberships(memberships);
+      
+      // Use first team for backward compat
+      const firstMembership = memberships[0];
       
       setFormData({
         email: user.email,
@@ -134,10 +144,11 @@ export function UserManagement() {
         last_name: user.last_name,
         role: user.role,
         active: user.active,
-        teamId: teamMember?.team_id || '',
+        teamId: firstMembership?.team_id || '',
         cellphone: user.cellphone || '',
         password: '',
       });
+      setNewAssignment({ teamId: '', role: 'player' });
     } else {
       setEditingUser(null);
       setFormData({
@@ -157,6 +168,8 @@ export function UserManagement() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingUser(null);
+    setEditMemberships([]);
+    setNewAssignment({ teamId: '', role: 'player' });
   };
 
   const handleSave = async () => {
@@ -355,6 +368,47 @@ export function UserManagement() {
     return roleOptions.find((r) => r.value === role)?.color || 'bg-gray-100 text-gray-700';
   };
 
+  const handleAddTeamAssignment = async () => {
+    if (!editingUser || !newAssignment.teamId) return;
+    try {
+      await rolesApi.addTeamMember(newAssignment.teamId, editingUser.id, newAssignment.role);
+      const memberships = await rolesApi.getUserTeamMemberships(editingUser.id);
+      setEditMemberships(memberships);
+      setNewAssignment({ teamId: '', role: 'player' });
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const handleChangeTeamRole = async (membershipId: string, role: TeamRole) => {
+    try {
+      await rolesApi.updateTeamMemberRole(membershipId, role);
+      setEditMemberships(prev => prev.map(m => m.id === membershipId ? { ...m, role } : m));
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const handleRemoveTeamAssignment = async (membershipId: string) => {
+    if (!confirm('Remove this team assignment?')) return;
+    try {
+      await rolesApi.removeTeamMember(membershipId);
+      setEditMemberships(prev => prev.filter(m => m.id !== membershipId));
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const handlePromoteToFull = async (userId: string) => {
+    if (!confirm('Promote this lite user to full membership?')) return;
+    try {
+      await rolesApi.promoteToFullUser(userId);
+      fetchUsers();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -438,6 +492,16 @@ export function UserManagement() {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+
+          <select
+            value={filterUserType}
+            onChange={(e) => setFilterUserType(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+          >
+            <option value="all">All Types</option>
+            <option value="full">Full Members</option>
+            <option value="lite">Lite Users</option>
+          </select>
         </div>
       </div>
 
@@ -493,6 +557,9 @@ export function UserManagement() {
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(user.role)}`}>
                       {roleOptions.find((r) => r.value === user.role)?.label || user.role}
                     </span>
+                    {user.user_type === 'lite' && (
+                      <span className="ml-1 px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">Lite</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.team}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -515,6 +582,14 @@ export function UserManagement() {
                     >
                       Edit
                     </button>
+                    {user.user_type === 'lite' && (
+                      <button
+                        onClick={() => handlePromoteToFull(user.id)}
+                        className="text-green-600 hover:text-green-800 mr-3"
+                      >
+                        Promote
+                      </button>
+                    )}
                     <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-800">
                       Delete
                     </button>
@@ -654,19 +729,55 @@ export function UserManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assign Team</label>
-                <select
-                  value={formData.teamId}
-                  onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                >
-                  <option value="">None (Unassigned)</option>
-                  {teams.map((team) => (
-                    <option key={team.id} value={team.id}>
-                      {team.age_group} {team.name}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Team Assignments</label>
+                {editingUser ? (
+                  <div className="space-y-2">
+                    {editMemberships.map(m => (
+                      <div key={m.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                        <span className="flex-1 text-sm">{m.team?.age_group} {m.team?.name}</span>
+                        <select value={m.role} onChange={e => handleChangeTeamRole(m.id, e.target.value as TeamRole)}
+                          className="px-2 py-1 border rounded text-sm">
+                          <option value="player">Player</option>
+                          <option value="coach">Coach</option>
+                          <option value="manager">Manager</option>
+                        </select>
+                        <button onClick={() => handleRemoveTeamAssignment(m.id)}
+                          className="text-red-500 hover:text-red-700 text-sm">✕</button>
+                      </div>
+                    ))}
+                    {editMemberships.length === 0 && <p className="text-sm text-gray-400">No team assignments</p>}
+                    <div className="flex gap-2 mt-2">
+                      <select value={newAssignment.teamId} onChange={e => setNewAssignment({ ...newAssignment, teamId: e.target.value })}
+                        className="flex-1 px-2 py-1 border rounded text-sm">
+                        <option value="">+ Add to team...</option>
+                        {teams.filter(t => !editMemberships.some(m => m.team_id === t.id)).map(t => (
+                          <option key={t.id} value={t.id}>{t.age_group} {t.name}</option>
+                        ))}
+                      </select>
+                      <select value={newAssignment.role} onChange={e => setNewAssignment({ ...newAssignment, role: e.target.value as TeamRole })}
+                        className="px-2 py-1 border rounded text-sm">
+                        <option value="player">Player</option>
+                        <option value="coach">Coach</option>
+                        <option value="manager">Manager</option>
+                      </select>
+                      <button onClick={handleAddTeamAssignment} disabled={!newAssignment.teamId}
+                        className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50">Add</button>
+                    </div>
+                  </div>
+                ) : (
+                  <select
+                    value={formData.teamId}
+                    onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                  >
+                    <option value="">None (Unassigned)</option>
+                    {teams.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.age_group} {team.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
 

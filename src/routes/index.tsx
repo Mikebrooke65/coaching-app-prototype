@@ -34,12 +34,23 @@ import { Reporting } from '../pages/desktop/Reporting';
 import { Announcements } from '../pages/desktop/Announcements';
 import { LessonBuilder } from '../pages/desktop/LessonBuilder';
 import { SessionBuilder } from '../pages/desktop/SessionBuilder';
+import { CompetitionsPage } from '../pages/desktop/CompetitionsPage';
+
+// Public pages
+import { LiteLandingPage } from '../pages/LiteLandingPage';
+
+// In-app pages
+import { CaregiverApprovalPage } from '../pages/CaregiverApprovalPage';
 
 export const router = createBrowserRouter([
   // Public routes
   {
     path: '/login',
     element: <Login />,
+  },
+  {
+    path: '/invite/:code',
+    element: <LiteLandingPage />,
   },
 
   // Mobile routes (all authenticated users)
@@ -124,6 +135,10 @@ export const router = createBrowserRouter([
         element: <Messaging />,
       },
       {
+        path: 'caregiver-approvals',
+        element: <CaregiverApprovalPage />,
+      },
+      {
         path: 'ai-coach',
         element: (
           <ProtectedRoute
@@ -197,6 +212,10 @@ export const router = createBrowserRouter([
       {
         path: 'session-builder',
         element: <SessionBuilder />,
+      },
+      {
+        path: 'competitions',
+        element: <CompetitionsPage />,
       },
     ],
   },

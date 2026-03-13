@@ -4,6 +4,36 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-13] - User Role Management Feature
+
+### Added
+- **Dual role system**: Independent App_Role (users.role) and Team_Role (team_members.role) — a user can be coach app-wide but player on a specific team
+- **Manager role**: Added 'manager' to team_members.role check constraint
+- **User type tracking**: `user_type` column on users table ('full' or 'lite') for distinguishing temporary access
+- **Competitions framework**: New `competitions` and `competition_teams` tables with WCR/Other types, date-based status, and "Close Now" admin action
+- **Invite codes system**: New `invite_codes` table with 21-day expiry, team-scoped codes, expired code notification to inviter
+- **Caregiver approval workflow**: New `caregiver_approvals` table with pending/approved/denied/escalated status and 7-day timeout escalation
+- **Player-caregiver relationships**: New `player_caregivers` table linking caregivers to players
+- **Privacy consent**: `privacy_consent_at` timestamp on users, consent checkbox on Lite Landing Page
+- **Competitions Management page** (desktop): Create/edit/delete competitions, link teams, "Close Now", lite user cleanup
+- **Lite Landing Page**: Public registration page for invite code redemption with privacy notice
+- **Caregiver Approval Page**: In-app page for caregivers to approve/deny new caregiver requests
+- **4 new API services**: roles-api.ts, competitions-api.ts, invites-api.ts, caregivers-api.ts (all extend ApiClient)
+- **Team-level permissions**: `getTeamRole()`, `canManageTeamRoster()`, `canCreateTeamEvents()`, `canSendTeamMessages()` in usePermissions hook
+- **Desktop Users page enhancements**: Multi-team assignment management, user_type filter, "Promote to Full" for lite users, inline team role editing
+
+### Changed
+- **AuthContext**: Now loads team data from `team_members` instead of empty `user_teams` table — fixes bug where users saw no teams
+- **usePermissions**: Extended with team-level permission functions (independent of app-level)
+- **Desktop navigation**: Added "Competitions" link in admin sidebar
+
+### Technical Notes
+- Migration 036 creates 5 new tables + modifies 2 existing tables
+- RLS policies on all new tables (authenticated read, admin/coach/manager write)
+- Invite code generation uses ambiguity-free alphanumeric charset (no I/O/0/1)
+- Existing user collision check on invite redemption (skip account creation, just add to team)
+- Lite-to-full promotion preserves all team memberships
+
 ## [2026-03-13] - Team Messaging Bug Fixes & UI Polish
 
 ### Fixed

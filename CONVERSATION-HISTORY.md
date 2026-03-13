@@ -27,16 +27,36 @@
 - Test desktop two-panel layout
 - UnreadBadge integration into MainLayout bottom nav (needs separate work)
 
-### 2. User Role Management — Dual Role Issue
-- `users.role` (app-level permission) and `team_members.role` (team-level function) are independent
-- When users are added to teams, `team_members.role` defaults to 'player' regardless of app role
-- No admin UI exists to set/edit `team_members.role`
-- Options to scope:
-  - Add role picker when assigning members to teams in Teams Management
-  - Auto-set `team_members.role` based on `users.role` when adding to team
-  - Show/edit team roles in Users detail view
-  - Allow different roles per team (coach on Team A, manager on Team B)
-- Needs spec or quick fix in Teams Management page
+### 2. User Role Management — COMPLETE
+- Spec created at `.kiro/specs/user-role-management/`
+- Requirements doc complete (14 requirements)
+- Design doc complete (architecture, data models, 28 correctness properties)
+- Tasks doc complete — all implementation tasks done
+- Migration 036 run in Supabase
+- Build passes, all code committed
+- Files created:
+  - `supabase/migrations/036_user_role_management.sql`
+  - `src/lib/roles-api.ts`
+  - `src/lib/competitions-api.ts`
+  - `src/lib/invites-api.ts`
+  - `src/lib/caregivers-api.ts`
+  - `src/pages/desktop/CompetitionsPage.tsx`
+  - `src/pages/LiteLandingPage.tsx`
+  - `src/pages/CaregiverApprovalPage.tsx`
+- Files modified:
+  - `src/types/database.ts` (new types + updated User, TeamMember, UserProfile)
+  - `src/contexts/AuthContext.tsx` (switched from user_teams to team_members)
+  - `src/hooks/usePermissions.ts` (added team-level permission functions)
+  - `src/routes/index.tsx` (added 3 new routes)
+  - `src/layouts/DesktopLayout.tsx` (added Competitions nav link)
+  - `src/pages/desktop/UserManagement.tsx` (multi-team assignments, user_type filter, promote)
+
+### 2a. Future Tasks (from User Role Management review)
+- Notification preferences — users control what notifications they receive (separate feature)
+- Audit trail for role changes — who changed team roles and when, admin accountability
+- RLS policy audit — after implementation, check all existing RLS policies across the app don't reference user_teams
+- Privacy/consent UI messaging — inform users what they're agreeing to, who sees their data, especially for caregivers seeing each other
+- SMS gateway integration — future upgrade from manual invite sharing to automated SMS (Twilio/AWS SNS)
 
 ### 3. Game Day Subs — Testing & Finishing
 - Test live count-up timer (kick-off, 2nd half start, timer resets for 2nd half)

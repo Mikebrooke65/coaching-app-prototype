@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import type { User, UserProfile, UserTeam, Team } from '../types/database';
+import type { User, UserProfile, TeamMember, Team } from '../types/database';
 
 interface AuthState {
   user: UserProfile | null;
@@ -57,9 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('User data fetched:', userData);
 
-      // Fetch user teams with team details
-      const { data: userTeams, error: teamsError } = await supabase
-        .from('user_teams')
+      // Fetch team memberships from team_members (source of truth)
+      const { data: teamMemberships, error: teamsError } = await supabase
+        .from('team_members')
         .select(`
           *,
           team:teams(*)
@@ -67,17 +67,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', userId);
 
       if (teamsError) {
-        console.warn('Error fetching teams (continuing anyway):', teamsError);
+        console.warn('Error fetching team memberships (continuing anyway):', teamsError);
       }
 
-      console.log('Teams fetched:', userTeams?.length || 0);
+      console.log('Team memberships fetched:', teamMemberships?.length || 0);
 
-      // Find default team
-      const defaultTeam = userTeams?.find((ut: any) => ut.is_default)?.team;
+      // Find default team (first membership)
+      const defaultTeam = teamMemberships?.[0]?.team;
 
       const profile = {
         ...userData,
-        teams: userTeams || [],
+        teams: [], // legacy field — kept for backward compat
+        teamMemberships: teamMemberships || [],
         defaultTeam,
       } as UserProfile;
       
