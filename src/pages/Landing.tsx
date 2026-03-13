@@ -228,9 +228,9 @@ export function Landing() {
                 />
                 <style>{`
                   .announcement-content {
-                    font-family: 'Exo 2', sans-serif;
                     line-height: 1.6;
                     color: #4b5563;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
                   }
                   .announcement-content h2 {
                     font-size: 18px !important;
@@ -246,7 +246,7 @@ export function Landing() {
                     color: #111827 !important;
                     margin-top: 0.75rem !important;
                     margin-bottom: 0.5rem !important;
-                    font-family: 'Exo 2', sans-serif !important;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
                   }
                   .announcement-content p {
                     margin-bottom: 0.5rem;
