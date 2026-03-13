@@ -2,7 +2,12 @@
 
 ## Outstanding Tasks (as of March 13, 2026)
 
-### 1. Team Messaging — Testing & Review (IN PROGRESS)
+### 1. Desktop UI Improvements — IN PROGRESS
+- **Desktop Schedule**: Remove popup modal for event creation - use RHS panel instead (plenty of space available), improve UI design
+- **Desktop Messaging**: Implement enhanced targeting model properly, use RHS panel for compose form instead of popup modal, improve UI design  
+- **Desktop Landing**: Add real data to dashboard boxes (similar to mobile Landing plus additional admin metrics)
+
+### 2. Team Messaging — Testing & Review (IN PROGRESS)
 - ✅ Fixed: infinite spinner when user has no teams in user_teams (now uses team_members)
 - ✅ Fixed: PostgREST self-join error (removed messages self-referential join, fetch replies separately)
 - ✅ Fixed: RLS infinite recursion (migration 035 — messages policy uses team_members, message_recipients policy is permissive)
@@ -27,7 +32,7 @@
 - Test desktop two-panel layout
 - UnreadBadge integration into MainLayout bottom nav (needs separate work)
 
-### 2. User Role Management — COMPLETE
+### 3. User Role Management — COMPLETE
 - Spec created at `.kiro/specs/user-role-management/`
 - Requirements doc complete (14 requirements)
 - Design doc complete (architecture, data models, 28 correctness properties)
@@ -51,14 +56,14 @@
   - `src/layouts/DesktopLayout.tsx` (added Competitions nav link)
   - `src/pages/desktop/UserManagement.tsx` (multi-team assignments, user_type filter, promote)
 
-### 2a. Future Tasks (from User Role Management review)
+### 3a. Future Tasks (from User Role Management review)
 - Notification preferences — users control what notifications they receive (separate feature)
 - Audit trail for role changes — who changed team roles and when, admin accountability
 - RLS policy audit — after implementation, check all existing RLS policies across the app don't reference user_teams
 - Privacy/consent UI messaging — inform users what they're agreeing to, who sees their data, especially for caregivers seeing each other
 - SMS gateway integration — future upgrade from manual invite sharing to automated SMS (Twilio/AWS SNS)
 
-### 3. Game Day Subs — Testing & Finishing
+### 4. Game Day Subs — Testing & Finishing
 - Test live count-up timer (kick-off, 2nd half start, timer resets for 2nd half)
 - Test substitution alerts (flashing banner + beep sound when rotation window minute is reached)
 - Test Coach strategy mode (manual player swaps — select player off, player on, confirm)
@@ -67,14 +72,14 @@
 - Test edge cases: zero subs, all players present, partial attendance
 - General UI/UX review of the Subs page flow
 
-### 4. Academy Lessons — Remaining Work
+### 5. Academy Lessons — Remaining Work
 - User to decide: proceed with 34 scraped slides or re-scrape the 13 missing ones first
 - User to review first Academy lesson (Migration 028 — Shielding) and confirm format
 - Batch-generate remaining Academy lessons from Bailey's slides
 - Upload pitch diagram images to Supabase Storage
 - U10 lessons not yet started (16 lessons remaining)
 
-### 5. General Outstanding Items
+### 6. General Outstanding Items
 - Bulk CSV user import function (created but not yet integrated into UI)
 - Session Builder save functionality (create/update sessions in database)
 - Lesson delivery refetch issue (noted in earlier session)
