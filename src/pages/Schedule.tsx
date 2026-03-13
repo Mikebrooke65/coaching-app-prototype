@@ -181,6 +181,8 @@ export function Schedule() {
   };
 
   const sendChangeNotification = async (oldEvent: Event, newEvent: Event, teamId: string) => {
+    console.log('sendChangeNotification called', { oldEvent, newEvent, teamId });
+    
     const changes: string[] = [];
     
     if (oldEvent.title !== newEvent.title) changes.push(`Title: ${oldEvent.title} → ${newEvent.title}`);
@@ -192,17 +194,24 @@ export function Schedule() {
     if (oldEvent.location !== newEvent.location) changes.push(`Location: ${oldEvent.location} → ${newEvent.location}`);
     if (oldEvent.opponent !== newEvent.opponent) changes.push(`Opponent: ${oldEvent.opponent} → ${newEvent.opponent}`);
 
-    if (changes.length === 0) return;
+    console.log('Changes detected:', changes);
+
+    if (changes.length === 0) {
+      console.log('No changes detected, skipping notification');
+      return;
+    }
 
     try {
+      console.log('Sending message to team:', teamId);
       // Send automatic message to team about event changes
-      await messagingApi.sendMessage({
+      const message = await messagingApi.createMessage({
         title: `Event Updated: ${newEvent.title}`,
         body: `The following details have changed:\n\n${changes.join('\n')}`,
         team_id: teamId,
         targeting_type: 'whole_team',
         recipient_user_ids: [],
       });
+      console.log('Message sent successfully:', message);
     } catch (err) {
       console.error('Failed to send change notification:', err);
     }
