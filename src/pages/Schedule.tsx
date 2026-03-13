@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, CheckCircle, XCircle, HelpCircle, Plus, Users, Bell } from 'lucide-react';
 import { eventsApi } from '../lib/events-api';
+import { messagingApi } from '../lib/messaging-api';
 import { useAuth } from '../contexts/AuthContext';
 import { MessagingProvider } from '../contexts/MessagingContext';
 import { ComposeForm } from '../components/messaging/ComposeForm';
@@ -193,9 +194,18 @@ export function Schedule() {
 
     if (changes.length === 0) return;
 
-    // This will be handled by MessagingContext - for now just log
-    console.log('Event changed, would send notification:', changes.join(', '));
-    // TODO: Integrate with messaging system to send automatic notification
+    try {
+      // Send automatic message to team about event changes
+      await messagingApi.sendMessage({
+        title: `Event Updated: ${newEvent.title}`,
+        body: `The following details have changed:\n\n${changes.join('\n')}`,
+        team_id: teamId,
+        targeting_type: 'whole_team',
+        recipient_user_ids: [],
+      });
+    } catch (err) {
+      console.error('Failed to send change notification:', err);
+    }
   };
 
   const resetForm = () => {
