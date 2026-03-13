@@ -79,7 +79,6 @@
 - Session Builder save functionality (create/update sessions in database)
 - Lesson delivery refetch issue (noted in earlier session)
 - Develop admin-configurable venue list for event creation (currently hardcoded: Fred Taylor Park, Huapai Domain, Massey Park, Rosebank Park, Waitakere Stadium, Henderson Park, Ranui Domain)
-- Integrate automatic event change notifications with messaging system (currently logs to console)
 
 ---
 

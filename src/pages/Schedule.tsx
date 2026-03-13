@@ -181,8 +181,6 @@ export function Schedule() {
   };
 
   const sendChangeNotification = async (oldEvent: Event, newEvent: Event, teamId: string) => {
-    console.log('sendChangeNotification called', { oldEvent, newEvent, teamId });
-    
     const changes: string[] = [];
     
     if (oldEvent.title !== newEvent.title) changes.push(`Title: ${oldEvent.title} → ${newEvent.title}`);
@@ -194,24 +192,16 @@ export function Schedule() {
     if (oldEvent.location !== newEvent.location) changes.push(`Location: ${oldEvent.location} → ${newEvent.location}`);
     if (oldEvent.opponent !== newEvent.opponent) changes.push(`Opponent: ${oldEvent.opponent} → ${newEvent.opponent}`);
 
-    console.log('Changes detected:', changes);
-
-    if (changes.length === 0) {
-      console.log('No changes detected, skipping notification');
-      return;
-    }
+    if (changes.length === 0) return;
 
     try {
-      console.log('Sending message to team:', teamId);
-      // Send automatic message to team about event changes
-      const message = await messagingApi.createMessage({
+      await messagingApi.createMessage({
         title: `Event Updated: ${newEvent.title}`,
         body: `The following details have changed:\n\n${changes.join('\n')}`,
         team_id: teamId,
         targeting_type: 'whole_team',
         recipient_user_ids: [],
       });
-      console.log('Message sent successfully:', message);
     } catch (err) {
       console.error('Failed to send change notification:', err);
     }
@@ -305,6 +295,19 @@ export function Schedule() {
         return 'bg-purple-100 text-purple-700';
       default:
         return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getCardBackgroundColor = (type: string) => {
+    switch (type) {
+      case 'training':
+        return 'rgba(59, 130, 246, 0.2)'; // Blue at 20%
+      case 'game':
+        return 'rgba(34, 197, 94, 0.2)'; // Green at 20%
+      case 'general':
+        return 'rgba(168, 85, 247, 0.2)'; // Purple at 20%
+      default:
+        return 'rgba(156, 163, 175, 0.2)'; // Gray at 20%
     }
   };
 
@@ -428,7 +431,7 @@ export function Schedule() {
           <div
             key={event.id}
             className="rounded-lg shadow-sm px-3 py-2 border border-gray-200"
-            style={{ backgroundColor: 'rgba(6, 182, 212, 0.2)' }}
+            style={{ backgroundColor: getCardBackgroundColor(event.event_type) }}
           >
             {/* Title row */}
             <div className="flex items-center justify-between mb-1">

@@ -12,7 +12,7 @@ All notable changes to the football coaching app prototype will be documented in
 - **Venue dropdown**: Common venues (Fred Taylor Park, Huapai Domain, etc.) with Custom option for free text
 - **Field number for games**: Optional field number input for game events (e.g., "Huapai Domain No 5")
 - **Auto-hide title for games**: Title field hidden for game events, auto-populated as "Game"
-- **Event change notifications**: Framework for automatic team notifications when event details change (logs to console, messaging integration pending)
+- **Automatic team notifications**: When event details change, whole team receives message listing all changes (date/time, location, opponent, title)
 
 ### Changed
 - **Create Event modal**: Improved scrolling with pinned footer buttons, increased z-index to appear above mobile nav
