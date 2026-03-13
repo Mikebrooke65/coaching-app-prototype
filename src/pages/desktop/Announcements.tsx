@@ -2,6 +2,7 @@
 import { Upload, X, Calendar, Users, Shield } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { TargetingSelector, type TargetingData } from '../../components/shared/TargetingSelector';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -21,16 +22,9 @@ interface Announcement {
   created_by: string | null;
 }
 
-interface Team {
-  id: string;
-  name: string;
-  age_group: string;
-}
-
 export function Announcements() {
   const { user } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
@@ -40,16 +34,19 @@ export function Announcements() {
     title: '',
     content: '',
     is_ongoing: false,
-    target_roles: [] as string[],
-    target_team_types: [] as string[],
-    target_divisions: [] as string[],
-    target_age_groups: [] as string[],
-    target_team_ids: [] as string[],
+  });
+
+  const [targetingData, setTargetingData] = useState<TargetingData>({
+    target_roles: [],
+    target_team_types: [],
+    target_divisions: [],
+    target_age_groups: [],
+    target_team_ids: [],
+    target_user_ids: [], // Not used for announcements but required by interface
   });
 
   useEffect(() => {
     fetchAnnouncements();
-    fetchTeams();
   }, []);
 
   const fetchAnnouncements = async () => {
@@ -69,20 +66,6 @@ export function Announcements() {
     }
   };
 
-  const fetchTeams = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('teams')
-        .select('id, name, age_group')
-        .order('age_group');
-
-      if (error) throw error;
-      setTeams(data || []);
-    } catch (error) {
-      console.error('Error fetching teams:', error);
-    }
-  };
-
   const handleOpenModal = (announcement?: Announcement) => {
     if (announcement) {
       setEditingAnnouncement(announcement);
@@ -90,11 +73,14 @@ export function Announcements() {
         title: announcement.title,
         content: announcement.content,
         is_ongoing: announcement.is_ongoing,
+      });
+      setTargetingData({
         target_roles: announcement.target_roles || [],
         target_team_types: announcement.target_team_types || [],
         target_divisions: announcement.target_divisions || [],
         target_age_groups: announcement.target_age_groups || [],
         target_team_ids: announcement.target_team_ids || [],
+        target_user_ids: [], // Not used for announcements
       });
     } else {
       setEditingAnnouncement(null);
@@ -102,11 +88,14 @@ export function Announcements() {
         title: '',
         content: '',
         is_ongoing: false,
+      });
+      setTargetingData({
         target_roles: [],
         target_team_types: [],
         target_divisions: [],
         target_age_groups: [],
         target_team_ids: [],
+        target_user_ids: [],
       });
     }
     setImageFile(null);

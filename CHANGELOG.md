@@ -4,6 +4,29 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-13] - Desktop Schedule and Messaging Integration
+
+### Added
+- Created reusable TargetingSelector component for admin targeting across multiple pages
+- Integrated real events API into desktop Schedule page (replaced mock data)
+- Added event creation/editing functionality to desktop Schedule
+- Enhanced targeting system with individual player selection capability
+
+### Changed
+- Desktop Schedule now uses real Event data structure from events API
+- Updated Announcements page to use new TargetingSelector component
+- Desktop Schedule filters now match mobile (Training/Games/General)
+- Event cards show real attendance counts and team information
+- Send Reminder functionality uses real event data and team targeting
+
+### Technical Notes
+- TargetingSelector supports hierarchical selection: Roles → Team Types → Divisions → Age Groups → Teams → Individual Players
+- Desktop Schedule maintains two-panel layout with enhanced functionality
+- Event creation modal matches mobile Schedule functionality
+- Real-time attendance tracking integrated into desktop view
+
+---
+
 ## [2026-03-13] - Schedule Page Improvements
 
 ### Added

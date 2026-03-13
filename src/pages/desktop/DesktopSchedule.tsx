@@ -1,102 +1,199 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, Users, Plus, Search, CheckCircle, XCircle, HelpCircle, Bell } from 'lucide-react';
 import { MessagingProvider } from '../../contexts/MessagingContext';
 import { ComposeForm } from '../../components/messaging/ComposeForm';
-
-// Note: DesktopSchedule currently uses mock data. The "Send Reminder" button
-// opens a ComposeForm pre-filled with event details. Once this page is
-// connected to real data (with target_teams), the prefillTeamId will be
-// populated from the event's target_teams array.
-
-interface Event {
-  id: string;
-  type: 'training' | 'match' | 'meeting' | 'social';
-  title: string;
-  description?: string;
-  date: string;
-  time: string;
-  location: string;
-  team?: string;
-  attendees: {
-    total: number;
-    going: number;
-    maybe: number;
-    notGoing: number;
-  };
-}
-
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    type: 'training',
-    title: 'Team Training Session',
-    description: 'Focus on passing and positioning drills',
-    date: '2026-03-08',
-    time: '4:00 PM - 5:30 PM',
-    location: 'Rangers Training Ground',
-    team: 'U12 Boys',
-    attendees: { total: 18, going: 15, maybe: 2, notGoing: 1 },
-  },
-  {
-    id: '2',
-    type: 'match',
-    title: 'Match vs City FC',
-    date: '2026-03-08',
-    time: '2:00 PM',
-    location: 'City Sports Complex',
-    team: 'U12 Boys',
-    attendees: { total: 18, going: 16, maybe: 1, notGoing: 1 },
-  },
-  {
-    id: '3',
-    type: 'training',
-    title: 'Skills Development',
-    description: 'Individual skills and ball control',
-    date: '2026-03-10',
-    time: '4:00 PM - 5:30 PM',
-    location: 'Rangers Training Ground',
-    team: 'U10 Girls',
-    attendees: { total: 15, going: 12, maybe: 3, notGoing: 0 },
-  },
-  {
-    id: '4',
-    type: 'match',
-    title: 'Match vs Coastal United',
-    date: '2026-03-15',
-    time: '10:00 AM',
-    location: 'Rangers Home Ground',
-    team: 'U12 Boys',
-    attendees: { total: 18, going: 0, maybe: 0, notGoing: 0 },
-  },
-  {
-    id: '5',
-    type: 'meeting',
-    title: 'Parent-Coach Meeting',
-    description: 'Season review and upcoming events',
-    date: '2026-03-12',
-    time: '6:00 PM - 7:00 PM',
-    location: 'Clubhouse',
-    attendees: { total: 25, going: 18, maybe: 5, notGoing: 2 },
-  },
-];
+import { eventsApi } from '../../lib/events-api';
+import { useAuth } from '../../contexts/AuthContext';
+import type { Event, EventRsvp, Team } from '../../types/database';
 
 export function DesktopSchedule() {
+  const { user } = useAuth();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [rsvps, setRsvps] = useState<Record<string, EventRsvp>>({});
+  const [attendeeCounts, setAttendeeCounts] = useState<Record<string, number>>({});
+  const [totalMemberCounts, setTotalMemberCounts] = useState<Record<string, number>>({});
+  const [userTeams, setUserTeams] = useState<Team[]>([]);
+  const [allTeams, setAllTeams] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [filter, setFilter] = useState<'all' | 'training' | 'match' | 'meeting'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [reminderEvent, setReminderEvent] = useState<Event | null>(null);
 
-  const filteredEvents = mockEvents.filter((event) => {
-    const matchesFilter = filter === 'all' || event.type === filter;
+  useEffect(() => {
+    loadEvents();
+    loadTeams();
+  }, []);
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const data = await eventsApi.getEvents();
+      setEvents(data);
+
+      // Load RSVPs for all events
+      const rsvpPromises = data.map(event => eventsApi.getUserRsvp(event.id));
+      const rsvpResults = await Promise.all(rsvpPromises);
+      
+      const rsvpMap: Record<string, EventRsvp> = {};
+      rsvpResults.forEach((rsvp, index) => {
+        if (rsvp) {
+          rsvpMap[data[index].id] = rsvp;
+        }
+      });
+      setRsvps(rsvpMap);
+
+      // Load attendee counts
+      const counts = await eventsApi.getAttendeeCounts(data.map(e => e.id));
+      setAttendeeCounts(counts);
+
+      // Load total eligible member counts
+      const totals = await eventsApi.getTotalMemberCounts(data);
+      setTotalMemberCounts(totals);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTeams = async () => {
+    try {
+      const teams = await eventsApi.getUserTeams();
+      setUserTeams(teams);
+
+      // If admin, also load all teams
+      if (user?.role === 'admin') {
+        const all = await eventsApi.getAllTeams();
+        setAllTeams(all);
+      }
+    } catch (err) {
+      console.error('Failed to load teams:', err);
+    }
+  };
+
+  // Form state for event creation/editing
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    event_type: 'training' as 'game' | 'training' | 'general',
+    event_date: '',
+    event_time: '',
+    location: '',
+    opponent: '',
+    home_away: 'home' as 'home' | 'away',
+    target_teams: [] as string[],
+  });
+
+  const handleCreateEvent = async () => {
+    try {
+      setError(null);
+
+      // Validation
+      if (!formData.title || !formData.event_date || !formData.event_time || !formData.location) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
+      if (formData.event_type === 'game' && !formData.opponent) {
+        setError('Please enter opponent name for game events');
+        return;
+      }
+
+      if (formData.event_type === 'game' && formData.target_teams.length !== 1) {
+        setError('Game events must be assigned to exactly one team');
+        return;
+      }
+
+      // Combine date and time
+      const eventDateTime = new Date(`${formData.event_date}T${formData.event_time}`).toISOString();
+
+      if (editingEventId) {
+        // Update existing event
+        const updatedEvent = await eventsApi.updateEvent(editingEventId, {
+          title: formData.title,
+          event_type: formData.event_type,
+          event_date: eventDateTime,
+          location: formData.location,
+          opponent: formData.event_type === 'game' ? formData.opponent : undefined,
+          home_away: formData.event_type === 'game' ? formData.home_away : undefined,
+          target_teams: formData.target_teams,
+        });
+
+        setEvents(events.map(e => e.id === editingEventId ? updatedEvent : e));
+      } else {
+        // Create new event
+        const newEvent = await eventsApi.createEvent({
+          title: formData.title,
+          event_type: formData.event_type,
+          event_date: eventDateTime,
+          location: formData.location,
+          opponent: formData.event_type === 'game' ? formData.opponent : undefined,
+          home_away: formData.event_type === 'game' ? formData.home_away : undefined,
+          target_teams: formData.target_teams,
+          target_roles: [],
+          target_divisions: [],
+          target_age_groups: [],
+        });
+
+        setEvents([...events, newEvent]);
+      }
+
+      setIsModalOpen(false);
+      setEditingEventId(null);
+      resetForm();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save event');
+    }
+  };
+
+  const handleEditEvent = (event: Event) => {
+    // Extract time from ISO date
+    const eventDate = new Date(event.event_date);
+    const dateStr = eventDate.toISOString().split('T')[0];
+    const timeStr = eventDate.toTimeString().slice(0, 5);
+
+    setFormData({
+      title: event.title,
+      event_type: event.event_type,
+      event_date: dateStr,
+      event_time: timeStr,
+      location: event.location,
+      opponent: event.opponent || '',
+      home_away: event.home_away || 'home',
+      target_teams: event.target_teams || [],
+    });
+    setEditingEventId(event.id);
+    setIsModalOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      event_type: 'training',
+      event_date: '',
+      event_time: '',
+      location: '',
+      opponent: '',
+      home_away: 'home',
+      target_teams: [],
+    });
+  };
+
+  const filteredEvents = events.filter((event) => {
+    const matchesFilter = filter === 'all' || event.event_type === filter;
     const matchesSearch =
       searchTerm === '' ||
       event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.team?.toLowerCase().includes(searchTerm.toLowerCase());
+      getEventTeamName(event)?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
   const sortedEvents = [...filteredEvents].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
+    new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
   );
 
   const formatDate = (dateStr: string) => {
@@ -109,30 +206,80 @@ export function DesktopSchedule() {
     });
   };
 
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'training':
         return 'bg-blue-100 text-blue-700';
-      case 'match':
+      case 'game':
         return 'bg-green-100 text-green-700';
-      case 'meeting':
+      case 'general':
         return 'bg-purple-100 text-purple-700';
-      case 'social':
-        return 'bg-orange-100 text-orange-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
   };
 
+  const getEventTeamName = (event: Event) => {
+    if (!event.target_teams || event.target_teams.length === 0) return null;
+    const teamId = event.target_teams[0];
+    const team = userTeams.find(t => t.id === teamId) || allTeams.find(t => t.id === teamId);
+    return team ? `${team.age_group} ${team.name}` : null;
+  };
+
+  const getEventTitle = (event: Event) => {
+    if (event.event_type !== 'game' || !event.opponent) {
+      return event.title;
+    }
+
+    const teamName = getEventTeamName(event) || 'Your Team';
+
+    if (event.home_away === 'home') {
+      return `${teamName} vs ${event.opponent}`;
+    } else {
+      return `${event.opponent} vs ${teamName}`;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#06b6d4] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading events...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-[#06b6d4]">Schedule Management</h1>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0081d9] transition-colors">
-          <Plus className="w-4 h-4" />
-          Add Event
-        </button>
+        {(user?.role === 'admin' || user?.role === 'coach' || user?.role === 'manager') && (
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0081d9] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Event
+          </button>
+        )}
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="flex gap-6 flex-1 min-h-0">
         {/* Left Panel - Events List */}
@@ -178,7 +325,7 @@ export function DesktopSchedule() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Matches
+                Games
               </button>
               <button
                 onClick={() => setFilter('meeting')}
@@ -188,7 +335,7 @@ export function DesktopSchedule() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Meetings
+                General
               </button>
             </div>
           </div>
@@ -207,13 +354,13 @@ export function DesktopSchedule() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900">{event.title}</h3>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${getTypeColor(event.type)}`}>
-                        {event.type}
+                      <h3 className="font-semibold text-gray-900">{getEventTitle(event)}</h3>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${getTypeColor(event.event_type)}`}>
+                        {event.event_type}
                       </span>
                     </div>
-                    {event.team && (
-                      <p className="text-sm text-gray-600">{event.team}</p>
+                    {getEventTeamName(event) && (
+                      <p className="text-sm text-gray-600">{getEventTeamName(event)}</p>
                     )}
                   </div>
                 </div>
@@ -221,26 +368,22 @@ export function DesktopSchedule() {
                 <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
-                    <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    <span>{new Date(event.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>{event.time}</span>
+                    <span>{formatTime(event.event_date)}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 text-xs text-gray-600">
                   <div className="flex items-center gap-1">
                     <CheckCircle className="w-3.5 h-3.5 text-green-600" />
-                    <span>{event.attendees.going}</span>
+                    <span>{attendeeCounts[event.id] || 0}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <HelpCircle className="w-3.5 h-3.5 text-yellow-600" />
-                    <span>{event.attendees.maybe}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <XCircle className="w-3.5 h-3.5 text-red-600" />
-                    <span>{event.attendees.notGoing}</span>
+                    <Users className="w-3.5 h-3.5 text-gray-400" />
+                    <span>{totalMemberCounts[event.id] || 0} total</span>
                   </div>
                 </div>
               </div>
@@ -255,15 +398,20 @@ export function DesktopSchedule() {
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    {selectedEvent.title}
+                    {getEventTitle(selectedEvent)}
                   </h2>
-                  {selectedEvent.team && (
-                    <p className="text-gray-600">{selectedEvent.team}</p>
+                  {getEventTeamName(selectedEvent) && (
+                    <p className="text-gray-600">{getEventTeamName(selectedEvent)}</p>
                   )}
                 </div>
-                <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  Edit
-                </button>
+                {(user?.role === 'admin' || user?.role === 'coach' || user?.role === 'manager') && (
+                  <button 
+                    onClick={() => handleEditEvent(selectedEvent)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
 
               <div className="space-y-6">
@@ -272,19 +420,19 @@ export function DesktopSchedule() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 text-gray-600">
                       <Calendar className="w-5 h-5" />
-                      <span>{formatDate(selectedEvent.date)}</span>
+                      <span>{formatDate(selectedEvent.event_date)}</span>
                     </div>
                     <div className="flex items-center gap-3 text-gray-600">
                       <Clock className="w-5 h-5" />
-                      <span>{selectedEvent.time}</span>
+                      <span>{formatTime(selectedEvent.event_date)}</span>
                     </div>
                     <div className="flex items-center gap-3 text-gray-600">
                       <MapPin className="w-5 h-5" />
                       <span>{selectedEvent.location}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getTypeColor(selectedEvent.type)}`}>
-                        {selectedEvent.type}
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getTypeColor(selectedEvent.event_type)}`}>
+                        {selectedEvent.event_type}
                       </span>
                     </div>
                   </div>
@@ -300,22 +448,14 @@ export function DesktopSchedule() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-3">Attendance</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="grid grid-cols-4 gap-4 text-center">
+                    <div className="grid grid-cols-2 gap-4 text-center">
                       <div>
-                        <p className="text-2xl font-bold text-gray-900">{selectedEvent.attendees.total}</p>
-                        <p className="text-xs text-gray-600 mt-1">Total</p>
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-green-600">{selectedEvent.attendees.going}</p>
+                        <p className="text-2xl font-bold text-green-600">{attendeeCounts[selectedEvent.id] || 0}</p>
                         <p className="text-xs text-gray-600 mt-1">Going</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-yellow-600">{selectedEvent.attendees.maybe}</p>
-                        <p className="text-xs text-gray-600 mt-1">Maybe</p>
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-red-600">{selectedEvent.attendees.notGoing}</p>
-                        <p className="text-xs text-gray-600 mt-1">Not Going</p>
+                        <p className="text-2xl font-bold text-gray-900">{totalMemberCounts[selectedEvent.id] || 0}</p>
+                        <p className="text-xs text-gray-600 mt-1">Total Members</p>
                       </div>
                     </div>
                   </div>
@@ -348,16 +488,276 @@ export function DesktopSchedule() {
 
       {/* Send Reminder Modal */}
       {reminderEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="max-w-lg w-full">
-            <MessagingProvider>
-              <ComposeForm
-                prefillTitle={`Reminder: ${reminderEvent.title}`}
-                prefillBody={`Hi team,\n\nThis is a reminder about ${reminderEvent.title} on ${formatDate(reminderEvent.date)} at ${reminderEvent.time}.\n\nLocation: ${reminderEvent.location}\n\nPlease update your RSVP if you haven't already.`}
-                onClose={() => setReminderEvent(null)}
-                onSent={() => setReminderEvent(null)}
-              />
-            </MessagingProvider>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+          <div className="min-h-full flex items-start justify-center p-4 py-8">
+            <div className="max-w-lg w-full">
+              <MessagingProvider>
+                <ComposeForm
+                  prefillTitle={`Reminder: ${getEventTitle(reminderEvent)}`}
+                  prefillBody={`Hi team,\n\nWe've only had ${attendeeCounts[reminderEvent.id] || 0} replies so far. Please get your response in!\n\nThis is a reminder about ${getEventTitle(reminderEvent)} on ${formatDate(reminderEvent.event_date)} at ${formatTime(reminderEvent.event_date)}.\n\nLocation: ${reminderEvent.location}\n\nPlease update your RSVP if you haven't already.`}
+                  prefillTeamId={reminderEvent.target_teams?.[0]}
+                  prefillTargeting="whole_team"
+                  hideTargetingOptions={true}
+                  onClose={() => setReminderEvent(null)}
+                  onSent={() => setReminderEvent(null)}
+                />
+              </MessagingProvider>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create/Edit Event Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="p-6 pb-4 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">{editingEventId ? 'Edit Event' : 'Create Event'}</h2>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-4">
+                {/* Team Selection - FIRST */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Team{formData.event_type === 'game' ? ' *' : ' (optional)'}
+                  </label>
+                  <select
+                    value={formData.target_teams[0] || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      target_teams: e.target.value ? [e.target.value] : [] 
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                  >
+                    <option value="">All teams</option>
+                    {(user?.role === 'admin' ? allTeams : userTeams).map(team => (
+                      <option key={team.id} value={team.id}>
+                        {team.age_group} {team.name}
+                      </option>
+                    ))}
+                  </select>
+                  {formData.event_type === 'game' && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Game events must be assigned to exactly one team
+                    </p>
+                  )}
+                </div>
+
+                {/* Event Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Event Type *
+                  </label>
+                  <select
+                    value={formData.event_type}
+                    onChange={(e) => {
+                      const newType = e.target.value as any;
+                      setFormData({ 
+                        ...formData, 
+                        event_type: newType,
+                        title: newType === 'game' ? 'Game' : formData.title
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                  >
+                    <option value="training">Training</option>
+                    <option value="game">Game</option>
+                    <option value="general">General</option>
+                  </select>
+                </div>
+
+                {/* Title - only show for non-game events */}
+                {formData.event_type !== 'game' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Title *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                      placeholder="e.g., Team Training Session"
+                    />
+                  </div>
+                )}
+
+                {/* Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.event_date}
+                    onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                  />
+                </div>
+
+                {/* Time */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Time *
+                  </label>
+                  <select
+                    value={formData.event_time}
+                    onChange={(e) => setFormData({ ...formData, event_time: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                  >
+                    <option value="">Select time</option>
+                    <option value="08:00">8:00 AM</option>
+                    <option value="08:30">8:30 AM</option>
+                    <option value="09:00">9:00 AM</option>
+                    <option value="09:30">9:30 AM</option>
+                    <option value="10:00">10:00 AM</option>
+                    <option value="10:30">10:30 AM</option>
+                    <option value="11:00">11:00 AM</option>
+                    <option value="11:30">11:30 AM</option>
+                    <option value="12:00">12:00 PM</option>
+                    <option value="12:30">12:30 PM</option>
+                    <option value="13:00">1:00 PM</option>
+                    <option value="13:30">1:30 PM</option>
+                    <option value="14:00">2:00 PM</option>
+                    <option value="14:30">2:30 PM</option>
+                    <option value="15:00">3:00 PM</option>
+                    <option value="15:30">3:30 PM</option>
+                    <option value="16:00">4:00 PM</option>
+                    <option value="16:30">4:30 PM</option>
+                    <option value="17:00">5:00 PM</option>
+                    <option value="17:30">5:30 PM</option>
+                    <option value="18:00">6:00 PM</option>
+                    <option value="18:30">6:30 PM</option>
+                    <option value="19:00">7:00 PM</option>
+                    <option value="19:30">7:30 PM</option>
+                  </select>
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Venue *
+                  </label>
+                  <select
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                  >
+                    <option value="">Select venue</option>
+                    <option value="Fred Taylor Park">Fred Taylor Park</option>
+                    <option value="Huapai Domain">Huapai Domain</option>
+                    <option value="Massey Park">Massey Park</option>
+                    <option value="Rosebank Park">Rosebank Park</option>
+                    <option value="Waitakere Stadium">Waitakere Stadium</option>
+                    <option value="Henderson Park">Henderson Park</option>
+                    <option value="Ranui Domain">Ranui Domain</option>
+                    <option value="Custom">Custom (enter below)</option>
+                  </select>
+                  {formData.location === 'Custom' && (
+                    <input
+                      type="text"
+                      placeholder="Enter custom venue"
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3] mt-2"
+                    />
+                  )}
+                </div>
+
+                {/* Field Number - for games only */}
+                {formData.event_type === 'game' && formData.location && formData.location !== 'Custom' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Field Number (optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., No 5"
+                      onChange={(e) => {
+                        const fieldNum = e.target.value;
+                        const baseVenue = formData.location.split(' No')[0];
+                        setFormData({ 
+                          ...formData, 
+                          location: fieldNum ? `${baseVenue} No ${fieldNum}` : baseVenue
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                    />
+                  </div>
+                )}
+
+                {/* Game-specific fields */}
+                {formData.event_type === 'game' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Opponent *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.opponent}
+                        onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                        placeholder="e.g., City FC"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Home/Away
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, home_away: 'home' })}
+                          className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            formData.home_away === 'home'
+                              ? 'bg-[#0091f3] text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Home
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, home_away: 'away' })}
+                          className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            formData.home_away === 'away'
+                              ? 'bg-[#0091f3] text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Away
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Pinned Footer with Buttons */}
+            <div className="p-6 pt-4 border-t border-gray-200 bg-white rounded-b-lg">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateEvent}
+                  className="flex-1 px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0077cc] transition-colors"
+                >
+                  {editingEventId ? 'Update Event' : 'Create Event'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
