@@ -3,6 +3,7 @@ import { Send, X, Search, ChevronDown, User, Users, Shield, Crown } from 'lucide
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMessaging } from '../../contexts/MessagingContext';
+import { TargetingSelector, type TargetingData } from '../shared/TargetingSelector';
 import type { MessageTargetingType, CreateMessagePayload } from '../../types/database';
 
 interface TeamMemberOption {
@@ -18,6 +19,7 @@ export interface ComposeFormProps {
   prefillTeamId?: string;
   prefillTargeting?: MessageTargetingType;
   hideTargetingOptions?: boolean;
+  enableEnhancedTargeting?: boolean; // New prop for desktop enhanced targeting
   onClose?: () => void;
   onSent?: () => void;
 }
@@ -35,6 +37,7 @@ export function ComposeForm({
   prefillTeamId,
   prefillTargeting,
   hideTargetingOptions = false,
+  enableEnhancedTargeting = false,
   onClose,
   onSent,
 }: ComposeFormProps) {

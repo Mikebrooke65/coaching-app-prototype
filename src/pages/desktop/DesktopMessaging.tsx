@@ -395,6 +395,7 @@ function DesktopMessagingContent() {
             <ComposeForm
               onClose={() => setShowCompose(false)}
               onSent={() => setShowCompose(false)}
+              enableEnhancedTargeting={true}
             />
           </div>
         </div>

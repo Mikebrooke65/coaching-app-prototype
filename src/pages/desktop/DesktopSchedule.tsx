@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, Users, Plus, Search, CheckCircle, XCircle, HelpCircle, Bell } from 'lucide-react';
 import { MessagingProvider } from '../../contexts/MessagingContext';
 import { ComposeForm } from '../../components/messaging/ComposeForm';
+import { TargetingSelector, type TargetingData } from '../../components/shared/TargetingSelector';
 import { eventsApi } from '../../lib/events-api';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Event, EventRsvp, Team } from '../../types/database';
@@ -88,6 +89,16 @@ export function DesktopSchedule() {
     target_teams: [] as string[],
   });
 
+  // Enhanced targeting for admin users
+  const [targetingData, setTargetingData] = useState<TargetingData>({
+    target_roles: [],
+    target_team_types: [],
+    target_divisions: [],
+    target_age_groups: [],
+    target_team_ids: [],
+    target_user_ids: [],
+  });
+
   const handleCreateEvent = async () => {
     try {
       setError(null);
@@ -103,7 +114,7 @@ export function DesktopSchedule() {
         return;
       }
 
-      if (formData.event_type === 'game' && formData.target_teams.length !== 1) {
+      if (formData.event_type === 'game' && targetingData.target_team_ids.length !== 1) {
         setError('Game events must be assigned to exactly one team');
         return;
       }
@@ -111,34 +122,27 @@ export function DesktopSchedule() {
       // Combine date and time
       const eventDateTime = new Date(`${formData.event_date}T${formData.event_time}`).toISOString();
 
+      // Use enhanced targeting if admin, otherwise use simple team selection
+      const eventPayload = {
+        title: formData.title,
+        event_type: formData.event_type,
+        event_date: eventDateTime,
+        location: formData.location,
+        opponent: formData.event_type === 'game' ? formData.opponent : undefined,
+        home_away: formData.event_type === 'game' ? formData.home_away : undefined,
+        target_teams: user?.role === 'admin' ? targetingData.target_team_ids : formData.target_teams,
+        target_roles: user?.role === 'admin' ? (targetingData.target_roles.length > 0 ? targetingData.target_roles : []) : [],
+        target_divisions: user?.role === 'admin' ? (targetingData.target_divisions.length > 0 ? targetingData.target_divisions : []) : [],
+        target_age_groups: user?.role === 'admin' ? (targetingData.target_age_groups.length > 0 ? targetingData.target_age_groups : []) : [],
+      };
+
       if (editingEventId) {
         // Update existing event
-        const updatedEvent = await eventsApi.updateEvent(editingEventId, {
-          title: formData.title,
-          event_type: formData.event_type,
-          event_date: eventDateTime,
-          location: formData.location,
-          opponent: formData.event_type === 'game' ? formData.opponent : undefined,
-          home_away: formData.event_type === 'game' ? formData.home_away : undefined,
-          target_teams: formData.target_teams,
-        });
-
+        const updatedEvent = await eventsApi.updateEvent(editingEventId, eventPayload);
         setEvents(events.map(e => e.id === editingEventId ? updatedEvent : e));
       } else {
         // Create new event
-        const newEvent = await eventsApi.createEvent({
-          title: formData.title,
-          event_type: formData.event_type,
-          event_date: eventDateTime,
-          location: formData.location,
-          opponent: formData.event_type === 'game' ? formData.opponent : undefined,
-          home_away: formData.event_type === 'game' ? formData.home_away : undefined,
-          target_teams: formData.target_teams,
-          target_roles: [],
-          target_divisions: [],
-          target_age_groups: [],
-        });
-
+        const newEvent = await eventsApi.createEvent(eventPayload);
         setEvents([...events, newEvent]);
       }
 
@@ -180,6 +184,14 @@ export function DesktopSchedule() {
       opponent: '',
       home_away: 'home',
       target_teams: [],
+    });
+    setTargetingData({
+      target_roles: [],
+      target_team_types: [],
+      target_divisions: [],
+      target_age_groups: [],
+      target_team_ids: [],
+      target_user_ids: [],
     });
   };
 
@@ -225,6 +237,19 @@ export function DesktopSchedule() {
         return 'bg-purple-100 text-purple-700';
       default:
         return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getCardBackgroundColor = (type: string) => {
+    switch (type) {
+      case 'training':
+        return 'rgba(59, 130, 246, 0.2)'; // Blue at 20%
+      case 'game':
+        return 'rgba(34, 197, 94, 0.2)'; // Green at 20%
+      case 'general':
+        return 'rgba(168, 85, 247, 0.2)'; // Purple at 20%
+      default:
+        return 'rgba(156, 163, 175, 0.2)'; // Gray at 20%
     }
   };
 
@@ -350,6 +375,9 @@ export function DesktopSchedule() {
                     ? 'border-[#0091f3] bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                 }`}
+                style={{ 
+                  backgroundColor: selectedEvent?.id === event.id ? undefined : getCardBackgroundColor(event.event_type)
+                }}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
@@ -519,32 +547,45 @@ export function DesktopSchedule() {
             {/* Scrollable Content */}
             <div className="p-6 overflow-y-auto flex-1">
               <div className="space-y-4">
-                {/* Team Selection - FIRST */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Team{formData.event_type === 'game' ? ' *' : ' (optional)'}
-                  </label>
-                  <select
-                    value={formData.target_teams[0] || ''}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      target_teams: e.target.value ? [e.target.value] : [] 
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                  >
-                    <option value="">All teams</option>
-                    {(user?.role === 'admin' ? allTeams : userTeams).map(team => (
-                      <option key={team.id} value={team.id}>
-                        {team.age_group} {team.name}
-                      </option>
-                    ))}
-                  </select>
-                  {formData.event_type === 'game' && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Game events must be assigned to exactly one team
-                    </p>
-                  )}
-                </div>
+                {/* Enhanced Targeting for Admin Users */}
+                {user?.role === 'admin' && (
+                  <TargetingSelector
+                    value={targetingData}
+                    onChange={setTargetingData}
+                    enableIndividualSelection={false}
+                    title="Event Targeting"
+                    description="leave empty to show to all users"
+                  />
+                )}
+
+                {/* Simple Team Selection for Non-Admin Users */}
+                {user?.role !== 'admin' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Team{formData.event_type === 'game' ? ' *' : ' (optional)'}
+                    </label>
+                    <select
+                      value={formData.target_teams[0] || ''}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        target_teams: e.target.value ? [e.target.value] : [] 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                    >
+                      <option value="">All teams</option>
+                      {userTeams.map(team => (
+                        <option key={team.id} value={team.id}>
+                          {team.age_group} {team.name}
+                        </option>
+                      ))}
+                    </select>
+                    {formData.event_type === 'game' && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Game events must be assigned to exactly one team
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Event Type */}
                 <div>
