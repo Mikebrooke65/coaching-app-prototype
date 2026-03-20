@@ -342,7 +342,7 @@ export function DesktopResources() {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {selectedCategory === 'Rules' ? (
-              /* Rules Section - Just Age Group Selector */}
+              // Rules Section - Just Age Group Selector
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Select Age Group</h3>
                 <div className="relative">
