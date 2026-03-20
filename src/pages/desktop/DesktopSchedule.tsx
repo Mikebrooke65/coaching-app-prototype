@@ -76,7 +76,7 @@ export function DesktopSchedule() {
   };
 
   // Form state for event creation/editing
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -146,7 +146,7 @@ export function DesktopSchedule() {
         setEvents([...events, newEvent]);
       }
 
-      setIsModalOpen(false);
+      setShowCreateForm(false);
       setEditingEventId(null);
       resetForm();
     } catch (err) {
@@ -170,8 +170,22 @@ export function DesktopSchedule() {
       home_away: event.home_away || 'home',
       target_teams: event.target_teams || [],
     });
+    
+    // Set targeting data for admin users
+    if (user?.role === 'admin') {
+      setTargetingData({
+        target_roles: event.target_roles || [],
+        target_team_types: event.target_team_types || [],
+        target_divisions: event.target_divisions || [],
+        target_age_groups: event.target_age_groups || [],
+        target_team_ids: event.target_teams || [],
+        target_user_ids: [],
+      });
+    }
+    
     setEditingEventId(event.id);
-    setIsModalOpen(true);
+    setShowCreateForm(true);
+    setSelectedEvent(null);
   };
 
   const resetForm = () => {
@@ -291,7 +305,11 @@ export function DesktopSchedule() {
         <h1 className="text-3xl font-bold text-[#06b6d4]">Schedule Management</h1>
         {(user?.role === 'admin' || user?.role === 'coach' || user?.role === 'manager') && (
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setShowCreateForm(true);
+              setSelectedEvent(null);
+              resetForm();
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0081d9] transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -307,24 +325,24 @@ export function DesktopSchedule() {
       )}
 
       <div className="flex gap-6 flex-1 min-h-0">
-        {/* Left Panel - Events List */}
-        <div className="w-1/2 flex flex-col bg-white rounded-lg shadow">
-          <div className="p-4 border-b border-gray-200">
-            <div className="relative mb-3">
+        {/* Left Panel - Events List (Narrower) */}
+        <div className="w-1/3 flex flex-col bg-white rounded-lg shadow">
+          <div className="p-3 border-b border-gray-200">
+            <div className="relative mb-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search events..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3] text-sm"
               />
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <button
                 onClick={() => setFilter('all')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                   filter === 'all'
                     ? 'bg-[#0091f3] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -334,7 +352,7 @@ export function DesktopSchedule() {
               </button>
               <button
                 onClick={() => setFilter('training')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                   filter === 'training'
                     ? 'bg-[#0091f3] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -344,7 +362,7 @@ export function DesktopSchedule() {
               </button>
               <button
                 onClick={() => setFilter('match')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                   filter === 'match'
                     ? 'bg-[#0091f3] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -354,7 +372,7 @@ export function DesktopSchedule() {
               </button>
               <button
                 onClick={() => setFilter('meeting')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                   filter === 'meeting'
                     ? 'bg-[#0091f3] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -365,12 +383,15 @@ export function DesktopSchedule() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {sortedEvents.map((event) => (
               <div
                 key={event.id}
-                onClick={() => setSelectedEvent(event)}
-                className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                onClick={() => {
+                  setSelectedEvent(event);
+                  setShowCreateForm(false);
+                }}
+                className={`p-3 border rounded-lg cursor-pointer transition-all ${
                   selectedEvent?.id === event.id
                     ? 'border-[#0091f3] bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -379,39 +400,39 @@ export function DesktopSchedule() {
                   backgroundColor: selectedEvent?.id === event.id ? undefined : getCardBackgroundColor(event.event_type)
                 }}
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900">{getEventTitle(event)}</h3>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${getTypeColor(event.event_type)}`}>
+                <div className="flex items-start justify-between mb-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1 mb-1">
+                      <h3 className="font-medium text-gray-900 text-sm truncate">{getEventTitle(event)}</h3>
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium capitalize flex-shrink-0 ${getTypeColor(event.event_type)}`}>
                         {event.event_type}
                       </span>
                     </div>
                     {getEventTeamName(event) && (
-                      <p className="text-sm text-gray-600">{getEventTeamName(event)}</p>
+                      <p className="text-xs text-gray-600 truncate">{getEventTeamName(event)}</p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                <div className="flex items-center gap-3 text-xs text-gray-600 mb-1">
                   <div className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
+                    <Calendar className="w-3 h-3" />
                     <span>{new Date(event.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
+                    <Clock className="w-3 h-3" />
                     <span>{formatTime(event.event_date)}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-gray-600">
+                <div className="flex items-center gap-2 text-xs text-gray-600">
                   <div className="flex items-center gap-1">
-                    <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                    <CheckCircle className="w-3 h-3 text-green-600" />
                     <span>{attendeeCounts[event.id] || 0}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5 text-gray-400" />
-                    <span>{totalMemberCounts[event.id] || 0} total</span>
+                    <Users className="w-3 h-3 text-gray-400" />
+                    <span>{totalMemberCounts[event.id] || 0}</span>
                   </div>
                 </div>
               </div>
@@ -419,134 +440,27 @@ export function DesktopSchedule() {
           </div>
         </div>
 
-        {/* Right Panel - Event Details */}
-        <div className="w-1/2 bg-white rounded-lg shadow p-6">
-          {selectedEvent ? (
+        {/* Right Panel - Event Details or Create Form (Wider) */}
+        <div className="w-2/3 bg-white rounded-lg shadow p-6">
+          {showCreateForm ? (
             <div>
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    {getEventTitle(selectedEvent)}
-                  </h2>
-                  {getEventTeamName(selectedEvent) && (
-                    <p className="text-gray-600">{getEventTeamName(selectedEvent)}</p>
-                  )}
-                </div>
-                {(user?.role === 'admin' || user?.role === 'coach' || user?.role === 'manager') && (
-                  <button 
-                    onClick={() => handleEditEvent(selectedEvent)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Edit
-                  </button>
-                )}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {editingEventId ? 'Edit Event' : 'Create New Event'}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setEditingEventId(null);
+                    resetForm();
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
               </div>
 
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Event Details</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <Calendar className="w-5 h-5" />
-                      <span>{formatDate(selectedEvent.event_date)}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <Clock className="w-5 h-5" />
-                      <span>{formatTime(selectedEvent.event_date)}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <MapPin className="w-5 h-5" />
-                      <span>{selectedEvent.location}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getTypeColor(selectedEvent.event_type)}`}>
-                        {selectedEvent.event_type}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedEvent.description && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
-                    <p className="text-gray-600">{selectedEvent.description}</p>
-                  </div>
-                )}
-
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Attendance</h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4 text-center">
-                      <div>
-                        <p className="text-2xl font-bold text-green-600">{attendeeCounts[selectedEvent.id] || 0}</p>
-                        <p className="text-xs text-gray-600 mt-1">Going</p>
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">{totalMemberCounts[selectedEvent.id] || 0}</p>
-                        <p className="text-xs text-gray-600 mt-1">Total Members</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-6 border-t border-gray-200 space-y-3">
-                  <button
-                    onClick={() => setReminderEvent(selectedEvent)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#06b6d4]/10 text-[#06b6d4] border border-[#06b6d4]/30 hover:bg-[#06b6d4]/20 transition-colors"
-                  >
-                    <Bell className="w-4 h-4" />
-                    Send Reminder
-                  </button>
-                  <button className="w-full px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0081d9] transition-colors">
-                    View Attendee List
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              <div className="text-center">
-                <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>Select an event to view details</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Send Reminder Modal */}
-      {reminderEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
-          <div className="min-h-full flex items-start justify-center p-4 py-8">
-            <div className="max-w-lg w-full">
-              <MessagingProvider>
-                <ComposeForm
-                  prefillTitle={`Reminder: ${getEventTitle(reminderEvent)}`}
-                  prefillBody={`Hi team,\n\nWe've only had ${attendeeCounts[reminderEvent.id] || 0} replies so far. Please get your response in!\n\nThis is a reminder about ${getEventTitle(reminderEvent)} on ${formatDate(reminderEvent.event_date)} at ${formatTime(reminderEvent.event_date)}.\n\nLocation: ${reminderEvent.location}\n\nPlease update your RSVP if you haven't already.`}
-                  prefillTeamId={reminderEvent.target_teams?.[0]}
-                  prefillTargeting="whole_team"
-                  hideTargetingOptions={true}
-                  onClose={() => setReminderEvent(null)}
-                  onSent={() => setReminderEvent(null)}
-                />
-              </MessagingProvider>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create/Edit Event Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full max-h-[85vh] flex flex-col">
-            {/* Header */}
-            <div className="p-6 pb-4 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">{editingEventId ? 'Edit Event' : 'Create Event'}</h2>
-            </div>
-
-            {/* Scrollable Content */}
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
                 {/* Enhanced Targeting for Admin Users */}
                 {user?.role === 'admin' && (
                   <TargetingSelector
@@ -626,55 +540,57 @@ export function DesktopSchedule() {
                   </div>
                 )}
 
-                {/* Date */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.event_date}
-                    onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                  />
-                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Date */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.event_date}
+                      onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                    />
+                  </div>
 
-                {/* Time */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Time *
-                  </label>
-                  <select
-                    value={formData.event_time}
-                    onChange={(e) => setFormData({ ...formData, event_time: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
-                  >
-                    <option value="">Select time</option>
-                    <option value="08:00">8:00 AM</option>
-                    <option value="08:30">8:30 AM</option>
-                    <option value="09:00">9:00 AM</option>
-                    <option value="09:30">9:30 AM</option>
-                    <option value="10:00">10:00 AM</option>
-                    <option value="10:30">10:30 AM</option>
-                    <option value="11:00">11:00 AM</option>
-                    <option value="11:30">11:30 AM</option>
-                    <option value="12:00">12:00 PM</option>
-                    <option value="12:30">12:30 PM</option>
-                    <option value="13:00">1:00 PM</option>
-                    <option value="13:30">1:30 PM</option>
-                    <option value="14:00">2:00 PM</option>
-                    <option value="14:30">2:30 PM</option>
-                    <option value="15:00">3:00 PM</option>
-                    <option value="15:30">3:30 PM</option>
-                    <option value="16:00">4:00 PM</option>
-                    <option value="16:30">4:30 PM</option>
-                    <option value="17:00">5:00 PM</option>
-                    <option value="17:30">5:30 PM</option>
-                    <option value="18:00">6:00 PM</option>
-                    <option value="18:30">6:30 PM</option>
-                    <option value="19:00">7:00 PM</option>
-                    <option value="19:30">7:30 PM</option>
-                  </select>
+                  {/* Time */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Time *
+                    </label>
+                    <select
+                      value={formData.event_time}
+                      onChange={(e) => setFormData({ ...formData, event_time: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
+                    >
+                      <option value="">Select time</option>
+                      <option value="08:00">8:00 AM</option>
+                      <option value="08:30">8:30 AM</option>
+                      <option value="09:00">9:00 AM</option>
+                      <option value="09:30">9:30 AM</option>
+                      <option value="10:00">10:00 AM</option>
+                      <option value="10:30">10:30 AM</option>
+                      <option value="11:00">11:00 AM</option>
+                      <option value="11:30">11:30 AM</option>
+                      <option value="12:00">12:00 PM</option>
+                      <option value="12:30">12:30 PM</option>
+                      <option value="13:00">1:00 PM</option>
+                      <option value="13:30">1:30 PM</option>
+                      <option value="14:00">2:00 PM</option>
+                      <option value="14:30">2:30 PM</option>
+                      <option value="15:00">3:00 PM</option>
+                      <option value="15:30">3:30 PM</option>
+                      <option value="16:00">4:00 PM</option>
+                      <option value="16:30">4:30 PM</option>
+                      <option value="17:00">5:00 PM</option>
+                      <option value="17:30">5:30 PM</option>
+                      <option value="18:00">6:00 PM</option>
+                      <option value="18:30">6:30 PM</option>
+                      <option value="19:00">7:00 PM</option>
+                      <option value="19:30">7:30 PM</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Location */}
@@ -777,14 +693,13 @@ export function DesktopSchedule() {
                   </>
                 )}
               </div>
-            </div>
 
-            {/* Pinned Footer with Buttons */}
-            <div className="p-6 pt-4 border-t border-gray-200 bg-white rounded-b-lg">
-              <div className="flex gap-3">
+              {/* Form Actions */}
+              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => {
-                    setIsModalOpen(false);
+                    setShowCreateForm(false);
+                    setEditingEventId(null);
                     resetForm();
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -798,6 +713,128 @@ export function DesktopSchedule() {
                   {editingEventId ? 'Update Event' : 'Create Event'}
                 </button>
               </div>
+            </div>
+          ) : selectedEvent ? (
+            <div>
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    {getEventTitle(selectedEvent)}
+                  </h2>
+                  {getEventTeamName(selectedEvent) && (
+                    <p className="text-gray-600">{getEventTeamName(selectedEvent)}</p>
+                  )}
+                </div>
+                {(user?.role === 'admin' || user?.role === 'coach' || user?.role === 'manager') && (
+                  <button 
+                    onClick={() => handleEditEvent(selectedEvent)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Event Details</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <Calendar className="w-5 h-5" />
+                      <span>{formatDate(selectedEvent.event_date)}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <Clock className="w-5 h-5" />
+                      <span>{formatTime(selectedEvent.event_date)}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <MapPin className="w-5 h-5" />
+                      <span>{selectedEvent.location}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getTypeColor(selectedEvent.event_type)}`}>
+                        {selectedEvent.event_type}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedEvent.description && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
+                    <p className="text-gray-600">{selectedEvent.description}</p>
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Attendance</h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                      <div>
+                        <p className="text-2xl font-bold text-green-600">{attendeeCounts[selectedEvent.id] || 0}</p>
+                        <p className="text-xs text-gray-600 mt-1">Going</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-gray-900">{totalMemberCounts[selectedEvent.id] || 0}</p>
+                        <p className="text-xs text-gray-600 mt-1">Total Members</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-gray-200 space-y-3">
+                  <button
+                    onClick={() => setReminderEvent(selectedEvent)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#06b6d4]/10 text-[#06b6d4] border border-[#06b6d4]/30 hover:bg-[#06b6d4]/20 transition-colors"
+                  >
+                    <Bell className="w-4 h-4" />
+                    Send Reminder
+                  </button>
+                  <button className="w-full px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0081d9] transition-colors">
+                    View Attendee List
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400">
+              <div className="text-center">
+                <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p className="mb-4">Select an event to view details</p>
+                {(user?.role === 'admin' || user?.role === 'coach' || user?.role === 'manager') && (
+                  <button
+                    onClick={() => {
+                      setShowCreateForm(true);
+                      setSelectedEvent(null);
+                      resetForm();
+                    }}
+                    className="px-4 py-2 bg-[#0091f3] text-white rounded-lg hover:bg-[#0081d9] transition-colors"
+                  >
+                    Create New Event
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Send Reminder Modal */}
+      {reminderEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+          <div className="min-h-full flex items-start justify-center p-4 py-8">
+            <div className="max-w-lg w-full">
+              <MessagingProvider>
+                <ComposeForm
+                  prefillTitle={`Reminder: ${getEventTitle(reminderEvent)}`}
+                  prefillBody={`Hi team,\n\nWe've only had ${attendeeCounts[reminderEvent.id] || 0} replies so far. Please get your response in!\n\nThis is a reminder about ${getEventTitle(reminderEvent)} on ${formatDate(reminderEvent.event_date)} at ${formatTime(reminderEvent.event_date)}.\n\nLocation: ${reminderEvent.location}\n\nPlease update your RSVP if you haven't already.`}
+                  prefillTeamId={reminderEvent.target_teams?.[0]}
+                  prefillTargeting="whole_team"
+                  hideTargetingOptions={true}
+                  onClose={() => setReminderEvent(null)}
+                  onSent={() => setReminderEvent(null)}
+                />
+              </MessagingProvider>
             </div>
           </div>
         </div>
