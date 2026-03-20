@@ -2,29 +2,10 @@
 
 ## Outstanding Tasks (as of March 20, 2026)
 
-### 1. Desktop UI Improvements — COMPLETE
-- ✅ Desktop Schedule: Removed popup modal, now uses inline form in RHS panel (w-2/3), compact event cards in LHS (w-1/3)
-- ✅ Desktop Games: Replaced mock data with real functionality - age group filtering (U4-U17), team selection, game navigation, score recording, feedback management
-- ✅ Desktop Resources: Fixed rules display - removed duplicate from left panel, shows only in right panel
-- ✅ Desktop Landing: Added real data to all 6 dashboard stats (users, teams, lessons, sessions, deliveries, feedback)
+### 1. Desktop UI Improvements — IN PROGRESS
 - Desktop Messaging: Still needs implementation with RHS panel for compose form
 
 ### 2. Team Messaging — Testing & Review (IN PROGRESS)
-- ✅ Fixed: infinite spinner when user has no teams in user_teams (now uses team_members)
-- ✅ Fixed: PostgREST self-join error (removed messages self-referential join, fetch replies separately)
-- ✅ Fixed: RLS infinite recursion (migration 035 — messages policy uses team_members, message_recipients policy is permissive)
-- ✅ Fixed: Leftover RLS policies cleaned up manually in Supabase
-- ✅ Fixed: ComposeForm teams loaded from team_members instead of user_teams
-- ✅ Fixed: Compose FAB button position (bottom-40 for nav clearance)
-- ✅ Fixed: Orange swipe-to-archive background bleeding through message cards
-- ✅ Fixed: Compose form send/cancel buttons hidden below visible area (pinned footer)
-- ✅ Compacted message cards (single-line body, tighter layout)
-- ✅ Slimmed bottom nav bar across all mobile pages
-- ✅ Messages page loads, shows "No messages yet" (correct — tables empty)
-- ✅ Compose form opens, targeting options display correctly
-- ✅ Message sent successfully, appears in thread list with correct card styling
-- ✅ Emoji reactions working on message cards
-- ✅ Read counter working on message cards
 - NEXT: Test thread detail view (tap card → view thread + replies)
 - Test reply functionality
 - Test archive/unarchive (swipe gesture)
@@ -34,31 +15,7 @@
 - Test desktop two-panel layout
 - UnreadBadge integration into MainLayout bottom nav (needs separate work)
 
-### 3. User Role Management — COMPLETE
-- Spec created at `.kiro/specs/user-role-management/`
-- Requirements doc complete (14 requirements)
-- Design doc complete (architecture, data models, 28 correctness properties)
-- Tasks doc complete — all implementation tasks done
-- Migration 036 run in Supabase
-- Build passes, all code committed
-- Files created:
-  - `supabase/migrations/036_user_role_management.sql`
-  - `src/lib/roles-api.ts`
-  - `src/lib/competitions-api.ts`
-  - `src/lib/invites-api.ts`
-  - `src/lib/caregivers-api.ts`
-  - `src/pages/desktop/CompetitionsPage.tsx`
-  - `src/pages/LiteLandingPage.tsx`
-  - `src/pages/CaregiverApprovalPage.tsx`
-- Files modified:
-  - `src/types/database.ts` (new types + updated User, TeamMember, UserProfile)
-  - `src/contexts/AuthContext.tsx` (switched from user_teams to team_members)
-  - `src/hooks/usePermissions.ts` (added team-level permission functions)
-  - `src/routes/index.tsx` (added 3 new routes)
-  - `src/layouts/DesktopLayout.tsx` (added Competitions nav link)
-  - `src/pages/desktop/UserManagement.tsx` (multi-team assignments, user_type filter, promote)
-
-### 3a. Future Tasks (from User Role Management review)
+### 3. Future Tasks (from User Role Management review)
 - Notification preferences — users control what notifications they receive (separate feature)
 - Audit trail for role changes — who changed team roles and when, admin accountability
 - RLS policy audit — after implementation, check all existing RLS policies across the app don't reference user_teams
@@ -74,14 +31,7 @@
 - Test edge cases: zero subs, all players present, partial attendance
 - General UI/UX review of the Subs page flow
 
-### 5. Academy Lessons — Remaining Work
-- User to decide: proceed with 34 scraped slides or re-scrape the 13 missing ones first
-- User to review first Academy lesson (Migration 028 — Shielding) and confirm format
-- Batch-generate remaining Academy lessons from Bailey's slides
-- Upload pitch diagram images to Supabase Storage
-- U10 lessons not yet started (16 lessons remaining)
-
-### 6. General Outstanding Items
+### 5. General Outstanding Items
 - Bulk CSV user import function (created but not yet integrated into UI)
 - Session Builder save functionality (create/update sessions in database)
 - Lesson delivery refetch issue (noted in earlier session)
