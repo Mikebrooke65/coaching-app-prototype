@@ -1,11 +1,13 @@
 # Conversation History
 
-## Outstanding Tasks (as of March 13, 2026)
+## Outstanding Tasks (as of March 20, 2026)
 
-### 1. Desktop UI Improvements — IN PROGRESS
-- **Desktop Schedule**: Remove popup modal for event creation - use RHS panel instead (plenty of space available), improve UI design
-- **Desktop Messaging**: Implement enhanced targeting model properly, use RHS panel for compose form instead of popup modal, improve UI design  
-- **Desktop Landing**: Add real data to dashboard boxes (similar to mobile Landing plus additional admin metrics)
+### 1. Desktop UI Improvements — COMPLETE
+- ✅ Desktop Schedule: Removed popup modal, now uses inline form in RHS panel (w-2/3), compact event cards in LHS (w-1/3)
+- ✅ Desktop Games: Replaced mock data with real functionality - age group filtering (U4-U17), team selection, game navigation, score recording, feedback management
+- ✅ Desktop Resources: Fixed rules display - removed duplicate from left panel, shows only in right panel
+- ✅ Desktop Landing: Added real data to all 6 dashboard stats (users, teams, lessons, sessions, deliveries, feedback)
+- Desktop Messaging: Still needs implementation with RHS panel for compose form
 
 ### 2. Team Messaging — Testing & Review (IN PROGRESS)
 - ✅ Fixed: infinite spinner when user has no teams in user_teams (now uses team_members)
@@ -84,6 +86,116 @@
 - Session Builder save functionality (create/update sessions in database)
 - Lesson delivery refetch issue (noted in earlier session)
 - Develop admin-configurable venue list for event creation (currently hardcoded: Fred Taylor Park, Huapai Domain, Massey Park, Rosebank Park, Waitakere Stadium, Henderson Park, Ranui Domain)
+
+---
+
+## Session: March 20, 2026 - Desktop UI Enhancements
+
+### Context
+Completed major desktop UI improvements across four pages: Games, Resources, Schedule, and Landing. Focus was on replacing mock data with real functionality, improving layouts, and adding proper data integration.
+
+### The Journey
+
+#### Desktop Games Page - Complete Rebuild
+Started with a page that had mock data and needed to match mobile functionality. The key challenge was implementing age group filtering for admin users who need to access all teams across the organization.
+
+**Problems Encountered:**
+- Initial implementation only showed age groups that had teams
+- File got corrupted during string replacement attempts
+- Needed to balance admin access (all teams) vs regular user access (assigned teams only)
+
+**Solutions:**
+- Deleted and recreated the file in chunks using fsWrite + fsAppend
+- Implemented comprehensive age group filter showing U4-U17 (all possible groups)
+- Added team count display next to each age group
+- Made age group selection required for admin users before team selection
+- Two-panel layout: Left (w-1/3) for team selection and games list, Right (w-2/3) for game details and feedback
+
+**Key Features Implemented:**
+- Age group dropdown with all U4-U17 options
+- Filtered team selection based on selected age group
+- Past games list with compact cards showing scores and home/away status
+- Game navigation with prev/next arrows
+- Score recording and updating
+- Team and player feedback management
+- Previous feedback display with timestamps
+- Integration with real APIs (gamesApi, eventsApi)
+
+#### Desktop Resources Page - Rules Display Fix
+The rules were appearing in both the left panel (unformatted list) and right panel (formatted display), causing confusion.
+
+**Solution:**
+- Removed the rule sections list from left panel
+- Left panel now shows only the age group selector dropdown
+- Added helpful text: "Rules will be displayed in the right panel"
+- All formatted rules display exclusively in right panel
+
+#### Desktop Schedule Page - Layout Redesign
+Changed from modal-based event creation to inline form for better desktop space utilization.
+
+**Changes:**
+- Left column narrowed from w-1/2 to w-1/3
+- Event cards made more compact (smaller text, tighter spacing)
+- Right column expanded to w-2/3 to accommodate inline event form
+- Removed "Add Event" button that opened modal
+- Form includes all original functionality with enhanced targeting
+
+#### Desktop Landing Page - Real Data Integration
+Replaced all "--" placeholders with actual database queries.
+
+**Stats Implemented:**
+- Total Users: Count from users table
+- Total Teams: Count from teams table  
+- Lessons: Count from lessons table
+- Sessions: Count from sessions table
+- Deliveries This Week: Count from lesson_deliveries (Sunday onwards)
+- Feedback This Month: Count from game_feedback (from 1st of month)
+
+**Technical Approach:**
+- Single fetchStats function with parallel queries
+- Loading state shows "..." during fetch
+- Week starts on Sunday (setDay(0))
+- Month starts on 1st (setDate(1))
+
+### Tasks Completed
+
+1. ✅ Desktop Games page - replaced mock data with real functionality
+2. ✅ Age group filtering (U4-U17) for admin users
+3. ✅ Team selection filtered by age group
+4. ✅ Game navigation and details display
+5. ✅ Score recording functionality
+6. ✅ Game feedback management (team and player)
+7. ✅ Desktop Resources - fixed rules display
+8. ✅ Desktop Schedule - redesigned layout with inline form
+9. ✅ Desktop Landing - added real data to all 6 stats
+10. ✅ Committed and pushed to both remotes (kiro + origin)
+11. ✅ Updated CHANGELOG.md
+12. ✅ Updated CONVERSATION-HISTORY.md
+
+### Files Modified
+
+- `src/pages/desktop/DesktopGames.tsx` - Complete rebuild with real data
+- `src/pages/desktop/DesktopResources.tsx` - Fixed rules display
+- `src/pages/desktop/DesktopSchedule.tsx` - Redesigned layout
+- `src/pages/desktop/DesktopLanding.tsx` - Added real stats
+
+### Technical Decisions
+
+**Age Group Filtering:**
+- Show all U4-U17 groups regardless of whether teams exist
+- Display team count next to each age group for clarity
+- Admin users must select age group before seeing teams
+- Non-admin users bypass age group filter and see their assigned teams directly
+
+**Data Fetching Strategy:**
+- Use Supabase count queries with `{ count: 'exact', head: true }` for efficiency
+- Parallel queries for all stats to minimize loading time
+- Date calculations done client-side for week/month boundaries
+
+**Layout Philosophy:**
+- Desktop pages should utilize available space (no modals when inline forms fit)
+- Two-panel layouts: narrower left for navigation/selection, wider right for details/forms
+- Compact card designs in list views to show more items
 
 ---
 

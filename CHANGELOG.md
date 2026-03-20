@@ -4,6 +4,46 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-20] - Desktop UI Enhancements
+
+### Added
+- **Desktop Games Page**: Complete real data integration replacing mock data
+  - Age group filtering for admin users (U4-U17 dropdown)
+  - Team selection filtered by selected age group
+  - Past games list with navigation arrows
+  - Score recording and updating functionality
+  - Game analysis with team and player feedback
+  - Previous feedback display with timestamps
+  - Manage Subs button linking to substitution management
+- **Desktop Landing Dashboard**: Real statistics display
+  - Total users count from database
+  - Total teams count from database
+  - Lessons and sessions counts
+  - Deliveries this week (from lesson_deliveries table)
+  - Feedback received this month (from game_feedback table)
+
+### Changed
+- **Desktop Schedule**: Redesigned layout for better space utilization
+  - Changed from modal-based to inline event creation form
+  - Left column narrowed to w-1/3 with compact event cards
+  - Right column expanded to w-2/3 for event form
+  - Event cards made more compact with smaller text and tighter spacing
+- **Desktop Resources**: Fixed rules display
+  - Removed duplicate unformatted rules list from left panel
+  - Left panel now shows only age group selector
+  - All formatted rules display exclusively in right panel
+
+### Technical Notes
+- Desktop Games uses gamesApi and eventsApi for real data
+- Age group filter shows all U4-U17 groups with team counts
+- Admin users can access all teams across all age groups
+- Non-admin users see only their assigned teams
+- Dashboard stats fetch on component mount with loading states
+- Week calculation starts from Sunday for deliveries count
+- Month calculation starts from 1st of month for feedback count
+
+---
+
 ## [2026-03-13] - Desktop Schedule and Messaging Integration
 
 ### Added
