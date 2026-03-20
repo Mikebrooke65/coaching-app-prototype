@@ -42,13 +42,13 @@ export function LessonBuilder() {
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAge, setFilterAge] = useState('all');
-  const [filterLevel, setFilterLevel] = useState('all');
+  const [filterDivision, setFilterDivision] = useState('all');
 
   // Form state
   const [formData, setFormData] = useState({
     name: '',
-    ageGroup: 'U9-U12',
-    level: 'Beginner',
+    ageGroup: 'U9',
+    division: 'Community',
     skills: '',
     blocks: [
       { type: 'Warm-Up & Technical', sessionId: '', sessionName: '', duration: 0 },
@@ -60,9 +60,9 @@ export function LessonBuilder() {
 
   const filteredLessons = mockLessons.filter((lesson) => {
     const matchesAge = filterAge === 'all' || lesson.ageGroup === filterAge;
-    const matchesLevel = filterLevel === 'all' || lesson.level === filterLevel;
+    const matchesDivision = filterDivision === 'all' || lesson.division === filterDivision;
     const matchesSearch = lesson.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesAge && matchesLevel && matchesSearch;
+    return matchesAge && matchesDivision && matchesSearch;
   });
 
   const totalDuration = formData.blocks.reduce((sum, block) => sum + block.duration, 0);
@@ -72,8 +72,8 @@ export function LessonBuilder() {
     setSelectedLesson(null);
     setFormData({
       name: '',
-      ageGroup: 'U9-U12',
-      level: 'Beginner',
+      ageGroup: 'U9',
+      division: 'Community',
       skills: '',
       blocks: [
         { type: 'Warm-Up & Technical', sessionId: '', sessionName: '', duration: 0 },
@@ -167,21 +167,30 @@ export function LessonBuilder() {
               className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
             >
               <option value="all">All Ages</option>
-              <option value="U4-U6">U4-U6</option>
-              <option value="U7-U8">U7-U8</option>
-              <option value="U9-U12">U9-U12</option>
-              <option value="U13-U17">U13-U17</option>
+              <option value="U4">U4</option>
+              <option value="U5">U5</option>
+              <option value="U6">U6</option>
+              <option value="U7">U7</option>
+              <option value="U8">U8</option>
+              <option value="U9">U9</option>
+              <option value="U10">U10</option>
+              <option value="U11">U11</option>
+              <option value="U12">U12</option>
+              <option value="U13">U13</option>
+              <option value="U14">U14</option>
+              <option value="U15">U15</option>
+              <option value="U16">U16</option>
+              <option value="U17">U17</option>
             </select>
 
             <select
-              value={filterLevel}
-              onChange={(e) => setFilterLevel(e.target.value)}
+              value={filterDivision}
+              onChange={(e) => setFilterDivision(e.target.value)}
               className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
             >
-              <option value="all">All Levels</option>
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
+              <option value="all">All Divisions</option>
+              <option value="Community">Community</option>
+              <option value="Academy">Academy</option>
             </select>
           </div>
         </div>
@@ -256,25 +265,34 @@ export function LessonBuilder() {
                   onChange={(e) => setFormData({ ...formData, ageGroup: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 >
-                  <option value="U4-U6">U4-U6</option>
-                  <option value="U7-U8">U7-U8</option>
-                  <option value="U9-U12">U9-U12</option>
-                  <option value="U13-U17">U13-U17</option>
+                  <option value="U4">U4</option>
+                  <option value="U5">U5</option>
+                  <option value="U6">U6</option>
+                  <option value="U7">U7</option>
+                  <option value="U8">U8</option>
+                  <option value="U9">U9</option>
+                  <option value="U10">U10</option>
+                  <option value="U11">U11</option>
+                  <option value="U12">U12</option>
+                  <option value="U13">U13</option>
+                  <option value="U14">U14</option>
+                  <option value="U15">U15</option>
+                  <option value="U16">U16</option>
+                  <option value="U17">U17</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Skill Level *
+                  Division *
                 </label>
                 <select
-                  value={formData.level}
-                  onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                  value={formData.division}
+                  onChange={(e) => setFormData({ ...formData, division: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 >
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
+                  <option value="Community">Community</option>
+                  <option value="Academy">Academy</option>
                 </select>
               </div>
 
