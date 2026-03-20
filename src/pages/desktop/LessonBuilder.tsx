@@ -1,22 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 
-// Mock lessons data
-const mockLessons = [
-  {
-    id: '1',
-    name: 'Passing Fundamentals',
-    ageGroup: 'U9-U12',
-    level: 'Beginner',
-    duration: 60,
-    skills: ['Passing', 'First Touch', 'Communication'],
-    sessions: [
-      { blockType: 'Warm-Up & Technical', sessionName: 'Dynamic Warm-Up', duration: 15 },
-      { blockType: 'Skill Introduction', sessionName: 'Passing in Pairs', duration: 15 },
-      { blockType: 'Progressive Development', sessionName: '3v3 Possession', duration: 15 },
-      { blockType: 'Game Application', sessionName: 'Small-Sided Game', duration: 15 },
-    ],
-  },
-];
+interface Lesson {
+  id: string;
+  title: string;
+  skill_category: string;
+  age_group: string;
+  division: string;
+}
 
 // Mock sessions from Session Builder
 const mockAvailableSessions = [
@@ -38,11 +29,36 @@ const BLOCK_TYPES = [
 ];
 
 export function LessonBuilder() {
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAge, setFilterAge] = useState('all');
   const [filterDivision, setFilterDivision] = useState('all');
+
+  // Load lessons from database
+  useEffect(() => {
+    fetchLessons();
+  }, []);
+
+  const fetchLessons = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('id, title, skill_category, age_group, division')
+        .order('age_group')
+        .order('title');
+
+      if (error) throw error;
+      setLessons(data || []);
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -58,10 +74,11 @@ export function LessonBuilder() {
     ],
   });
 
-  const filteredLessons = mockLessons.filter((lesson) => {
-    const matchesAge = filterAge === 'all' || lesson.ageGroup === filterAge;
+  const filteredLessons = lessons.filter((lesson) => {
+    const matchesAge = filterAge === 'all' || lesson.age_group === filterAge;
     const matchesDivision = filterDivision === 'all' || lesson.division === filterDivision;
-    const matchesSearch = lesson.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         lesson.skill_category.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesAge && matchesDivision && matchesSearch;
   });
 
@@ -197,39 +214,45 @@ export function LessonBuilder() {
 
         {/* Lessons List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {filteredLessons.map((lesson) => (
-            <button
-              key={lesson.id}
-              onClick={() => setSelectedLesson(lesson)}
-              className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                selectedLesson?.id === lesson.id
-                  ? 'border-[#0091f3] bg-[#0091f3] bg-opacity-5'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-medium text-gray-900 text-sm">{lesson.name}</h3>
-                <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700">
-                  {lesson.duration} min
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1 mb-2">
-                <span className="text-xs px-2 py-0.5 rounded bg-[#0091f3] text-white">
-                  {lesson.ageGroup}
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                  {lesson.level}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {lesson.skills.map((skill) => (
-                  <span key={skill} className="text-xs px-2 py-0.5 rounded bg-gray-50 text-gray-600">
-                    {skill}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#22c55e]"></div>
+            </div>
+          ) : filteredLessons.length > 0 ? (
+            filteredLessons.map((lesson) => (
+              <button
+                key={lesson.id}
+                onClick={() => setSelectedLesson(lesson)}
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                  selectedLesson?.id === lesson.id
+                    ? 'border-[#0091f3] bg-[#0091f3] bg-opacity-5'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-medium text-gray-900 text-sm">{lesson.title}</h3>
+                </div>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  <span className="text-xs px-2 py-0.5 rounded bg-[#0091f3] text-white">
+                    {lesson.age_group}
                   </span>
-                ))}
-              </div>
-            </button>
-          ))}
+                  <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                    {lesson.division}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  <span className="text-xs px-2 py-0.5 rounded bg-gray-50 text-gray-600">
+                    {lesson.skill_category}
+                  </span>
+                </div>
+              </button>
+            ))
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <p>No lessons found</p>
+              <p className="text-sm mt-1">Try adjusting your filters</p>
+            </div>
+          )}
         </div>
       </div>
 

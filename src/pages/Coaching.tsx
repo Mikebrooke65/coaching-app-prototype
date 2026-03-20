@@ -108,15 +108,20 @@ export function Coaching() {
 
       setPastLessons(past);
 
-      // Fetch available lessons (not yet delivered to this team, matching age group)
+      // Fetch available lessons (not yet delivered to this team, matching age group AND division)
       const deliveredLessonIds = past.map(l => l.id);
       
       let query = supabase
         .from('lessons')
-        .select('id, title, skill_category, age_group')
+        .select('id, title, skill_category, age_group, division')
         .eq('age_group', selectedTeam.age_group)
         .order('skill_category')
         .order('title');
+
+      // Filter by team's division if it exists
+      if (selectedTeam.division) {
+        query = query.eq('division', selectedTeam.division);
+      }
 
       // Exclude already delivered lessons
       if (deliveredLessonIds.length > 0) {
