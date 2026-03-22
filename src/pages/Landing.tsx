@@ -97,10 +97,12 @@ export function Landing() {
     try {
       setIsLoading(true);
       
-      // Fetch all active announcements
+      // Fetch active announcements (not expired)
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('announcements')
         .select('*')
+        .or(`is_ongoing.eq.true,expires_at.gt.${now}`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

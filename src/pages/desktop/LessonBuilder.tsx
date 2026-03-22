@@ -1,49 +1,153 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 
-interface Lesson {
+// ============================================================================
+// TypeScript Interfaces and Data Models
+// ============================================================================
+
+// Database Session Model
+interface DBSession {
+  id: string;
+  session_name: string;
+  age_group: string;
+  session_type: 'warmup' | 'skill_intro' | 'progressive' | 'game';
+  duration: number;
+  title: string;
+  description: string | null;
+  organisation: string;
+  equipment: string[];
+  coaching_points: string[];
+  steps: string[];
+  key_objectives: string[];
+  pitch_layout_description: string;
+  diagram_url: string | null;
+  video_url: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Database Lesson Model
+interface DBLesson {
+  id: string;
+  title: string;
+  description: string | null;
+  age_group: string;
+  skill_category: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  division: 'Community' | 'Academy';
+  session_1_id: string;
+  session_2_id: string;
+  session_3_id: string;
+  session_4_id: string;
+  total_duration: number | null;
+  objectives: string[];
+  coaching_focus: string[];
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Lesson Allocation Model
+interface LessonAllocation {
+  id: string;
+  lesson_id: string;
+  age_group: string;
+  created_at: string;
+}
+
+// UI Lesson Model (with allocations)
+interface UILesson {
   id: string;
   title: string;
   skill_category: string;
   age_group: string;
-  division: string;
-  allocated_age_groups?: string[];
+  division: 'Community' | 'Academy';
+  allocated_age_groups: string[];
 }
 
-// Mock sessions from Session Builder
-const mockAvailableSessions = [
-  { id: 's1', name: 'Dynamic Warm-Up', type: 'Warm-Up & Technical', duration: 10, ageGroup: 'U9-U12' },
-  { id: 's2', name: 'Ball Mastery', type: 'Warm-Up & Technical', duration: 15, ageGroup: 'U9-U12' },
-  { id: 's3', name: 'Passing in Pairs', type: 'Skill Introduction', duration: 15, ageGroup: 'U9-U12' },
-  { id: 's4', name: 'Dribbling Technique', type: 'Skill Introduction', duration: 15, ageGroup: 'U9-U12' },
-  { id: 's5', name: '3v3 Possession', type: 'Progressive Development', duration: 15, ageGroup: 'U9-U12' },
-  { id: 's6', name: '1v1 Challenges', type: 'Progressive Development', duration: 20, ageGroup: 'U9-U12' },
-  { id: 's7', name: 'Small-Sided Game', type: 'Game Application', duration: 15, ageGroup: 'U9-U12' },
-  { id: 's8', name: 'Full Game', type: 'Game Application', duration: 20, ageGroup: 'U9-U12' },
-];
+// UI Session Block Model
+interface SessionBlock {
+  type: 'Warm-Up & Technical' | 'Skill Introduction' | 'Progressive Development' | 'Game Application';
+  sessionId: string;
+  sessionName: string;
+  duration: number;
+}
 
-const BLOCK_TYPES = [
-  'Warm-Up & Technical',
-  'Skill Introduction',
-  'Progressive Development',
-  'Game Application',
-];
+// Form State Model
+interface LessonFormData {
+  name: string;
+  ageGroup: string;
+  division: 'Community' | 'Academy';
+  skills: string;
+  blocks: SessionBlock[];
+}
+
+// Validation Errors Model
+interface ValidationErrors {
+  name?: string;
+  ageGroup?: string;
+  division?: string;
+  skills?: string;
+  block0?: string;
+  block1?: string;
+  block2?: string;
+  block3?: string;
+}
+
+// Session Type Mapping: UI Block Type → Database session_type
+const SESSION_TYPE_MAP: Record<string, 'warmup' | 'skill_intro' | 'progressive' | 'game'> = {
+  'Warm-Up & Technical': 'warmup',
+  'Skill Introduction': 'skill_intro',
+  'Progressive Development': 'progressive',
+  'Game Application': 'game',
+};
+
+// Error Messages
+const ERROR_MESSAGES = {
+  LESSON_NAME_REQUIRED: 'Lesson name is required',
+  AGE_GROUP_REQUIRED: 'Age group is required',
+  DIVISION_REQUIRED: 'Division is required',
+  SKILLS_REQUIRED: 'Skills focus is required',
+  SESSION_REQUIRED: (blockNum: number) => `Session ${blockNum} is required`,
+  FETCH_LESSON_FAILED: 'Failed to load lesson data',
+  FETCH_SESSIONS_FAILED: 'Failed to load sessions',
+  SAVE_LESSON_FAILED: 'Failed to save lesson',
+  NETWORK_ERROR: 'Network error. Please check your connection.',
+};
 
 export function LessonBuilder() {
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [lessons, setLessons] = useState<UILesson[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const [selectedLesson, setSelectedLesson] = useState<UILesson | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAge, setFilterAge] = useState('all');
   const [filterDivision, setFilterDivision] = useState('all');
   const [showSaveAsNew, setShowSaveAsNew] = useState(false);
   const [newLessonName, setNewLessonName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [sessionsByType, setSessionsByType] = useState<Record<string, DBSession[]>>({});
 
   // Load lessons from database
   useEffect(() => {
     fetchLessons();
   }, []);
+
+  // Form state
+  const [formData, setFormData] = useState<LessonFormData>({
+    name: '',
+    ageGroup: 'U9',
+    division: 'Community',
+    skills: '',
+    blocks: [
+      { type: 'Warm-Up & Technical', sessionId: '', sessionName: '', duration: 0 },
+      { type: 'Skill Introduction', sessionId: '', sessionName: '', duration: 0 },
+      { type: 'Progressive Development', sessionId: '', sessionName: '', duration: 0 },
+      { type: 'Game Application', sessionId: '', sessionName: '', duration: 0 },
+    ],
+  });
 
   const fetchLessons = async () => {
     try {
@@ -81,25 +185,149 @@ export function LessonBuilder() {
       return lessonsWithAllocations;
     } catch (error) {
       console.error('Error fetching lessons:', error);
+      setError(ERROR_MESSAGES.FETCH_LESSON_FAILED);
       return [];
     } finally {
       setLoading(false);
     }
   };
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    ageGroup: 'U9',
-    division: 'Community',
-    skills: '',
-    blocks: [
-      { type: 'Warm-Up & Technical', sessionId: '', sessionName: '', duration: 0 },
-      { type: 'Skill Introduction', sessionId: '', sessionName: '', duration: 0 },
-      { type: 'Progressive Development', sessionId: '', sessionName: '', duration: 0 },
-      { type: 'Game Application', sessionId: '', sessionName: '', duration: 0 },
-    ],
-  });
+  // Fetch single lesson with all four sessions
+  const fetchLessonWithSessions = async (lessonId: string): Promise<{ lesson: DBLesson; sessions: DBSession[] } | null> => {
+    try {
+      // Fetch lesson
+      const { data: lesson, error: lessonError } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('id', lessonId)
+        .single();
+
+      if (lessonError) throw lessonError;
+
+      // Fetch all four sessions
+      const sessionIds = [
+        lesson.session_1_id,
+        lesson.session_2_id,
+        lesson.session_3_id,
+        lesson.session_4_id
+      ];
+
+      const { data: sessions, error: sessionsError } = await supabase
+        .from('sessions')
+        .select('id, title, duration, session_type, age_group')
+        .in('id', sessionIds);
+
+      if (sessionsError) throw sessionsError;
+
+      // Map sessions to blocks in correct order
+      const sessionMap = new Map(sessions.map(s => [s.id, s]));
+      const orderedSessions = [
+        sessionMap.get(lesson.session_1_id),
+        sessionMap.get(lesson.session_2_id),
+        sessionMap.get(lesson.session_3_id),
+        sessionMap.get(lesson.session_4_id)
+      ].filter((s): s is DBSession => s !== undefined);
+
+      return { lesson, sessions: orderedSessions };
+    } catch (error) {
+      console.error('Error fetching lesson with sessions:', error);
+      setError(ERROR_MESSAGES.FETCH_LESSON_FAILED);
+      return null;
+    }
+  };
+
+  // Fetch sessions filtered by age group and session type
+  const fetchSessionsByTypeAndAge = async (
+    ageGroup: string,
+    sessionType: 'warmup' | 'skill_intro' | 'progressive' | 'game'
+  ): Promise<DBSession[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('id, title, duration, session_type, age_group')
+        .eq('age_group', ageGroup)
+        .eq('session_type', sessionType)
+        .order('title');
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      setError(ERROR_MESSAGES.FETCH_SESSIONS_FAILED);
+      return [];
+    }
+  };
+
+  // Load lesson data when a lesson is selected
+  useEffect(() => {
+    const loadLessonData = async () => {
+      if (selectedLesson && !isCreatingNew) {
+        const result = await fetchLessonWithSessions(selectedLesson.id);
+        if (result) {
+          const { lesson, sessions } = result;
+          
+          // Transform to form data
+          setFormData({
+            name: lesson.title,
+            ageGroup: lesson.age_group,
+            division: lesson.division,
+            skills: lesson.skill_category,
+            blocks: [
+              {
+                type: 'Warm-Up & Technical',
+                sessionId: sessions[0]?.id || '',
+                sessionName: sessions[0]?.title || '',
+                duration: sessions[0]?.duration || 0,
+              },
+              {
+                type: 'Skill Introduction',
+                sessionId: sessions[1]?.id || '',
+                sessionName: sessions[1]?.title || '',
+                duration: sessions[1]?.duration || 0,
+              },
+              {
+                type: 'Progressive Development',
+                sessionId: sessions[2]?.id || '',
+                sessionName: sessions[2]?.title || '',
+                duration: sessions[2]?.duration || 0,
+              },
+              {
+                type: 'Game Application',
+                sessionId: sessions[3]?.id || '',
+                sessionName: sessions[3]?.title || '',
+                duration: sessions[3]?.duration || 0,
+              },
+            ],
+          });
+        }
+      }
+    };
+
+    loadLessonData();
+  }, [selectedLesson, isCreatingNew]);
+
+  // Prefetch sessions when age group changes
+  useEffect(() => {
+    const prefetchSessions = async () => {
+      const sessionTypes: Array<'warmup' | 'skill_intro' | 'progressive' | 'game'> = [
+        'warmup',
+        'skill_intro',
+        'progressive',
+        'game'
+      ];
+
+      for (const sessionType of sessionTypes) {
+        const cacheKey = `${formData.ageGroup}-${sessionType}`;
+        if (!sessionsByType[cacheKey]) {
+          const sessions = await fetchSessionsByTypeAndAge(formData.ageGroup, sessionType);
+          setSessionsByType(prev => ({ ...prev, [cacheKey]: sessions }));
+        }
+      }
+    };
+
+    prefetchSessions();
+  }, [formData.ageGroup]);
 
   const filteredLessons = lessons.filter((lesson) => {
     const matchesAge = filterAge === 'all' || lesson.age_group === filterAge;
@@ -109,7 +337,148 @@ export function LessonBuilder() {
     return matchesAge && matchesDivision && matchesSearch;
   });
 
-  const totalDuration = formData.blocks.reduce((sum, block) => sum + block.duration, 0);
+  // Calculate total duration from all session blocks
+  const calculateTotalDuration = (blocks: SessionBlock[]): number => {
+    return blocks.reduce((sum, block) => sum + (block.duration || 0), 0);
+  };
+
+  const totalDuration = calculateTotalDuration(formData.blocks);
+
+  // Validate lesson form data
+  const validateLesson = (data: LessonFormData): ValidationErrors => {
+    const errors: ValidationErrors = {};
+
+    if (!data.name.trim()) {
+      errors.name = ERROR_MESSAGES.LESSON_NAME_REQUIRED;
+    }
+
+    if (!data.ageGroup) {
+      errors.ageGroup = ERROR_MESSAGES.AGE_GROUP_REQUIRED;
+    }
+
+    if (!data.division) {
+      errors.division = ERROR_MESSAGES.DIVISION_REQUIRED;
+    }
+
+    if (!data.skills.trim()) {
+      errors.skills = ERROR_MESSAGES.SKILLS_REQUIRED;
+    }
+
+    data.blocks.forEach((block, index) => {
+      if (!block.sessionId) {
+        errors[`block${index}` as keyof ValidationErrors] = ERROR_MESSAGES.SESSION_REQUIRED(index + 1);
+      }
+    });
+
+    return errors;
+  };
+
+  // Check if form is valid
+  const isFormValid = (): boolean => {
+    const errors = validateLesson(formData);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Create new lesson
+  const createLesson = async (data: LessonFormData): Promise<DBLesson | null> => {
+    try {
+      const lessonData = {
+        title: data.name,
+        age_group: data.ageGroup,
+        division: data.division,
+        skill_category: data.skills,
+        session_1_id: data.blocks[0].sessionId,
+        session_2_id: data.blocks[1].sessionId,
+        session_3_id: data.blocks[2].sessionId,
+        session_4_id: data.blocks[3].sessionId,
+        total_duration: calculateTotalDuration(data.blocks),
+        level: 'Beginner' as const,
+        objectives: [],
+        coaching_focus: [],
+      };
+
+      const { data: lesson, error } = await supabase
+        .from('lessons')
+        .insert(lessonData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return lesson;
+    } catch (error) {
+      console.error('Error creating lesson:', error);
+      setError(ERROR_MESSAGES.SAVE_LESSON_FAILED);
+      return null;
+    }
+  };
+
+  // Update existing lesson
+  const updateLesson = async (lessonId: string, data: LessonFormData): Promise<DBLesson | null> => {
+    try {
+      const lessonData = {
+        title: data.name,
+        age_group: data.ageGroup,
+        division: data.division,
+        skill_category: data.skills,
+        session_1_id: data.blocks[0].sessionId,
+        session_2_id: data.blocks[1].sessionId,
+        session_3_id: data.blocks[2].sessionId,
+        session_4_id: data.blocks[3].sessionId,
+        total_duration: calculateTotalDuration(data.blocks),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: lesson, error } = await supabase
+        .from('lessons')
+        .update(lessonData)
+        .eq('id', lessonId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return lesson;
+    } catch (error) {
+      console.error('Error updating lesson:', error);
+      setError(ERROR_MESSAGES.SAVE_LESSON_FAILED);
+      return null;
+    }
+  };
+
+  // Copy lesson with new name
+  const copyLesson = async (newName: string, data: LessonFormData): Promise<DBLesson | null> => {
+    try {
+      const lessonData = {
+        title: newName,
+        age_group: data.ageGroup,
+        division: data.division,
+        skill_category: data.skills,
+        session_1_id: data.blocks[0].sessionId,
+        session_2_id: data.blocks[1].sessionId,
+        session_3_id: data.blocks[2].sessionId,
+        session_4_id: data.blocks[3].sessionId,
+        total_duration: calculateTotalDuration(data.blocks),
+        level: 'Beginner' as const,
+        objectives: [],
+        coaching_focus: [],
+      };
+
+      const { data: lesson, error } = await supabase
+        .from('lessons')
+        .insert(lessonData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return lesson;
+    } catch (error) {
+      console.error('Error copying lesson:', error);
+      setError(ERROR_MESSAGES.SAVE_LESSON_FAILED);
+      return null;
+    }
+  };
 
   const handleCreateNew = () => {
     setIsCreatingNew(true);
@@ -126,42 +495,174 @@ export function LessonBuilder() {
         { type: 'Game Application', sessionId: '', sessionName: '', duration: 0 },
       ],
     });
+    setValidationErrors({});
+    setError(null);
+  };
+
+  const handleCancel = () => {
+    setIsCreatingNew(false);
+    setSelectedLesson(null);
+    setFormData({
+      name: '',
+      ageGroup: 'U9',
+      division: 'Community',
+      skills: '',
+      blocks: [
+        { type: 'Warm-Up & Technical', sessionId: '', sessionName: '', duration: 0 },
+        { type: 'Skill Introduction', sessionId: '', sessionName: '', duration: 0 },
+        { type: 'Progressive Development', sessionId: '', sessionName: '', duration: 0 },
+        { type: 'Game Application', sessionId: '', sessionName: '', duration: 0 },
+      ],
+    });
+    setValidationErrors({});
+    setError(null);
+  };
+
+  const handleAgeGroupChange = (newAgeGroup: string) => {
+    // Clear all session selections when age group changes
+    setFormData({
+      ...formData,
+      ageGroup: newAgeGroup,
+      blocks: [
+        { type: 'Warm-Up & Technical', sessionId: '', sessionName: '', duration: 0 },
+        { type: 'Skill Introduction', sessionId: '', sessionName: '', duration: 0 },
+        { type: 'Progressive Development', sessionId: '', sessionName: '', duration: 0 },
+        { type: 'Game Application', sessionId: '', sessionName: '', duration: 0 },
+      ],
+    });
   };
 
   const handleSelectSession = (blockIndex: number, sessionId: string) => {
-    const session = mockAvailableSessions.find((s) => s.id === sessionId);
+    if (!sessionId) {
+      // Clear selection
+      const newBlocks = [...formData.blocks];
+      newBlocks[blockIndex] = {
+        ...newBlocks[blockIndex],
+        sessionId: '',
+        sessionName: '',
+        duration: 0,
+      };
+      setFormData({ ...formData, blocks: newBlocks });
+      return;
+    }
+
+    // Find session in cache
+    const blockType = formData.blocks[blockIndex].type;
+    const sessionType = SESSION_TYPE_MAP[blockType];
+    const cacheKey = `${formData.ageGroup}-${sessionType}`;
+    const sessions = sessionsByType[cacheKey] || [];
+    const session = sessions.find((s) => s.id === sessionId);
+    
     if (session) {
       const newBlocks = [...formData.blocks];
       newBlocks[blockIndex] = {
         ...newBlocks[blockIndex],
         sessionId: session.id,
-        sessionName: session.name,
+        sessionName: session.title,
         duration: session.duration,
       };
       setFormData({ ...formData, blocks: newBlocks });
     }
   };
 
-  const getFilteredSessionsForBlock = (blockType: string) => {
-    return mockAvailableSessions.filter(
-      (session) => session.type === blockType && session.ageGroup === formData.ageGroup
-    );
+  const getFilteredSessionsForBlock = (blockType: string): DBSession[] => {
+    // Map UI block type to database session_type
+    const sessionType = SESSION_TYPE_MAP[blockType];
+    if (!sessionType) return [];
+
+    // Return cached sessions if available
+    const cacheKey = `${formData.ageGroup}-${sessionType}`;
+    if (sessionsByType[cacheKey]) {
+      return sessionsByType[cacheKey];
+    }
+
+    // Fetch sessions asynchronously and cache them
+    fetchSessionsByTypeAndAge(formData.ageGroup, sessionType).then((sessions) => {
+      setSessionsByType(prev => ({ ...prev, [cacheKey]: sessions }));
+    });
+
+    return [];
   };
 
-  const handleSave = () => {
-    console.log('Saving lesson:', formData);
-    alert('Lesson saved! (This will save to database when connected)');
+  const handleSave = async () => {
+    // Validate form
+    const errors = validateLesson(formData);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    setValidationErrors({});
+
+    try {
+      if (isCreatingNew) {
+        // Create new lesson
+        const lesson = await createLesson(formData);
+        if (lesson) {
+          await fetchLessons();
+          setIsCreatingNew(false);
+          setSelectedLesson({
+            id: lesson.id,
+            title: lesson.title,
+            skill_category: lesson.skill_category,
+            age_group: lesson.age_group,
+            division: lesson.division,
+            allocated_age_groups: [],
+          });
+          setError(null);
+          alert('Lesson created successfully!');
+        }
+      } else if (selectedLesson) {
+        // Update existing lesson
+        const lesson = await updateLesson(selectedLesson.id, formData);
+        if (lesson) {
+          await fetchLessons();
+          setError(null);
+          alert('Lesson updated successfully!');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving lesson:', error);
+    }
   };
 
-  const handleSaveAsNew = () => {
+  const handleSaveAsNew = async () => {
     if (!newLessonName.trim()) {
       alert('Please enter a name for the new lesson');
       return;
     }
-    console.log('Saving as new lesson:', { ...formData, name: newLessonName });
-    alert(`New lesson "${newLessonName}" created! (This will save to database when connected)`);
-    setShowSaveAsNew(false);
-    setNewLessonName('');
+
+    // Validate form
+    const errors = validateLesson(formData);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    setValidationErrors({});
+
+    try {
+      const lesson = await copyLesson(newLessonName, formData);
+      if (lesson) {
+        await fetchLessons();
+        setShowSaveAsNew(false);
+        setNewLessonName('');
+        setSelectedLesson({
+          id: lesson.id,
+          title: lesson.title,
+          skill_category: lesson.skill_category,
+          age_group: lesson.age_group,
+          division: lesson.division,
+          allocated_age_groups: [],
+        });
+        setError(null);
+        alert(`New lesson "${newLessonName}" created successfully!`);
+      }
+    } catch (error) {
+      console.error('Error copying lesson:', error);
+    }
   };
 
   const handleToggleAllocation = async (lessonId: string, ageGroup: string) => {
@@ -364,7 +865,7 @@ export function LessonBuilder() {
                 </label>
                 <select
                   value={formData.ageGroup}
-                  onChange={(e) => setFormData({ ...formData, ageGroup: e.target.value })}
+                  onChange={(e) => handleAgeGroupChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3]"
                 >
                   <option value="U4">U4</option>
@@ -466,7 +967,7 @@ export function LessonBuilder() {
                         <option value="">Select a session...</option>
                         {getFilteredSessionsForBlock(block.type).map((session) => (
                           <option key={session.id} value={session.id}>
-                            {session.name} ({session.duration} min)
+                            {session.title} ({session.duration} min)
                           </option>
                         ))}
                       </select>
@@ -540,10 +1041,7 @@ export function LessonBuilder() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setIsCreatingNew(false);
-                  setSelectedLesson(null);
-                }}
+                onClick={handleCancel}
                 className="px-4 py-2 text-gray-600 hover:text-gray-900"
               >
                 Cancel
