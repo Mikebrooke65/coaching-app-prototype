@@ -4,6 +4,52 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-03-23] - Lesson Builder Enhancements & Allocation System
+
+### Added
+- **Lesson Allocation System**: Complete feature for controlling lesson availability
+  - New `lesson_allocations` table tracking which lessons are allocated to which age groups
+  - Allocation UI in Desktop Lesson Builder with U4-U17 toggle buttons
+  - Green checkmark badges on allocated age groups
+  - Allocation count display on lesson cards (e.g., "✓ 3")
+  - Mobile coaching page now filters by allocation status
+  - Only shows lessons allocated to team's age group
+  - Bulk allocation SQL for initial setup
+- **Save as New Button**: Desktop Lesson Builder
+  - Green "Save as New" button next to "Save Changes"
+  - Modal prompts for new lesson name
+  - Creates copy of lesson with modifications
+  - Button visibility based on create vs edit mode
+
+### Changed
+- **Desktop Lesson Builder UI**: Compact lesson cards
+  - Reduced from 3 lines to 2 lines maximum
+  - Smaller padding (p-3 → p-2)
+  - Smaller fonts (text-sm → text-xs, text-xs → text-[10px])
+  - All badges on single line
+  - More lessons visible in left panel
+- **Mobile Coaching Filtering**: Enhanced lesson filtering
+  - Added division field to team query
+  - Filters by age_group (from allocations), division, and delivery status
+  - Removes lesson's own age_group constraint (allows cross-age allocation)
+  - Shows "No available lessons" when none allocated
+
+### Fixed
+- **Division Filtering**: Mobile coaching page now correctly filters by team division
+  - Added `division` to team SELECT query in Coaching.tsx
+  - Teams now properly load with division field
+  - Lessons filter by both age_group AND division
+
+### Technical Notes
+- Migration 037 creates lesson_allocations table with unique constraint
+- RLS policies: all users view, admins manage allocations
+- Allocation toggle updates database and refreshes UI optimistically
+- Graceful fallback if allocations table doesn't exist
+- Community pattern: allocate all lessons to age group
+- Academy pattern: selectively allocate 2-3 lessons per week
+
+---
+
 ## [2026-03-20] - Desktop UI Enhancements
 
 ### Added

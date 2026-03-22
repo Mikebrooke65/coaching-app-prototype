@@ -8,6 +8,7 @@ interface Team {
   id: string;
   name: string;
   age_group: string;
+  division?: string;
 }
 
 interface Lesson {
@@ -57,7 +58,7 @@ export function Coaching() {
       // Fetch teams where this user is the coach
       const { data, error } = await supabase
         .from('teams')
-        .select('id, name, age_group')
+        .select('id, name, age_group, division')
         .eq('coach_id', user.id)
         .order('age_group');
 
@@ -108,13 +109,29 @@ export function Coaching() {
 
       setPastLessons(past);
 
-      // Fetch available lessons (not yet delivered to this team, matching age group AND division)
+      // Fetch allocated lessons for this age group
+      const { data: allocationsData, error: allocationsError } = await supabase
+        .from('lesson_allocations')
+        .select('lesson_id')
+        .eq('age_group', selectedTeam.age_group);
+
+      if (allocationsError) throw allocationsError;
+
+      const allocatedLessonIds = (allocationsData || []).map(a => a.lesson_id);
+
+      // Fetch available lessons (not yet delivered, matching division, AND allocated to this age group)
       const deliveredLessonIds = past.map(l => l.id);
       
+      // If no lessons are allocated to this age group, show none
+      if (allocatedLessonIds.length === 0) {
+        setAvailableLessons([]);
+        return;
+      }
+
       let query = supabase
         .from('lessons')
         .select('id, title, skill_category, age_group, division')
-        .eq('age_group', selectedTeam.age_group)
+        .in('id', allocatedLessonIds)
         .order('skill_category')
         .order('title');
 

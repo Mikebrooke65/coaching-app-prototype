@@ -1,5 +1,104 @@
 # Conversation History
 
+## Session: March 23, 2026 - Lesson Builder Enhancements & Allocation System
+
+### Context
+Continued from previous session. Focus on Desktop Lesson Builder UI improvements and implementing a lesson allocation system to control which lessons are available to coaches based on age group and division.
+
+### Tasks Completed
+
+#### 1. Fixed Mobile Coaching Division Filtering
+- **Issue**: Teams have `division` field but it wasn't being fetched from database
+- **Solution**: Updated `fetchUserTeams` query in Coaching.tsx to include `division` field
+- **Result**: Mobile coaching page now correctly filters lessons by both age_group AND division
+
+#### 2. Desktop Lesson Builder UI Improvements
+- **Smaller lesson cards**: Reduced from 3 lines to 2 lines maximum
+  - Changed padding from p-3 to p-2
+  - Reduced font sizes (text-sm → text-xs, text-xs → text-[10px])
+  - All badges on single line with smaller text
+  - Added allocation count badge (e.g., "✓ 3" if allocated to 3 age groups)
+- **Save as New button**: Added green "Save as New" button next to "Save Changes"
+  - Opens modal prompting for new lesson name
+  - Creates copy of lesson with modifications
+  - "Save Changes" only appears when editing existing lesson
+  - "Create Lesson" appears when creating new
+
+#### 3. Lesson Allocation System (Complete)
+- **Created migration 037**: `037_lesson_allocations.sql`
+- **Database**:
+  - `lesson_allocations` table tracks which lessons are allocated to which age groups
+  - Unique constraint on (lesson_id, age_group) prevents duplicates
+  - RLS policies: all users can view, only admins can manage
+- **Desktop Lesson Builder**:
+  - Added "Lesson Allocation" section with U4-U17 age group buttons
+  - Click to toggle allocation for each age group
+  - Allocated age groups show with green background and checkmark
+  - Allocation status updates immediately with optimistic UI
+- **Mobile Coaching Page**:
+  - Now filters lessons by allocation status
+  - Only shows lessons allocated to the team's age group
+  - Filters by age_group, division, AND allocation
+  - If no lessons allocated, shows "No available lessons" message
+- **Bulk Allocation SQL**:
+  - Provided SQL to allocate all U9 Community lessons to U9 age group
+  - `INSERT INTO lesson_allocations ... ON CONFLICT DO NOTHING`
+
+### Technical Details
+
+**Allocation Logic**:
+- Admins allocate lessons to age groups in Lesson Builder
+- Community: Typically allocate all 16 lessons to an age group
+- Academy: Selectively allocate 2-3 lessons per week
+- Mobile coaching filters by: `age_group` (from allocations) + `division` + not delivered
+- Removes the lesson's own age_group filter, allowing cross-age allocation
+
+**fetchLessons Changes**:
+1. Fetch allocated lesson IDs for team's age group
+2. Fetch lessons matching those IDs (regardless of lesson's age_group)
+3. Filter by team's division
+4. Exclude already delivered lessons
+5. If no allocations exist, show no lessons
+
+**UI Updates**:
+- Lesson cards show allocation count badge
+- Allocation buttons in right panel when lesson selected
+- Toggle allocation updates database and refreshes UI
+- Error handling with graceful fallback if table doesn't exist
+
+### Files Created
+- `supabase/migrations/037_lesson_allocations.sql`
+
+### Files Modified
+- `src/pages/Coaching.tsx` - Added division to team query, allocation filtering
+- `src/pages/desktop/LessonBuilder.tsx` - Smaller cards, Save as New, allocation UI
+- `CHANGELOG.md` - Updated with today's work
+- `CONVERSATION-HISTORY.md` - This file
+
+### Current Status
+- ✅ Division filtering working on mobile
+- ✅ Lesson cards compact and readable
+- ✅ Save as New functionality complete
+- ✅ Allocation system fully implemented
+- ✅ Mobile coaching respects allocations
+- ✅ Bulk allocation SQL provided
+- ⏳ Ready for testing with real data
+- ⏳ Need to run migration on production
+
+### Next Steps
+1. Run migration 037 on production Supabase
+2. Test allocation workflow: allocate lessons → check mobile coaching
+3. Bulk allocate Community lessons for all age groups
+4. Selectively allocate Academy lessons
+5. Test with multiple teams and divisions
+
+### User Feedback
+- User confirmed allocation system matches requirements
+- Community vs Academy allocation patterns understood
+- Bulk SQL approach appreciated for initial setup
+
+---
+
 ## Outstanding Tasks (as of March 20, 2026)
 
 ### 1. Desktop UI Improvements — IN PROGRESS

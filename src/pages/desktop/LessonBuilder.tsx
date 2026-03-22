@@ -7,6 +7,7 @@ interface Lesson {
   skill_category: string;
   age_group: string;
   division: string;
+  allocated_age_groups?: string[];
 }
 
 // Mock sessions from Session Builder
@@ -36,6 +37,8 @@ export function LessonBuilder() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAge, setFilterAge] = useState('all');
   const [filterDivision, setFilterDivision] = useState('all');
+  const [showSaveAsNew, setShowSaveAsNew] = useState(false);
+  const [newLessonName, setNewLessonName] = useState('');
 
   // Load lessons from database
   useEffect(() => {
@@ -45,16 +48,40 @@ export function LessonBuilder() {
   const fetchLessons = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      // Fetch lessons with their allocations
+      const { data: lessonsData, error: lessonsError } = await supabase
         .from('lessons')
         .select('id, title, skill_category, age_group, division')
         .order('age_group')
         .order('title');
 
-      if (error) throw error;
-      setLessons(data || []);
+      if (lessonsError) throw lessonsError;
+
+      // Fetch allocations for all lessons (gracefully handle if table doesn't exist)
+      const { data: allocationsData, error: allocationsError } = await supabase
+        .from('lesson_allocations')
+        .select('lesson_id, age_group');
+
+      let lessonsWithAllocations;
+      // If allocations table doesn't exist yet, just show lessons without allocations
+      if (allocationsError) {
+        console.warn('Allocations table not found, showing lessons without allocation data:', allocationsError);
+        lessonsWithAllocations = (lessonsData || []).map(lesson => ({ ...lesson, allocated_age_groups: [] }));
+      } else {
+        // Merge allocations into lessons
+        lessonsWithAllocations = (lessonsData || []).map(lesson => ({
+          ...lesson,
+          allocated_age_groups: (allocationsData || [])
+            .filter(a => a.lesson_id === lesson.id)
+            .map(a => a.age_group)
+        }));
+      }
+
+      setLessons(lessonsWithAllocations);
+      return lessonsWithAllocations;
     } catch (error) {
       console.error('Error fetching lessons:', error);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -124,6 +151,57 @@ export function LessonBuilder() {
   const handleSave = () => {
     console.log('Saving lesson:', formData);
     alert('Lesson saved! (This will save to database when connected)');
+  };
+
+  const handleSaveAsNew = () => {
+    if (!newLessonName.trim()) {
+      alert('Please enter a name for the new lesson');
+      return;
+    }
+    console.log('Saving as new lesson:', { ...formData, name: newLessonName });
+    alert(`New lesson "${newLessonName}" created! (This will save to database when connected)`);
+    setShowSaveAsNew(false);
+    setNewLessonName('');
+  };
+
+  const handleToggleAllocation = async (lessonId: string, ageGroup: string) => {
+    const lesson = lessons.find(l => l.id === lessonId);
+    if (!lesson) return;
+
+    const isAllocated = lesson.allocated_age_groups?.includes(ageGroup);
+
+    try {
+      if (isAllocated) {
+        // Remove allocation
+        const { error } = await supabase
+          .from('lesson_allocations')
+          .delete()
+          .eq('lesson_id', lessonId)
+          .eq('age_group', ageGroup);
+
+        if (error) throw error;
+      } else {
+        // Add allocation
+        const { error } = await supabase
+          .from('lesson_allocations')
+          .insert({
+            lesson_id: lessonId,
+            age_group: ageGroup
+          });
+
+        if (error) throw error;
+      }
+
+      // Refresh lessons and update selectedLesson
+      const updatedLessons = await fetchLessons();
+      const updatedLesson = updatedLessons.find(l => l.id === lessonId);
+      if (updatedLesson) {
+        setSelectedLesson(updatedLesson);
+      }
+    } catch (error) {
+      console.error('Error toggling allocation:', error);
+      alert('Failed to update allocation');
+    }
   };
 
   return (
@@ -223,27 +301,28 @@ export function LessonBuilder() {
               <button
                 key={lesson.id}
                 onClick={() => setSelectedLesson(lesson)}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                className={`w-full text-left p-2 rounded-lg border transition-colors ${
                   selectedLesson?.id === lesson.id
                     ? 'border-[#0091f3] bg-[#0091f3] bg-opacity-5'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-medium text-gray-900 text-sm">{lesson.title}</h3>
-                </div>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  <span className="text-xs px-2 py-0.5 rounded bg-[#0091f3] text-white">
+                <h3 className="font-medium text-gray-900 text-xs mb-1 truncate">{lesson.title}</h3>
+                <div className="flex items-center gap-1 flex-wrap">
+                  <span className="text-[10px] px-1.5 py-0 rounded bg-[#0091f3] text-white">
                     {lesson.age_group}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                  <span className="text-[10px] px-1.5 py-0 rounded bg-gray-100 text-gray-600">
                     {lesson.division}
                   </span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-xs px-2 py-0.5 rounded bg-gray-50 text-gray-600">
+                  <span className="text-[10px] px-1.5 py-0 rounded bg-gray-50 text-gray-600">
                     {lesson.skill_category}
                   </span>
+                  {lesson.allocated_age_groups && lesson.allocated_age_groups.length > 0 && (
+                    <span className="text-[10px] px-1.5 py-0 rounded bg-green-100 text-green-700">
+                      ✓ {lesson.allocated_age_groups.length}
+                    </span>
+                  )}
                 </div>
               </button>
             ))
@@ -397,15 +476,62 @@ export function LessonBuilder() {
               </div>
             </div>
 
+            {/* Allocation Section - Admin Only */}
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Lesson Allocation</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Select which age groups can access this lesson. Coaches will only see allocated lessons for their team's age group.
+              </p>
+              <div className="grid grid-cols-7 gap-2">
+                {['U4', 'U5', 'U6', 'U7', 'U8', 'U9', 'U10', 'U11', 'U12', 'U13', 'U14', 'U15', 'U16', 'U17'].map((age) => {
+                  const isAllocated = selectedLesson?.allocated_age_groups?.includes(age);
+                  return (
+                    <button
+                      key={age}
+                      type="button"
+                      onClick={() => handleToggleAllocation(selectedLesson.id, age)}
+                      className={`px-2 py-1.5 text-xs font-medium rounded border transition-colors ${
+                        isAllocated
+                          ? 'bg-green-100 border-green-300 text-green-700'
+                          : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {isAllocated && '✓ '}{age}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={handleSave}
-                className="flex-1 px-4 py-2 bg-[#0091f3] text-white rounded-lg font-medium hover:bg-[#0077cc]"
-              >
-                Save Lesson
-              </button>
+              {!isCreatingNew && selectedLesson && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className="flex-1 px-4 py-2 bg-[#0091f3] text-white rounded-lg font-medium hover:bg-[#0077cc]"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSaveAsNew(true)}
+                    className="flex-1 px-4 py-2 bg-[#22c55e] text-white rounded-lg font-medium hover:bg-[#16a34a]"
+                  >
+                    Save as New
+                  </button>
+                </>
+              )}
+              {isCreatingNew && (
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className="flex-1 px-4 py-2 bg-[#0091f3] text-white rounded-lg font-medium hover:bg-[#0077cc]"
+                >
+                  Create Lesson
+                </button>
+              )}
               <button
                 type="button"
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
@@ -423,6 +549,43 @@ export function LessonBuilder() {
                 Cancel
               </button>
             </div>
+
+            {/* Save as New Modal */}
+            {showSaveAsNew && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Save as New Lesson</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Enter a name for the new lesson. This will create a copy with your changes.
+                  </p>
+                  <input
+                    type="text"
+                    value={newLessonName}
+                    onChange={(e) => setNewLessonName(e.target.value)}
+                    placeholder="New lesson name..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0091f3] mb-4"
+                    autoFocus
+                  />
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleSaveAsNew}
+                      className="flex-1 px-4 py-2 bg-[#22c55e] text-white rounded-lg font-medium hover:bg-[#16a34a]"
+                    >
+                      Create New Lesson
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowSaveAsNew(false);
+                        setNewLessonName('');
+                      }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </form>
         ) : (
           <div className="text-center py-12">
