@@ -99,9 +99,91 @@ Continued from previous session. Focus on Desktop Lesson Builder UI improvements
 
 ---
 
-## Outstanding Tasks (as of March 20, 2026)
+## Session: March 23, 2026 (Part 2) - Lesson Builder CRUD & Reporting Requirements
 
-### 1. Desktop UI Improvements — IN PROGRESS
+### Context
+Completed Desktop Lesson Builder CRUD functionality and compiled comprehensive reporting requirements for future implementation.
+
+### Tasks Completed
+
+#### 1. Desktop Lesson Builder CRUD Implementation
+- **Created spec**: Full requirements, design, and tasks documents in `.kiro/specs/lesson-builder-crud/`
+- **Implemented full CRUD**:
+  - Create new lessons with 4 session blocks
+  - Read/load existing lessons with all session data
+  - Update existing lessons
+  - Copy lessons with "Save as New" functionality
+- **TypeScript interfaces**: DBSession, DBLesson, UILesson, SessionBlock, LessonFormData, ValidationErrors
+- **Session filtering**: Implemented `fetchSessionsByTypeAndAge()` with proper type filtering (warmup, skill_intro, progressive, game)
+- **Session caching**: Prefetch and cache sessions by age group and type for performance
+- **Form validation**: Complete validation with error messages
+- **Auto-calculation**: Total duration calculated from 4 session blocks
+- **Bug fixes**:
+  - Fixed formData initialization order (moved state declaration before useEffects)
+  - Fixed session dropdown to display `session.title` instead of `session.name`
+
+#### 2. Reporting Requirements Compilation
+- **Created document**: `REPORTING-REQUIREMENTS.md` with comprehensive list of all reports needed
+- **8 Total Reports** across 6 categories:
+  1. **Lesson Delivery Reports** (2): Delivery Summary, Lesson Effectiveness
+  2. **Session Feedback Reports** (2): Session Ratings, Session Popularity
+  3. **Coach Activity Reports** (1): Coach Activity Summary
+  4. **Team Reports** (1): Team Training History
+  5. **Game Feedback Reports** (1): Game Feedback by Team (4 Moments)
+  6. **User Management Reports** (1): Lite Users Report
+- **Implementation priorities**: Defined 3 phases (Essential, Feedback Analysis, Advanced Analytics)
+- **Common features**: Standard filters (date range, team, age group, coach), export options (CSV/PDF)
+- **Technical considerations**: Database views, query optimization, UI components, performance requirements
+
+### Files Created
+- `.kiro/specs/lesson-builder-crud/requirements.md`
+- `.kiro/specs/lesson-builder-crud/design.md`
+- `.kiro/specs/lesson-builder-crud/tasks.md`
+- `.kiro/specs/lesson-builder-crud/.config.kiro`
+- `REPORTING-REQUIREMENTS.md`
+
+### Files Modified
+- `src/pages/desktop/LessonBuilder.tsx` - Complete CRUD implementation with bug fixes
+- `CHANGELOG.md` - Updated with today's work
+- `CONVERSATION-HISTORY.md` - This file
+
+### Current Status
+- ✅ Lesson Builder CRUD fully functional
+- ✅ Session filtering by type and age group working
+- ✅ Form validation and error handling complete
+- ✅ All changes committed and pushed to both remotes
+- ✅ Reporting requirements documented and prioritized
+- ⏳ Ready to create reporting spec when needed
+
+### Next Steps
+1. Test Lesson Builder CRUD in production
+2. Create spec for Reporting feature (when ready to implement)
+3. Implement Phase 1 reports (Essential): Lesson Delivery Summary, Coach Activity Summary, Team Training History
+
+### User Feedback
+- Lesson Builder is HIGH PRIORITY - blocks admins from creating/editing lessons
+- Reporting requirements successfully compiled from multiple sources
+- Ready to move forward with reporting implementation when time permits
+
+---
+
+## Outstanding Tasks (as of March 23, 2026)
+
+### 1. Admin Reporting Dashboard — TO DO
+- **Reference**: See `REPORTING-REQUIREMENTS.md` for complete specification
+- **8 Reports Needed**:
+  - Lesson Delivery Summary (Phase 1 - Essential)
+  - Lesson Effectiveness Report (Phase 2 - Feedback Analysis)
+  - Session Ratings Report (Phase 2 - Feedback Analysis)
+  - Session Popularity Report (Phase 3 - Advanced Analytics)
+  - Coach Activity Summary (Phase 1 - Essential)
+  - Team Training History Report (Phase 1 - Essential)
+  - Game Feedback by Team (Phase 2 - Feedback Analysis)
+  - Lite Users Report (Phase 3 - Advanced Analytics)
+- **Common Features**: Date range filters, team/age group/coach filters, CSV/PDF export
+- **Next Steps**: Create spec for Reporting feature, implement Phase 1 reports first
+
+### 2. Desktop UI Improvements — IN PROGRESS
 - Desktop Messaging: Still needs implementation with RHS panel for compose form
 
 ### 2. Team Messaging — Testing & Review (IN PROGRESS)

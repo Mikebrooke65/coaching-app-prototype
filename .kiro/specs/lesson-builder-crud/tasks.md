@@ -1,3 +1,4 @@
+
 # Implementation Plan: Lesson Builder CRUD
 
 ## Overview

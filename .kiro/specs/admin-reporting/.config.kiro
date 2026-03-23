@@ -1,0 +1,9 @@
+{
+  "specName": "admin-reporting",
+  "displayName": "Admin Reporting Dashboard",
+  "version": "1.0.0",
+  "status": "ready",
+  "workflow": "requirements_first",
+  "createdAt": "2026-03-24",
+  "description": "Comprehensive reporting dashboard for admins to monitor coaching activities, assess content effectiveness, and make data-driven decisions"
+}
