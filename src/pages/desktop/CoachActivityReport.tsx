@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { ReportFilters } from '../../components/reporting/ReportFilters';
 import { ReportTable } from '../../components/reporting/ReportTable';
 import { ExportButton } from '../../components/reporting/ExportButton';

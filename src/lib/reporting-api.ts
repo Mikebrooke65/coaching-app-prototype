@@ -66,21 +66,21 @@ export class ReportingApi extends ApiClient {
         .from('lesson_deliveries')
         .select(`
           id,
-          delivered_at,
+          delivery_date,
           notes,
           lessons!inner(title, skill_category, version),
           teams!inner(name, age_group),
           users!inner(first_name, last_name)
         `)
-        .order('delivered_at', { ascending: false })
+        .order('delivery_date', { ascending: false })
         .limit(100);
 
       // Apply filters
       if (filters.dateFrom) {
-        query = query.gte('delivered_at', filters.dateFrom);
+        query = query.gte('delivery_date', filters.dateFrom);
       }
       if (filters.dateTo) {
-        query = query.lte('delivered_at', filters.dateTo);
+        query = query.lte('delivery_date', filters.dateTo);
       }
       if (filters.teamId) {
         query = query.eq('team_id', filters.teamId);
@@ -107,7 +107,7 @@ export class ReportingApi extends ApiClient {
         coachName: `${row.users.first_name} ${row.users.last_name}`,
         teamName: `${row.teams.age_group} ${row.teams.name}`,
         ageGroup: row.teams.age_group,
-        dateDelivered: row.delivered_at,
+        dateDelivered: row.delivery_date,
         lessonVersion: row.lessons.version || 1,
         notes: row.notes,
       }));
@@ -138,14 +138,14 @@ export class ReportingApi extends ApiClient {
         // Count lesson deliveries
         let deliveriesQuery = this.supabase
           .from('lesson_deliveries')
-          .select('id, delivered_at', { count: 'exact', head: false })
+          .select('id, delivery_date', { count: 'exact', head: false })
           .eq('coach_id', coach.id);
 
         if (filters.dateFrom) {
-          deliveriesQuery = deliveriesQuery.gte('delivered_at', filters.dateFrom);
+          deliveriesQuery = deliveriesQuery.gte('delivery_date', filters.dateFrom);
         }
         if (filters.dateTo) {
-          deliveriesQuery = deliveriesQuery.lte('delivered_at', filters.dateTo);
+          deliveriesQuery = deliveriesQuery.lte('delivery_date', filters.dateTo);
         }
 
         const { data: deliveries, error: deliveriesError } = await deliveriesQuery;
@@ -155,7 +155,7 @@ export class ReportingApi extends ApiClient {
         let feedbackQuery = this.supabase
           .from('game_feedback')
           .select('id, created_at', { count: 'exact', head: false })
-          .eq('coach_id', coach.id);
+          .eq('created_by', coach.id);
 
         if (filters.dateFrom) {
           feedbackQuery = feedbackQuery.gte('created_at', filters.dateFrom);
@@ -181,7 +181,7 @@ export class ReportingApi extends ApiClient {
           .filter((name, index, self) => self.indexOf(name) === index); // unique
 
         // Find last activity date
-        const deliveryDates = (deliveries || []).map((d: any) => new Date(d.delivered_at));
+        const deliveryDates = (deliveries || []).map((d: any) => new Date(d.delivery_date));
         const feedbackDates = (feedback || []).map((f: any) => new Date(f.created_at));
         const allDates = [...deliveryDates, ...feedbackDates];
         const lastActivityDate = allDates.length > 0 
@@ -214,12 +214,12 @@ export class ReportingApi extends ApiClient {
       let query = this.supabase
         .from('lesson_deliveries')
         .select(`
-          delivered_at,
+          delivery_date,
           lessons!inner(title, skill_category, version),
           teams!inner(name, age_group),
           users!inner(first_name, last_name)
         `)
-        .order('delivered_at', { ascending: false })
+        .order('delivery_date', { ascending: false })
         .limit(100);
 
       // Apply filters
@@ -230,10 +230,10 @@ export class ReportingApi extends ApiClient {
         query = query.eq('teams.age_group', filters.ageGroup);
       }
       if (filters.dateFrom) {
-        query = query.gte('delivered_at', filters.dateFrom);
+        query = query.gte('delivery_date', filters.dateFrom);
       }
       if (filters.dateTo) {
-        query = query.lte('delivered_at', filters.dateTo);
+        query = query.lte('delivery_date', filters.dateTo);
       }
       if (filters.skillCategory) {
         query = query.eq('lessons.skill_category', filters.skillCategory);
@@ -249,7 +249,7 @@ export class ReportingApi extends ApiClient {
         ageGroup: row.teams.age_group,
         lessonName: row.lessons.title,
         skillCategory: row.lessons.skill_category,
-        dateDelivered: row.delivered_at,
+        dateDelivered: row.delivery_date,
         coachName: `${row.users.first_name} ${row.users.last_name}`,
         lessonVersion: row.lessons.version || 1,
       }));
