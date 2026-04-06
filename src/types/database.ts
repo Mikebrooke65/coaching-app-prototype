@@ -281,7 +281,7 @@ export interface TeamMemberWithTeam extends TeamMember {
 export interface Competition {
   id: string;
   name: string;
-  competition_type: 'wcr' | 'other';
+  competition_type: 'external_league' | 'club_tournament';
   status: 'active' | 'closed';
   start_date: string;
   end_date: string;
@@ -371,7 +371,7 @@ export interface LiteUserReport {
 // Competition creation payload
 export interface CreateCompetitionPayload {
   name: string;
-  competition_type: 'wcr' | 'other';
+  competition_type: 'external_league' | 'club_tournament';
   start_date: string;
   end_date: string;
 }

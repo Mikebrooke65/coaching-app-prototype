@@ -9,7 +9,7 @@ export function CompetitionsPage() {
   const [compTeams, setCompTeams] = useState<(CompetitionTeam & { team?: Team })[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ name: '', competition_type: 'wcr' as 'wcr' | 'other', start_date: '', end_date: '' });
+  const [formData, setFormData] = useState({ name: '', competition_type: 'external_league' as 'external_league' | 'club_tournament', start_date: '', end_date: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -50,7 +50,7 @@ export function CompetitionsPage() {
       }
       setShowForm(false);
       setEditingId(null);
-      setFormData({ name: '', competition_type: 'wcr', start_date: '', end_date: '' });
+      setFormData({ name: '', competition_type: 'external_league', start_date: '', end_date: '' });
       await loadData();
     } catch (e: any) {
       setError(e.message);
@@ -106,7 +106,7 @@ export function CompetitionsPage() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Competitions</h1>
-        <button onClick={() => { setShowForm(true); setEditingId(null); setFormData({ name: '', competition_type: 'wcr', start_date: '', end_date: '' }); }}
+        <button onClick={() => { setShowForm(true); setEditingId(null); setFormData({ name: '', competition_type: 'external_league', start_date: '', end_date: '' }); }}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
           + New Competition
         </button>
@@ -121,10 +121,10 @@ export function CompetitionsPage() {
           <div className="grid grid-cols-2 gap-4">
             <input placeholder="Competition name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
               className="border rounded-lg px-3 py-2" />
-            <select value={formData.competition_type} onChange={e => setFormData({ ...formData, competition_type: e.target.value as 'wcr' | 'other' })}
+            <select value={formData.competition_type} onChange={e => setFormData({ ...formData, competition_type: e.target.value as 'external_league' | 'club_tournament' })}
               className="border rounded-lg px-3 py-2">
-              <option value="wcr">WCR (Club)</option>
-              <option value="other">Other (Tournament/Social)</option>
+              <option value="external_league">External League</option>
+              <option value="club_tournament">Club Tournament</option>
             </select>
             <input type="date" value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })}
               className="border rounded-lg px-3 py-2" />
@@ -157,8 +157,8 @@ export function CompetitionsPage() {
                   onClick={() => selectComp(comp)}>
                   <td className="p-3 font-medium">{comp.name}</td>
                   <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${comp.competition_type === 'wcr' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                      {comp.competition_type === 'wcr' ? 'WCR' : 'Other'}
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${comp.competition_type === 'external_league' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                      {comp.competition_type === 'external_league' ? 'External League' : 'Club Tournament'}
                     </span>
                   </td>
                   <td className="p-3">
@@ -208,7 +208,7 @@ export function CompetitionsPage() {
                   ))}
                 </select>
               )}
-              {selectedComp.competition_type === 'other' && selectedComp.status === 'closed' && (
+              {selectedComp.competition_type === 'club_tournament' && selectedComp.status === 'closed' && (
                 <button onClick={handleCleanup} className="mt-4 w-full px-3 py-2 bg-orange-100 text-orange-700 rounded-lg text-sm hover:bg-orange-200">
                   Cleanup Lite Users
                 </button>

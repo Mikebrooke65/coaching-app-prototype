@@ -110,10 +110,10 @@ class CompetitionsApi extends ApiClient {
 
   /** Remove lite users for a closed Other competition. Preserves promoted (full) users. */
   async cleanupLiteUsers(competitionId: string): Promise<{ removed: number; retained: number }> {
-    // Get competition to verify it's Other and closed
+    // Get competition to verify it's a Club Tournament and closed
     const comp = await this.getCompetition(competitionId);
-    if (comp.competition_type !== 'other') {
-      throw new ApiError('Cleanup only applies to Other (non-WCR) competitions');
+    if (comp.competition_type !== 'club_tournament') {
+      throw new ApiError('Cleanup only applies to Club Tournament competitions');
     }
 
     // Get teams linked to this competition

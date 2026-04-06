@@ -1,6 +1,89 @@
 # Conversation History
 
-## Session: April 7, 2026 - Admin Reporting Dashboard Phase 2
+## Session: April 7, 2026 (Part 2) - Lite Users & Tournament Preparation
+
+### Context
+After completing Phase 2 Reporting, user clarified that lite user functionality was designed but UI not fully implemented. Also preparing for Tournament feature which depends on lite users.
+
+### Discovery: What Was Designed vs Implemented
+
+#### Database & API (IMPLEMENTED ✅)
+- Migration 036: `competitions`, `competition_teams`, `invite_codes`, `caregiver_approvals`, `player_caregivers` tables
+- `competitions-api.ts`: CRUD, link/unlink teams, cleanup lite users
+- `invites-api.ts`: Generate, validate, redeem invite codes
+- `LiteLandingPage.tsx`: Registration form for lite users via invite code
+- `user_type` field on users table ('full' or 'lite')
+
+#### UI (MISSING ❌)
+- **Invite generation UI**: Managers can't generate invite codes for their teams
+- **Manager assignment**: No way to assign a manager when linking team to competition
+- **Pending invites view**: No UI to see/manage pending invites
+- **Mid-season player addition**: Coaches can't add players mid-season from app
+- **Caregiver approval workflow**: Tables exist but no UI
+
+### Key Decision: Rename Competition Types
+
+**Current values**: `'wcr'` and `'other'`
+**New values**: `'external_league'` and `'club_tournament'`
+
+**Rationale**: 
+- "WCR" is club-specific, not descriptive
+- "Other" is vague
+- New names clearly describe the purpose:
+  - **External League**: Regular season leagues (NZ Football, etc.)
+  - **Club Tournament**: Tournaments run BY the club (summer comps, etc.) - these trigger lite user workflows and will have the new Tournament management features
+
+### Tournament Feature Overview
+
+**Two new pages planned:**
+1. **Competitions Page** (existing, admin-only): Manage ALL competitions
+2. **Tournament Page** (NEW): 
+   - Admin: Select Club Tournament to manage (fixtures, standings, match generation)
+   - Non-Admin: View their team's tournament (if team is in a Club Tournament)
+
+**Tournament Phase 1 MVP features:**
+- Round-robin match generation
+- Standings calculation (points, goal difference)
+- Matches appear in Schedule as events
+- Scores recorded in Games page
+- Mobile standings page
+
+### Files Affected by Competition Type Rename
+
+| File | Change |
+|------|--------|
+| `supabase/migrations/039_rename_competition_types.sql` | NEW - Alter check constraint |
+| `src/types/database.ts` | `'wcr' \| 'other'` → `'external_league' \| 'club_tournament'` |
+| `src/pages/desktop/CompetitionsPage.tsx` | Dropdown options, display labels |
+| `src/lib/competitions-api.ts` | Cleanup check from `'other'` to `'club_tournament'` |
+
+### Implementation Order
+
+1. **Rename competition types** (migration + code) ← IN PROGRESS
+2. **Complete Lite User UI**:
+   - Add "Invite Players" button on CompetitionsPage for Club Tournaments
+   - Add invite code generation modal
+   - Add pending invites panel
+   - Add manager assignment when linking teams
+3. **Build Tournament Page** (Phase 1 MVP):
+   - Admin: Tournament selection, fixture management
+   - User: View standings, fixtures for their team
+   - Round-robin match generation algorithm
+   - Standings calculation
+
+### Reference Documents
+- `TOURNAMENT-FEATURE-ANALYSIS.md` - Strategic analysis, ROI, implementation phases
+- `TOURNIFY-DETAILED-ANALYSIS.md` - Detailed feature breakdown of competitor
+- `.kiro/specs/user-role-management/` - Original lite user spec (requirements, design, tasks)
+
+### Current Status
+- ⏳ Competition type rename - IN PROGRESS
+- ❌ Lite user UI - NOT STARTED
+- ❌ Tournament page - NOT STARTED
+
+---
+
+## Session: April 7, 2026 (Part 1) - Admin Reporting Dashboard Phase 2
 
 ### Context
 Continuing from March 23 session. Completing the Admin Reporting Dashboard by implementing Phase 2 (Feedback Analysis) reports.

@@ -358,9 +358,8 @@ export class ReportingApi extends ApiClient {
       throw new Error('Failed to load filter options. Please try again.');
     }
   }
-}
 
-// ============================================================================
+  // ============================================================================
   // Phase 2: Feedback Analysis Methods
   // ============================================================================
 
