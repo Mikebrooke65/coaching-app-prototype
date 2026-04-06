@@ -168,6 +168,32 @@ class InvitesApi extends ApiClient {
     return data as InviteCode[];
   }
 
+  /** Get pending invites for a specific competition */
+  async getPendingInvitesForCompetition(competitionId: string): Promise<InviteCode[]> {
+    const { data, error } = await this.supabase
+      .from('invite_codes')
+      .select('*, team:teams(*)')
+      .eq('competition_id', competitionId)
+      .is('redeemed_by', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) throw new ApiError(error.message);
+    return data as InviteCode[];
+  }
+
+  /** Get all invites (pending and redeemed) for a specific competition */
+  async getAllInvitesForCompetition(competitionId: string): Promise<InviteCode[]> {
+    const { data, error } = await this.supabase
+      .from('invite_codes')
+      .select('*, team:teams(*)')
+      .eq('competition_id', competitionId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw new ApiError(error.message);
+    return data as InviteCode[];
+  }
+
   /** Invite a mid-season player to a WCR team */
   async inviteMidSeasonPlayer(teamId: string, playerData: InvitePlayerData): Promise<InviteCode> {
     // Check if user already exists

@@ -4,6 +4,26 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-04-07] - Lite User UI & Competition Type Rename
+
+### Added
+- **Lite User Invite UI**: Complete invite workflow on CompetitionsPage
+  - "Invite" button on each team in Club Tournaments
+  - Modal to enter email/phone and generate invite code
+  - Shareable link with copy-to-clipboard
+  - Invites panel showing all invites with status (Pending/Redeemed/Expired)
+- **invites-api methods**: `getPendingInvitesForCompetition()`, `getAllInvitesForCompetition()`
+
+### Changed
+- **Competition types renamed**: `wcr` → `external_league`, `other` → `club_tournament`
+- **CompetitionsPage**: Updated labels and conditional logic for new types
+- **competitions-api**: Updated cleanup to check for `club_tournament`
+
+### Technical Notes
+- Migration 039 renames competition types in database
+- Invite features only visible for Club Tournament competitions
+- Lite users register via `/invite/:code` route (LiteLandingPage)
+
 ## [2026-04-07] - Admin Reporting Dashboard Phase 2
 
 ### Added

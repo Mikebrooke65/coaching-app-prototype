@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
 import { competitionsApi } from '../../lib/competitions-api';
-import type { Competition, CompetitionTeam, Team } from '../../types/database';
+import { invitesApi } from '../../lib/invites-api';
+import type { Competition, CompetitionTeam, Team, InviteCode } from '../../types/database';
 
 export function CompetitionsPage() {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedComp, setSelectedComp] = useState<Competition | null>(null);
   const [compTeams, setCompTeams] = useState<(CompetitionTeam & { team?: Team })[]>([]);
+  const [invites, setInvites] = useState<InviteCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ name: '', competition_type: 'external_league' as 'external_league' | 'club_tournament', start_date: '', end_date: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  
+  // Invite modal state
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteTeamId, setInviteTeamId] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePhone, setInvitePhone] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -35,9 +45,24 @@ export function CompetitionsPage() {
     setCompTeams(ct);
   };
 
+  const loadInvites = async (compId: string) => {
+    try {
+      const inv = await invitesApi.getAllInvitesForCompetition(compId);
+      setInvites(inv);
+    } catch (e) {
+      console.error('Failed to load invites:', e);
+      setInvites([]);
+    }
+  };
+
   const selectComp = (comp: Competition) => {
     setSelectedComp(comp);
     loadCompTeams(comp.id);
+    if (comp.competition_type === 'club_tournament') {
+      loadInvites(comp.id);
+    } else {
+      setInvites([]);
+    }
   };
 
   const handleSave = async () => {
@@ -73,7 +98,7 @@ export function CompetitionsPage() {
   const handleDelete = async (comp: Competition) => {
     if (!confirm(`Delete "${comp.name}"? This cannot be undone.`)) return;
     await competitionsApi.deleteCompetition(comp.id);
-    if (selectedComp?.id === comp.id) { setSelectedComp(null); setCompTeams([]); }
+    if (selectedComp?.id === comp.id) { setSelectedComp(null); setCompTeams([]); setInvites([]); }
     await loadData();
   };
 
@@ -96,14 +121,48 @@ export function CompetitionsPage() {
     alert(`Cleanup complete: ${result.removed} lite users removed, ${result.retained} full users retained.`);
   };
 
+  const openInviteModal = (teamId: string) => {
+    setInviteTeamId(teamId);
+    setInviteEmail('');
+    setInvitePhone('');
+    setGeneratedCode(null);
+    setShowInviteModal(true);
+  };
+
+  const handleGenerateInvite = async () => {
+    if (!selectedComp || !inviteTeamId || !inviteEmail) return;
+    setInviteLoading(true);
+    try {
+      const invite = await invitesApi.generateInviteCode(
+        inviteTeamId,
+        inviteEmail,
+        invitePhone || undefined,
+        selectedComp.id
+      );
+      setGeneratedCode(invite.code);
+      await loadInvites(selectedComp.id);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const copyInviteLink = (code: string) => {
+    const link = `${window.location.origin}/invite/${code}`;
+    navigator.clipboard.writeText(link);
+    alert('Invite link copied to clipboard!');
+  };
+
   const linkedTeamIds = compTeams.map((ct: any) => ct.team_id);
   const availableTeams = teams.filter(t => !linkedTeamIds.includes(t.id));
   const isActive = (comp: Competition) => competitionsApi.isCompetitionActive(comp);
+  const isClubTournament = selectedComp?.competition_type === 'club_tournament';
 
   if (loading) return <div className="p-8 text-center text-gray-500">Loading competitions...</div>;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Competitions</h1>
         <button onClick={() => { setShowForm(true); setEditingId(null); setFormData({ name: '', competition_type: 'external_league', start_date: '', end_date: '' }); }}
@@ -127,9 +186,9 @@ export function CompetitionsPage() {
               <option value="club_tournament">Club Tournament</option>
             </select>
             <input type="date" value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })}
-              className="border rounded-lg px-3 py-2" />
+              className="border rounded-lg px-3 py-2" placeholder="Start date" />
             <input type="date" value={formData.end_date} onChange={e => setFormData({ ...formData, end_date: e.target.value })}
-              className="border rounded-lg px-3 py-2" />
+              className="border rounded-lg px-3 py-2" placeholder="End date" />
           </div>
           <div className="flex gap-2 mt-4">
             <button onClick={handleSave} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Save</button>
@@ -171,7 +230,7 @@ export function CompetitionsPage() {
                     <div className="flex gap-1" onClick={e => e.stopPropagation()}>
                       <button onClick={() => handleEdit(comp)} className="text-xs px-2 py-1 bg-gray-100 rounded hover:bg-gray-200">Edit</button>
                       {isActive(comp) && (
-                        <button onClick={() => handleClose(comp)} className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Close Now</button>
+                        <button onClick={() => handleClose(comp)} className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Close</button>
                       )}
                       <button onClick={() => handleDelete(comp)} className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100">Delete</button>
                     </div>
@@ -185,40 +244,151 @@ export function CompetitionsPage() {
           </table>
         </div>
 
-        {/* Team Linking Panel */}
-        <div className="bg-white rounded-lg shadow p-4">
-          {selectedComp ? (
-            <>
-              <h3 className="font-semibold mb-3">Teams in "{selectedComp.name}"</h3>
-              <div className="space-y-2 mb-4">
-                {compTeams.map((ct: any) => (
-                  <div key={ct.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm">{ct.team?.age_group} {ct.team?.name}</span>
-                    <button onClick={() => handleUnlinkTeam(ct.team_id)} className="text-xs text-red-600 hover:underline">Remove</button>
-                  </div>
-                ))}
-                {compTeams.length === 0 && <p className="text-sm text-gray-400">No teams linked</p>}
-              </div>
-              {availableTeams.length > 0 && (
-                <select onChange={e => { if (e.target.value) handleLinkTeam(e.target.value); e.target.value = ''; }}
-                  className="w-full border rounded-lg px-3 py-2 text-sm" defaultValue="">
-                  <option value="" disabled>+ Add team...</option>
-                  {availableTeams.map(t => (
-                    <option key={t.id} value={t.id}>{t.age_group} {t.name}</option>
+        {/* Right Panel - Teams & Invites */}
+        <div className="space-y-4">
+          {/* Team Linking Panel */}
+          <div className="bg-white rounded-lg shadow p-4">
+            {selectedComp ? (
+              <>
+                <h3 className="font-semibold mb-3">Teams in "{selectedComp.name}"</h3>
+                <div className="space-y-2 mb-4">
+                  {compTeams.map((ct: any) => (
+                    <div key={ct.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <span className="text-sm">{ct.team?.age_group} {ct.team?.name}</span>
+                      <div className="flex gap-2">
+                        {isClubTournament && isActive(selectedComp) && (
+                          <button onClick={() => openInviteModal(ct.team_id)} 
+                            className="text-xs text-blue-600 hover:underline">Invite</button>
+                        )}
+                        <button onClick={() => handleUnlinkTeam(ct.team_id)} 
+                          className="text-xs text-red-600 hover:underline">Remove</button>
+                      </div>
+                    </div>
                   ))}
-                </select>
+                  {compTeams.length === 0 && <p className="text-sm text-gray-400">No teams linked</p>}
+                </div>
+                {availableTeams.length > 0 && (
+                  <select onChange={e => { if (e.target.value) handleLinkTeam(e.target.value); e.target.value = ''; }}
+                    className="w-full border rounded-lg px-3 py-2 text-sm" defaultValue="">
+                    <option value="" disabled>+ Add team...</option>
+                    {availableTeams.map(t => (
+                      <option key={t.id} value={t.id}>{t.age_group} {t.name}</option>
+                    ))}
+                  </select>
+                )}
+                {isClubTournament && selectedComp.status === 'closed' && (
+                  <button onClick={handleCleanup} className="mt-4 w-full px-3 py-2 bg-orange-100 text-orange-700 rounded-lg text-sm hover:bg-orange-200">
+                    Cleanup Lite Users
+                  </button>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-gray-400 text-center py-8">Select a competition to manage teams</p>
+            )}
+          </div>
+
+          {/* Invites Panel - Only for Club Tournaments */}
+          {selectedComp && isClubTournament && (
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="font-semibold mb-3">Invites</h3>
+              {invites.length === 0 ? (
+                <p className="text-sm text-gray-400">No invites sent yet</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {invites.map((inv: any) => (
+                    <div key={inv.id} className="p-2 bg-gray-50 rounded text-sm">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">{inv.recipient_email}</p>
+                          <p className="text-xs text-gray-500">{inv.team?.age_group} {inv.team?.name}</p>
+                        </div>
+                        <div className="text-right">
+                          {inv.redeemed_by ? (
+                            <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">Redeemed</span>
+                          ) : new Date(inv.expires_at) < new Date() ? (
+                            <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded">Expired</span>
+                          ) : (
+                            <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded">Pending</span>
+                          )}
+                        </div>
+                      </div>
+                      {!inv.redeemed_by && new Date(inv.expires_at) >= new Date() && (
+                        <button onClick={() => copyInviteLink(inv.code)} 
+                          className="mt-1 text-xs text-blue-600 hover:underline">
+                          Copy Link
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
-              {selectedComp.competition_type === 'club_tournament' && selectedComp.status === 'closed' && (
-                <button onClick={handleCleanup} className="mt-4 w-full px-3 py-2 bg-orange-100 text-orange-700 rounded-lg text-sm hover:bg-orange-200">
-                  Cleanup Lite Users
-                </button>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-gray-400 text-center py-8">Select a competition to manage teams</p>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Invite Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowInviteModal(false)} />
+          <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Invite Player</h2>
+            
+            {generatedCode ? (
+              <div className="text-center">
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">Invite code generated!</p>
+                  <p className="text-2xl font-mono font-bold text-blue-600">{generatedCode}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-gray-500 mb-1">Share this link:</p>
+                  <p className="text-sm font-mono break-all">{window.location.origin}/invite/{generatedCode}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => copyInviteLink(generatedCode)} 
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Copy Link
+                  </button>
+                  <button onClick={() => { setShowInviteModal(false); setGeneratedCode(null); }} 
+                    className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                    <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+                      placeholder="player@example.com"
+                      className="w-full border rounded-lg px-3 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number (optional)</label>
+                    <input type="tel" value={invitePhone} onChange={e => setInvitePhone(e.target.value)}
+                      placeholder="021 123 4567"
+                      className="w-full border rounded-lg px-3 py-2" />
+                  </div>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 mt-4 text-sm text-blue-700">
+                  <p>An invite code will be generated. Share the link with the player to let them register as a lite user.</p>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={handleGenerateInvite} disabled={!inviteEmail || inviteLoading}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50">
+                    {inviteLoading ? 'Generating...' : 'Generate Invite'}
+                  </button>
+                  <button onClick={() => setShowInviteModal(false)} 
+                    className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

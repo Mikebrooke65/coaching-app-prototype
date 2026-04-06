@@ -77,9 +77,31 @@ After completing Phase 2 Reporting, user clarified that lite user functionality 
 - `.kiro/specs/user-role-management/` - Original lite user spec (requirements, design, tasks)
 
 ### Current Status
-- ⏳ Competition type rename - IN PROGRESS
-- ❌ Lite user UI - NOT STARTED
+- ✅ Competition type rename - COMPLETE
+- ✅ Lite user UI - COMPLETE
 - ❌ Tournament page - NOT STARTED
+
+### Lite User UI Implementation (Completed)
+
+#### CompetitionsPage Enhancements
+- **Invite button**: Each team in a Club Tournament has an "Invite" button
+- **Invite modal**: Enter email (required) and phone (optional) to generate invite code
+- **Generated code display**: Shows code and shareable link with copy button
+- **Invites panel**: Shows all invites for selected Club Tournament
+  - Status badges: Pending (yellow), Redeemed (green), Expired (red)
+  - Copy link button for pending invites
+- **Conditional display**: Invite features only show for Club Tournaments
+
+#### invites-api.ts Enhancements
+- `getPendingInvitesForCompetition(competitionId)`: Get pending invites for a competition
+- `getAllInvitesForCompetition(competitionId)`: Get all invites (pending + redeemed)
+
+### Files Modified
+- `src/pages/desktop/CompetitionsPage.tsx` - Full lite user UI
+- `src/lib/invites-api.ts` - New competition-specific methods
+- `supabase/migrations/039_rename_competition_types.sql` - Type rename migration
+- `src/types/database.ts` - Updated Competition types
+- `src/lib/competitions-api.ts` - Updated cleanup logic
 
 ---
 
