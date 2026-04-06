@@ -51,6 +51,55 @@ export interface FilterOptions {
   skillCategories: string[];
 }
 
+// Phase 2: Feedback Analysis Interfaces
+export interface LessonEffectivenessRow {
+  lessonId: string;
+  lessonName: string;
+  skillCategory: string;
+  ageGroup: string;
+  deliveryCount: number;
+  feedbackCount: number;
+  averageRating: number | null;
+}
+
+export interface SessionRatingsRow {
+  sessionId: string;
+  sessionName: string;
+  sessionType: string;
+  skillCategory: string;
+  deliveryCount: number;
+  feedbackCount: number;
+  averageRating: number | null;
+}
+
+export interface GameFeedbackRow {
+  id: string;
+  teamName: string;
+  ageGroup: string;
+  gameDate: string;
+  opponent: string | null;
+  coachName: string;
+  attackingWww: string | null;
+  attackingEbi: string | null;
+  transitionAdWww: string | null;
+  transitionAdEbi: string | null;
+  defendingWww: string | null;
+  defendingEbi: string | null;
+  transitionDaWww: string | null;
+  transitionDaEbi: string | null;
+  keyAreas: string | null;
+  comments: string | null;
+}
+
+export interface FeedbackDetail {
+  id: string;
+  rating: number;
+  comment: string | null;
+  coachName: string;
+  teamName: string;
+  date: string;
+}
+
 // ============================================================================
 // Reporting API Client
 // ============================================================================
@@ -307,6 +356,311 @@ export class ReportingApi extends ApiClient {
     } catch (error) {
       console.error('Error fetching filter options:', error);
       throw new Error('Failed to load filter options. Please try again.');
+    }
+  }
+}
+
+// ============================================================================
+  // Phase 2: Feedback Analysis Methods
+  // ============================================================================
+
+  /**
+   * Fetch lesson effectiveness data with ratings
+   */
+  async getLessonEffectiveness(filters: ReportFilters): Promise<LessonEffectivenessRow[]> {
+    try {
+      // Get all lessons
+      let lessonsQuery = this.supabase
+        .from('lessons')
+        .select('id, title, skill_category, age_group');
+
+      if (filters.ageGroup) {
+        lessonsQuery = lessonsQuery.eq('age_group', filters.ageGroup);
+      }
+      if (filters.skillCategory) {
+        lessonsQuery = lessonsQuery.eq('skill_category', filters.skillCategory);
+      }
+
+      const { data: lessons, error: lessonsError } = await lessonsQuery;
+      if (lessonsError) throw lessonsError;
+
+      const results: LessonEffectivenessRow[] = [];
+
+      for (const lesson of lessons || []) {
+        // Count deliveries
+        let deliveriesQuery = this.supabase
+          .from('lesson_deliveries')
+          .select('id', { count: 'exact', head: true })
+          .eq('lesson_id', lesson.id);
+
+        if (filters.dateFrom) {
+          deliveriesQuery = deliveriesQuery.gte('delivery_date', filters.dateFrom);
+        }
+        if (filters.dateTo) {
+          deliveriesQuery = deliveriesQuery.lte('delivery_date', filters.dateTo);
+        }
+
+        const { count: deliveryCount, error: deliveriesError } = await deliveriesQuery;
+        if (deliveriesError) throw deliveriesError;
+
+        // Skip if below minimum deliveries
+        if (filters.minDeliveries && (deliveryCount || 0) < filters.minDeliveries) {
+          continue;
+        }
+
+        // Get feedback with ratings
+        let feedbackQuery = this.supabase
+          .from('lesson_feedback')
+          .select('rating')
+          .eq('lesson_id', lesson.id);
+
+        if (filters.dateFrom) {
+          feedbackQuery = feedbackQuery.gte('created_at', filters.dateFrom);
+        }
+        if (filters.dateTo) {
+          feedbackQuery = feedbackQuery.lte('created_at', filters.dateTo);
+        }
+
+        const { data: feedback, error: feedbackError } = await feedbackQuery;
+        if (feedbackError) throw feedbackError;
+
+        const feedbackCount = feedback?.length || 0;
+        const averageRating = feedbackCount > 0
+          ? feedback!.reduce((sum, f) => sum + (f.rating || 0), 0) / feedbackCount
+          : null;
+
+        results.push({
+          lessonId: lesson.id,
+          lessonName: lesson.title,
+          skillCategory: lesson.skill_category,
+          ageGroup: lesson.age_group || 'All',
+          deliveryCount: deliveryCount || 0,
+          feedbackCount,
+          averageRating,
+        });
+      }
+
+      // Sort by average rating descending (nulls last)
+      return results.sort((a, b) => {
+        if (a.averageRating === null && b.averageRating === null) return 0;
+        if (a.averageRating === null) return 1;
+        if (b.averageRating === null) return -1;
+        return b.averageRating - a.averageRating;
+      });
+    } catch (error) {
+      console.error('Error fetching lesson effectiveness:', error);
+      throw new Error('Failed to load lesson effectiveness. Please try again.');
+    }
+  }
+
+  /**
+   * Fetch session ratings data
+   */
+  async getSessionRatings(filters: ReportFilters): Promise<SessionRatingsRow[]> {
+    try {
+      // Get all sessions
+      let sessionsQuery = this.supabase
+        .from('sessions')
+        .select('id, title, session_type, skill_category');
+
+      if (filters.skillCategory) {
+        sessionsQuery = sessionsQuery.eq('skill_category', filters.skillCategory);
+      }
+
+      const { data: sessions, error: sessionsError } = await sessionsQuery;
+      if (sessionsError) throw sessionsError;
+
+      const results: SessionRatingsRow[] = [];
+
+      for (const session of sessions || []) {
+        // Get feedback with ratings
+        let feedbackQuery = this.supabase
+          .from('session_feedback')
+          .select('rating')
+          .eq('session_id', session.id);
+
+        if (filters.dateFrom) {
+          feedbackQuery = feedbackQuery.gte('created_at', filters.dateFrom);
+        }
+        if (filters.dateTo) {
+          feedbackQuery = feedbackQuery.lte('created_at', filters.dateTo);
+        }
+
+        const { data: feedback, error: feedbackError } = await feedbackQuery;
+        if (feedbackError) throw feedbackError;
+
+        const feedbackCount = feedback?.length || 0;
+        const averageRating = feedbackCount > 0
+          ? feedback!.reduce((sum, f) => sum + (f.rating || 0), 0) / feedbackCount
+          : null;
+
+        // Count how many times session was used in lessons
+        const { count: deliveryCount, error: deliveryError } = await this.supabase
+          .from('lesson_sessions')
+          .select('id', { count: 'exact', head: true })
+          .eq('session_id', session.id);
+
+        if (deliveryError) throw deliveryError;
+
+        results.push({
+          sessionId: session.id,
+          sessionName: session.title,
+          sessionType: session.session_type || 'Unknown',
+          skillCategory: session.skill_category || 'Unknown',
+          deliveryCount: deliveryCount || 0,
+          feedbackCount,
+          averageRating,
+        });
+      }
+
+      // Sort by average rating descending (nulls last)
+      return results.sort((a, b) => {
+        if (a.averageRating === null && b.averageRating === null) return 0;
+        if (a.averageRating === null) return 1;
+        if (b.averageRating === null) return -1;
+        return b.averageRating - a.averageRating;
+      });
+    } catch (error) {
+      console.error('Error fetching session ratings:', error);
+      throw new Error('Failed to load session ratings. Please try again.');
+    }
+  }
+
+  /**
+   * Fetch game feedback data
+   */
+  async getGameFeedback(filters: ReportFilters): Promise<GameFeedbackRow[]> {
+    try {
+      let query = this.supabase
+        .from('game_feedback')
+        .select(`
+          id,
+          game_date,
+          opponent,
+          attacking_www,
+          attacking_ebi,
+          transition_ad_www,
+          transition_ad_ebi,
+          defending_www,
+          defending_ebi,
+          transition_da_www,
+          transition_da_ebi,
+          key_areas,
+          comments,
+          teams!inner(name, age_group),
+          users!inner(first_name, last_name)
+        `)
+        .order('game_date', { ascending: false })
+        .limit(100);
+
+      if (filters.dateFrom) {
+        query = query.gte('game_date', filters.dateFrom);
+      }
+      if (filters.dateTo) {
+        query = query.lte('game_date', filters.dateTo);
+      }
+      if (filters.teamId) {
+        query = query.eq('team_id', filters.teamId);
+      }
+      if (filters.coachId) {
+        query = query.eq('created_by', filters.coachId);
+      }
+      if (filters.ageGroup) {
+        query = query.eq('teams.age_group', filters.ageGroup);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        teamName: `${row.teams.age_group} ${row.teams.name}`,
+        ageGroup: row.teams.age_group,
+        gameDate: row.game_date,
+        opponent: row.opponent,
+        coachName: `${row.users.first_name} ${row.users.last_name}`,
+        attackingWww: row.attacking_www,
+        attackingEbi: row.attacking_ebi,
+        transitionAdWww: row.transition_ad_www,
+        transitionAdEbi: row.transition_ad_ebi,
+        defendingWww: row.defending_www,
+        defendingEbi: row.defending_ebi,
+        transitionDaWww: row.transition_da_www,
+        transitionDaEbi: row.transition_da_ebi,
+        keyAreas: row.key_areas,
+        comments: row.comments,
+      }));
+    } catch (error) {
+      console.error('Error fetching game feedback:', error);
+      throw new Error('Failed to load game feedback. Please try again.');
+    }
+  }
+
+  /**
+   * Fetch detailed feedback for a specific lesson
+   */
+  async getLessonFeedbackDetails(lessonId: string): Promise<FeedbackDetail[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('lesson_feedback')
+        .select(`
+          id,
+          rating,
+          comment,
+          created_at,
+          users!inner(first_name, last_name),
+          lesson_deliveries!inner(teams!inner(name, age_group))
+        `)
+        .eq('lesson_id', lessonId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        rating: row.rating,
+        comment: row.comment,
+        coachName: `${row.users.first_name} ${row.users.last_name}`,
+        teamName: `${row.lesson_deliveries.teams.age_group} ${row.lesson_deliveries.teams.name}`,
+        date: row.created_at,
+      }));
+    } catch (error) {
+      console.error('Error fetching lesson feedback details:', error);
+      throw new Error('Failed to load feedback details. Please try again.');
+    }
+  }
+
+  /**
+   * Fetch detailed feedback for a specific session
+   */
+  async getSessionFeedbackDetails(sessionId: string): Promise<FeedbackDetail[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('session_feedback')
+        .select(`
+          id,
+          rating,
+          comment,
+          created_at,
+          users!inner(first_name, last_name),
+          teams!inner(name, age_group)
+        `)
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        rating: row.rating,
+        comment: row.comment,
+        coachName: `${row.users.first_name} ${row.users.last_name}`,
+        teamName: row.teams ? `${row.teams.age_group} ${row.teams.name}` : 'Unknown',
+        date: row.created_at,
+      }));
+    } catch (error) {
+      console.error('Error fetching session feedback details:', error);
+      throw new Error('Failed to load feedback details. Please try again.');
     }
   }
 }

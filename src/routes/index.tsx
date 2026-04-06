@@ -41,6 +41,9 @@ import { DesktopReporting } from '../pages/desktop/DesktopReporting';
 import { LessonDeliveryReport } from '../pages/desktop/LessonDeliveryReport';
 import { CoachActivityReport } from '../pages/desktop/CoachActivityReport';
 import { TeamTrainingReport } from '../pages/desktop/TeamTrainingReport';
+import { LessonEffectivenessReport } from '../pages/desktop/LessonEffectivenessReport';
+import { SessionRatingsReport } from '../pages/desktop/SessionRatingsReport';
+import { GameFeedbackReport } from '../pages/desktop/GameFeedbackReport';
 
 // Public pages
 import { LiteLandingPage } from '../pages/LiteLandingPage';
@@ -218,6 +221,18 @@ export const router = createBrowserRouter([
       {
         path: 'reporting/team-training',
         element: <TeamTrainingReport />,
+      },
+      {
+        path: 'reporting/lesson-effectiveness',
+        element: <LessonEffectivenessReport />,
+      },
+      {
+        path: 'reporting/session-ratings',
+        element: <SessionRatingsReport />,
+      },
+      {
+        path: 'reporting/game-feedback',
+        element: <GameFeedbackReport />,
       },
       {
         path: 'announcements',

@@ -4,6 +4,34 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-04-07] - Admin Reporting Dashboard Phase 2
+
+### Added
+- **Phase 2 Feedback Analysis Reports**: Complete implementation
+  - Lesson Effectiveness Report: View lesson quality based on coach feedback ratings
+  - Session Ratings Report: Identify which sessions work well and need improvement
+  - Game Feedback Report: View post-match analysis using 4 Moments framework
+- **DrillDownModal Component**: Click-through to view detailed feedback comments
+  - Star rating display
+  - Coach name, team, and date for each feedback entry
+  - Loading and empty states
+- **Extended Reporting API**: New methods in `reporting-api.ts`
+  - `getLessonEffectiveness()`: Aggregates lesson ratings and delivery counts
+  - `getSessionRatings()`: Aggregates session ratings and usage counts
+  - `getGameFeedback()`: Fetches 4 Moments game feedback with filters
+  - `getLessonFeedbackDetails()`: Drill-down for individual lesson feedback
+  - `getSessionFeedbackDetails()`: Drill-down for individual session feedback
+- **New TypeScript Interfaces**: 
+  - `LessonEffectivenessRow`, `SessionRatingsRow`, `GameFeedbackRow`, `FeedbackDetail`
+
+### Technical Notes
+- All 6 Phase 1+2 reports now complete and routed
+- Phase 1: Lesson Delivery, Coach Activity, Team Training
+- Phase 2: Lesson Effectiveness, Session Ratings, Game Feedback
+- Routes added at `/desktop/reporting/*`
+- Game Feedback uses card-based layout with 4 Moments color coding
+- Drill-down modal reusable for both lesson and session feedback
+
 ## [2026-03-23] - Lesson Builder Enhancements & Allocation System
 
 ### Added

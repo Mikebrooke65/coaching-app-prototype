@@ -1,5 +1,63 @@
 # Conversation History
 
+## Session: April 7, 2026 - Admin Reporting Dashboard Phase 2
+
+### Context
+Continuing from March 23 session. Completing the Admin Reporting Dashboard by implementing Phase 2 (Feedback Analysis) reports.
+
+### Tasks Completed
+
+#### 1. Phase 2 Reporting Implementation
+- **Lesson Effectiveness Report**: Shows lesson quality based on coach feedback
+  - Aggregates ratings and delivery counts per lesson
+  - Click-through to view detailed feedback comments
+  - Filters: date range, age group, skill category, min deliveries
+- **Session Ratings Report**: Identifies which sessions work well
+  - Aggregates ratings and usage counts per session
+  - Click-through to view detailed feedback comments
+  - Filters: date range, skill category
+- **Game Feedback Report**: Post-match analysis using 4 Moments framework
+  - Card-based layout with color-coded moments (Attacking, Transitions, Defending)
+  - Shows WWW (What Went Well) and EBI (Even Better If) for each moment
+  - Filters: date range, team, coach, age group
+
+#### 2. DrillDownModal Component
+- Reusable modal for viewing detailed feedback
+- Star rating display with visual stars
+- Shows coach name, team, date for each entry
+- Loading skeleton and empty states
+
+#### 3. Extended Reporting API
+- `getLessonEffectiveness()`: Aggregates lesson ratings
+- `getSessionRatings()`: Aggregates session ratings
+- `getGameFeedback()`: Fetches 4 Moments game feedback
+- `getLessonFeedbackDetails()`: Drill-down for lesson feedback
+- `getSessionFeedbackDetails()`: Drill-down for session feedback
+
+### Files Created
+- `src/components/reporting/DrillDownModal.tsx`
+- `src/pages/desktop/LessonEffectivenessReport.tsx`
+- `src/pages/desktop/SessionRatingsReport.tsx`
+- `src/pages/desktop/GameFeedbackReport.tsx`
+
+### Files Modified
+- `src/lib/reporting-api.ts` - Added Phase 2 methods and interfaces
+- `src/routes/index.tsx` - Added routes for Phase 2 reports
+- `CHANGELOG.md` - Updated with today's work
+- `CONVERSATION-HISTORY.md` - This file
+
+### Current Status
+- ✅ Phase 1 Reports: Lesson Delivery, Coach Activity, Team Training
+- ✅ Phase 2 Reports: Lesson Effectiveness, Session Ratings, Game Feedback
+- ⏳ Phase 3 (Polish): PDF export, performance optimization, mobile responsiveness
+
+### Next Steps
+1. Test all 6 reports with real data
+2. Implement PDF export (Phase 3)
+3. Begin Tournaments feature (next major feature)
+
+---
+
 ## Session: March 23, 2026 - Lesson Builder Enhancements & Allocation System
 
 ### Context
