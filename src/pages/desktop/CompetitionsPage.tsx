@@ -23,6 +23,15 @@ export function CompetitionsPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
 
+  // Add Tournament Team modal state
+  const [showAddTeamModal, setShowAddTeamModal] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
+  const [newTeamAgeGroup, setNewTeamAgeGroup] = useState('');
+  const [managerEmail, setManagerEmail] = useState('');
+  const [managerPhone, setManagerPhone] = useState('');
+  const [addTeamLoading, setAddTeamLoading] = useState(false);
+  const [addTeamResult, setAddTeamResult] = useState<{ teamName: string; code: string } | null>(null);
+
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
@@ -162,6 +171,52 @@ export function CompetitionsPage() {
     alert('Invite link copied to clipboard!');
   };
 
+  const handleAddTournamentTeam = async () => {
+    if (!selectedComp || !newTeamName || !managerEmail) return;
+    setAddTeamLoading(true);
+    setError('');
+    try {
+      // 1. Create lightweight team (only name and age group required)
+      const team = await competitionsApi.insert<Team>('teams', {
+        name: newTeamName,
+        age_group: newTeamAgeGroup || 'Open',
+        training_ground: '',
+        training_time: '',
+      } as any);
+
+      // 2. Link team to competition
+      await competitionsApi.linkTeam(selectedComp.id, team.id);
+
+      // 3. Generate invite code for the manager
+      const invite = await invitesApi.generateInviteCode(
+        team.id,
+        managerEmail,
+        managerPhone || undefined,
+        selectedComp.id
+      );
+
+      setAddTeamResult({ teamName: newTeamName, code: invite.code });
+
+      // Refresh data
+      await loadData();
+      await loadCompTeams(selectedComp.id);
+      await loadInvites(selectedComp.id);
+    } catch (e: any) {
+      setError(e.message || 'Failed to add tournament team');
+    } finally {
+      setAddTeamLoading(false);
+    }
+  };
+
+  const openAddTeamModal = () => {
+    setNewTeamName('');
+    setNewTeamAgeGroup('');
+    setManagerEmail('');
+    setManagerPhone('');
+    setAddTeamResult(null);
+    setShowAddTeamModal(true);
+  };
+
   const linkedTeamIds = compTeams.map((ct: any) => ct.team_id);
   const availableTeams = teams.filter(t => !linkedTeamIds.includes(t.id));
   const isActive = (comp: Competition) => competitionsApi.isCompetitionActive(comp);
@@ -289,6 +344,11 @@ export function CompetitionsPage() {
                     Cleanup Lite Users
                   </button>
                 )}
+                {isClubTournament && isActive(selectedComp) && (
+                  <button onClick={openAddTeamModal} className="mt-3 w-full px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200">
+                    + Add Tournament Team
+                  </button>
+                )}
               </>
             ) : (
               <p className="text-sm text-gray-400 text-center py-8">Select a competition to manage teams</p>
@@ -388,6 +448,89 @@ export function CompetitionsPage() {
                     {inviteLoading ? 'Generating...' : 'Generate Invite'}
                   </button>
                   <button onClick={() => setShowInviteModal(false)} 
+                    className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Add Tournament Team Modal */}
+      {showAddTeamModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowAddTeamModal(false)} />
+          <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Add Tournament Team</h2>
+            
+            {addTeamResult ? (
+              <div className="text-center">
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">Team "{addTeamResult.teamName}" created and linked!</p>
+                  <p className="text-sm text-gray-600 mb-2">Manager invite code:</p>
+                  <p className="text-2xl font-mono font-bold text-blue-600">{addTeamResult.code}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-gray-500 mb-1">Share this link with the team manager:</p>
+                  <p className="text-sm font-mono break-all">{window.location.origin}/invite/{addTeamResult.code}</p>
+                </div>
+                <p className="text-xs text-gray-500 mb-4">
+                  The manager registers via this link, then they can share it with their players to onboard them.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => copyInviteLink(addTeamResult.code)} 
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Copy Link
+                  </button>
+                  <button onClick={() => { setShowAddTeamModal(false); setAddTeamResult(null); }} 
+                    className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Team Name *</label>
+                    <input type="text" value={newTeamName} onChange={e => setNewTeamName(e.target.value)}
+                      placeholder="e.g. Eastern Suburbs FC"
+                      className="w-full border rounded-lg px-3 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Age Group</label>
+                    <select value={newTeamAgeGroup} onChange={e => setNewTeamAgeGroup(e.target.value)}
+                      className="w-full border rounded-lg px-3 py-2">
+                      <option value="">Select age group</option>
+                      {['U4','U5','U6','U7','U8','U9','U10','U11','U12','U13','U14','U15','U16','U17','Open'].map(ag => (
+                        <option key={ag} value={ag}>{ag}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Manager Email *</label>
+                    <input type="email" value={managerEmail} onChange={e => setManagerEmail(e.target.value)}
+                      placeholder="manager@example.com"
+                      className="w-full border rounded-lg px-3 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Manager Phone (optional)</label>
+                    <input type="tel" value={managerPhone} onChange={e => setManagerPhone(e.target.value)}
+                      placeholder="021 123 4567"
+                      className="w-full border rounded-lg px-3 py-2" />
+                  </div>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 mt-4 text-sm text-blue-700">
+                  <p>This creates the team, links it to the tournament, and generates an invite code for the manager. Share the link so they can register and onboard their players.</p>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={handleAddTournamentTeam} disabled={!newTeamName || !managerEmail || addTeamLoading}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50">
+                    {addTeamLoading ? 'Creating...' : 'Create Team & Invite'}
+                  </button>
+                  <button onClick={() => setShowAddTeamModal(false)} 
                     className="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
                     Cancel
                   </button>
