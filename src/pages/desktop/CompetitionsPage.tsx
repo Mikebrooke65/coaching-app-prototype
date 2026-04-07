@@ -104,14 +104,22 @@ export function CompetitionsPage() {
 
   const handleLinkTeam = async (teamId: string) => {
     if (!selectedComp) return;
-    await competitionsApi.linkTeam(selectedComp.id, teamId);
-    await loadCompTeams(selectedComp.id);
+    try {
+      await competitionsApi.linkTeam(selectedComp.id, teamId);
+      await loadCompTeams(selectedComp.id);
+    } catch (e: any) {
+      setError(e.message || 'Failed to link team');
+    }
   };
 
   const handleUnlinkTeam = async (teamId: string) => {
     if (!selectedComp) return;
-    await competitionsApi.unlinkTeam(selectedComp.id, teamId);
-    await loadCompTeams(selectedComp.id);
+    try {
+      await competitionsApi.unlinkTeam(selectedComp.id, teamId);
+      await loadCompTeams(selectedComp.id);
+    } catch (e: any) {
+      setError(e.message || 'Failed to unlink team');
+    }
   };
 
   const handleCleanup = async () => {
