@@ -16,6 +16,21 @@ All notable changes to the football coaching app prototype will be documented in
   - StandingsTable, FixtureList, TournamentConfig reusable components
   - Database migration 040 (competitions extensions, events extensions, competition_standings table)
   - Routes: `/tournaments` (mobile), `/desktop/tournaments` (desktop)
+  - "Tournaments" link in desktop sidebar navigation
+  - events-api: `getEventsByCompetition()` method
+- **Add Tournament Team**: Quick-create for external teams on CompetitionsPage
+  - One-step flow: enter team name, age group, manager email → creates team, links to competition, generates invite code
+  - Manager receives shareable link to register and onboard their players
+  - Only visible for active Club Tournament competitions
+- **Missing Tables Fix**: Created `competition_teams` and `invite_codes` tables (migration 036 had not been fully applied)
+  - Round-robin fixture generator (circle method algorithm, single/double format)
+  - Standings engine with configurable scoring rules and tiebreakers
+  - Tournament API layer (config, fixtures, standings, generation, recalculation)
+  - Desktop Tournament Page (admin: config, generate fixtures, view standings/fixtures)
+  - Mobile Tournament Page (user: standings/fixtures tabs, team highlighting)
+  - StandingsTable, FixtureList, TournamentConfig reusable components
+  - Database migration 040 (competitions extensions, events extensions, competition_standings table)
+  - Routes: `/tournaments` (mobile), `/desktop/tournaments` (desktop)
   - events-api: `getEventsByCompetition()` method
 
 ### Technical Notes

@@ -80,6 +80,21 @@ After completing Phase 2 Reporting, user clarified that lite user functionality 
 - ✅ Competition type rename - COMPLETE
 - ✅ Lite user UI - COMPLETE
 - ✅ Tournament Phase 1 MVP - COMPLETE (code implemented, needs testing)
+- ✅ Add Tournament Team quick-create - COMPLETE
+- ✅ Missing DB tables fixed (competition_teams, invite_codes)
+- ✅ Tournaments nav link added to desktop sidebar
+
+### Next Steps (User Testing)
+1. Run migration 040 in Supabase SQL Editor
+2. On Competitions page: create a Club Tournament, add 3+ teams (use "Add Tournament Team" for external teams)
+3. On Tournaments page: select tournament, configure format (Single Round Robin), set scoring rules
+4. Add match day dates, start time, duration, venue, pitches → click "Generate Fixtures"
+5. Verify fixtures appear in fixture list grouped by round
+6. Verify standings table shows all teams with 0-0-0-0
+7. Record scores for fixtures on Games page → verify standings update
+8. Check mobile `/tournaments` page shows standings and fixtures
+9. Test lite user invite flow: create tournament team → share link → register
+10. After testing: proceed to Schedule/Games page integration (tournament badges, filters)
 
 ### Tournament Phase 1 MVP Implementation (Completed)
 
@@ -359,56 +374,49 @@ Completed Desktop Lesson Builder CRUD functionality and compiled comprehensive r
 
 ---
 
-## Outstanding Tasks (as of March 23, 2026)
+## Outstanding Tasks (as of April 7, 2026)
 
-### 1. Admin Reporting Dashboard — TO DO
-- **Reference**: See `REPORTING-REQUIREMENTS.md` for complete specification
-- **8 Reports Needed**:
-  - Lesson Delivery Summary (Phase 1 - Essential)
-  - Lesson Effectiveness Report (Phase 2 - Feedback Analysis)
-  - Session Ratings Report (Phase 2 - Feedback Analysis)
-  - Session Popularity Report (Phase 3 - Advanced Analytics)
-  - Coach Activity Summary (Phase 1 - Essential)
-  - Team Training History Report (Phase 1 - Essential)
-  - Game Feedback by Team (Phase 2 - Feedback Analysis)
-  - Lite Users Report (Phase 3 - Advanced Analytics)
-- **Common Features**: Date range filters, team/age group/coach filters, CSV/PDF export
-- **Next Steps**: Create spec for Reporting feature, implement Phase 1 reports first
+### 1. Tournament Management — TESTING
+- **Status**: Phase 1 MVP code complete, needs user testing
+- **Test Steps**:
+  - Run migration 040 in Supabase
+  - Create Club Tournament, add teams, configure format
+  - Generate fixtures, verify standings
+  - Record scores, verify standings update
+  - Test mobile tournament page
+  - Test lite user invite flow for external teams
+- **Phase 2** (future): Knockout brackets, group stages, referee assignment, score entry links, competition messaging, player stats
+- **Phase 3** (future): Public view, online registration, Stripe payments, drag-and-drop scheduling, advanced stats, slideshow mode
 
-### 2. Desktop UI Improvements — IN PROGRESS
-- Desktop Messaging: Still needs implementation with RHS panel for compose form
+### 2. Admin Reporting Dashboard — MOSTLY COMPLETE
+- Phase 1 (Essential): ✅ Lesson Delivery, Coach Activity, Team Training
+- Phase 2 (Feedback): ✅ Lesson Effectiveness, Session Ratings, Game Feedback
+- Phase 3 (Polish): ⏳ PDF export, Session Popularity, Lite Users Report
 
-### 2. Team Messaging — Testing & Review (IN PROGRESS)
-- NEXT: Test thread detail view (tap card → view thread + replies)
-- Test reply functionality
-- Test archive/unarchive (swipe gesture)
-- Test search
-- Test Realtime subscriptions (live message delivery)
-- Test "Send Reminder" button on Schedule event cards
+### 3. Schedule/Games Integration with Tournaments — TO DO
+- Add competition name badge on tournament fixtures in Schedule page
+- Add "Tournament" filter to Schedule event type filter
+- Add competition indicator on Games page for tournament fixtures
+- Trigger standings recalculation on score save from Games page
+
+### 4. Team Messaging — Testing & Review
+- Test thread detail view, reply, archive/unarchive, search
+- Test Realtime subscriptions
 - Test desktop two-panel layout
-- UnreadBadge integration into MainLayout bottom nav (needs separate work)
+- UnreadBadge integration into bottom nav
 
-### 3. Future Tasks (from User Role Management review)
-- Notification preferences — users control what notifications they receive (separate feature)
-- Audit trail for role changes — who changed team roles and when, admin accountability
-- RLS policy audit — after implementation, check all existing RLS policies across the app don't reference user_teams
-- Privacy/consent UI messaging — inform users what they're agreeing to, who sees their data, especially for caregivers seeing each other
-- SMS gateway integration — future upgrade from manual invite sharing to automated SMS (Twilio/AWS SNS)
+### 5. Game Day Subs — Testing & Finishing
+- Test live timer, substitution alerts, coach strategy mode
+- Test playing time bars, guest players, edge cases
 
-### 4. Game Day Subs — Testing & Finishing
-- Test live count-up timer (kick-off, 2nd half start, timer resets for 2nd half)
-- Test substitution alerts (flashing banner + beep sound when rotation window minute is reached)
-- Test Coach strategy mode (manual player swaps — select player off, player on, confirm)
-- Test playing time bars (update during active play, correct percentages)
-- Test guest players in lineup and substitutions
-- Test edge cases: zero subs, all players present, partial attendance
-- General UI/UX review of the Subs page flow
-
-### 5. General Outstanding Items
-- Bulk CSV user import function (created but not yet integrated into UI)
-- Session Builder save functionality (create/update sessions in database)
-- Lesson delivery refetch issue (noted in earlier session)
-- Develop admin-configurable venue list for event creation (currently hardcoded: Fred Taylor Park, Huapai Domain, Massey Park, Rosebank Park, Waitakere Stadium, Henderson Park, Ranui Domain)
+### 6. Future Tasks
+- Notification preferences
+- Audit trail for role changes
+- RLS policy audit (remove user_teams references)
+- SMS gateway integration (Twilio/AWS SNS)
+- Bulk CSV user import UI
+- Session Builder save functionality
+- Admin-configurable venue list
 
 ---
 
