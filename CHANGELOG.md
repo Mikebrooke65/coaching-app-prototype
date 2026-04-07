@@ -4,6 +4,27 @@ All notable changes to the football coaching app prototype will be documented in
 
 ## [Unreleased]
 
+## [2026-04-07] - Tournament Management Phase 1 MVP
+
+### Added
+- **Tournament Management**: Complete Phase 1 MVP implementation
+  - Round-robin fixture generator (circle method algorithm, single/double format)
+  - Standings engine with configurable scoring rules and tiebreakers
+  - Tournament API layer (config, fixtures, standings, generation, recalculation)
+  - Desktop Tournament Page (admin: config, generate fixtures, view standings/fixtures)
+  - Mobile Tournament Page (user: standings/fixtures tabs, team highlighting)
+  - StandingsTable, FixtureList, TournamentConfig reusable components
+  - Database migration 040 (competitions extensions, events extensions, competition_standings table)
+  - Routes: `/tournaments` (mobile), `/desktop/tournaments` (desktop)
+  - events-api: `getEventsByCompetition()` method
+
+### Technical Notes
+- Fixtures stored as events (automatic Schedule/Games integration)
+- Standings materialized in competition_standings table (fast reads)
+- Pure logic modules (round-robin.ts, standings-engine.ts) have no DB dependencies
+- RLS: all authenticated read standings, admin-only write
+- Schema supports Phase 2/3 extensibility (knockout, groups, referees, public views)
+
 ## [2026-04-07] - Lite User UI & Competition Type Rename
 
 ### Added

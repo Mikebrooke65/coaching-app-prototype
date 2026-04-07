@@ -79,7 +79,36 @@ After completing Phase 2 Reporting, user clarified that lite user functionality 
 ### Current Status
 - ✅ Competition type rename - COMPLETE
 - ✅ Lite user UI - COMPLETE
-- ❌ Tournament page - NOT STARTED
+- ✅ Tournament Phase 1 MVP - COMPLETE (code implemented, needs testing)
+
+### Tournament Phase 1 MVP Implementation (Completed)
+
+#### Database
+- Migration 040: Extended `competitions` table (format, scoring rules, tiebreaker_rules), extended `events` table (competition_id, round_number, match_number, pitch), created `competition_standings` table with RLS
+
+#### Pure Logic Modules (no DB access)
+- `round-robin.ts`: Circle method algorithm for single/double round-robin fixture generation, handles odd teams with BYE
+- `standings-engine.ts`: Calculates standings from fixtures with configurable scoring rules and tiebreakers (goal_difference, goals_scored, head_to_head, alphabetical)
+
+#### API Layer
+- `tournament-api.ts`: getTournamentConfig, updateTournamentConfig, getFixtures, getFixturesByRound, getStandings, getMyTournaments, generateFixtures (with validation, pitch scheduling, bulk insert), recalculateStandings, cancelFixture
+
+#### UI Components
+- `StandingsTable.tsx`: Semantic HTML table with team highlighting, loading skeleton, responsive
+- `FixtureList.tsx`: Grouped by round, status badges, team highlighting
+- `TournamentConfig.tsx`: Admin config panel (format, scoring, fixture generation with match days/pitches)
+
+#### Pages
+- `DesktopTournamentPage.tsx`: Admin view with competition selector, config, standings, fixtures
+- `TournamentPage.tsx`: Mobile view with tabs (Standings/Fixtures), team highlighting, tournament selector
+
+#### Routes
+- `/tournaments` (mobile, all authenticated users)
+- `/desktop/tournaments` (desktop, admin only)
+
+#### Integration
+- `events-api.ts`: Added `getEventsByCompetition()` method
+- Routes configured in `routes/index.tsx`
 
 ### Lite User UI Implementation (Completed)
 
