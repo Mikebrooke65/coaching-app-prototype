@@ -189,6 +189,19 @@ export class EventsApi extends ApiClient {
     });
   }
 
+  // Get events for a specific competition
+  async getEventsByCompetition(competitionId: string): Promise<Event[]> {
+    const { data, error } = await this.supabase
+      .from('events')
+      .select('*')
+      .eq('competition_id', competitionId)
+      .order('round_number', { ascending: true })
+      .order('match_number', { ascending: true });
+
+    if (error) throw new ApiError(error.message);
+    return data as Event[];
+  }
+
   // Update game event score
   async updateEventScore(
     eventId: string,

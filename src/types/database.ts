@@ -277,6 +277,9 @@ export interface TeamMemberWithTeam extends TeamMember {
   team: Team;
 }
 
+// Tournament format type
+export type TournamentFormat = 'single_round_robin' | 'double_round_robin';
+
 // Competition
 export interface Competition {
   id: string;
@@ -285,8 +288,28 @@ export interface Competition {
   status: 'active' | 'closed';
   start_date: string;
   end_date: string;
+  format?: TournamentFormat;
+  points_for_win?: number;
+  points_for_draw?: number;
+  points_for_loss?: number;
+  tiebreaker_rules?: string[];
   created_at: string;
   updated_at: string;
+}
+
+// Competition standing (materialized standings row)
+export interface CompetitionStanding {
+  id: string;
+  competition_id: string;
+  team_id: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+  goal_difference: number;
+  points: number;
 }
 
 // Competition-Team link
@@ -422,6 +445,10 @@ export interface Event {
   target_roles: string[];
   target_divisions: string[];
   target_age_groups: string[];
+  competition_id?: string;
+  round_number?: number;
+  match_number?: number;
+  pitch?: string;
   created_at: string;
   updated_at: string;
   created_by?: string;

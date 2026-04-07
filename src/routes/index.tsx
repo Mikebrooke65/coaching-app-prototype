@@ -20,6 +20,7 @@ import { Schedule } from '../pages/Schedule';
 import { Messaging } from '../pages/Messaging';
 import { AICoach } from '../pages/AICoach';
 import { SubsPage } from '../pages/SubsPage';
+import { TournamentPage } from '../pages/TournamentPage';
 
 // Desktop admin pages
 import { DesktopLanding } from '../pages/desktop/DesktopLanding';
@@ -35,6 +36,7 @@ import { Announcements } from '../pages/desktop/Announcements';
 import { LessonBuilder } from '../pages/desktop/LessonBuilder';
 import { SessionBuilder } from '../pages/desktop/SessionBuilder';
 import { CompetitionsPage } from '../pages/desktop/CompetitionsPage';
+import { DesktopTournamentPage } from '../pages/desktop/DesktopTournamentPage';
 
 // Reporting pages
 import { DesktopReporting } from '../pages/desktop/DesktopReporting';
@@ -157,6 +159,10 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: 'tournaments',
+        element: <TournamentPage />,
+      },
     ],
   },
 
@@ -249,6 +255,10 @@ export const router = createBrowserRouter([
       {
         path: 'competitions',
         element: <CompetitionsPage />,
+      },
+      {
+        path: 'tournaments',
+        element: <DesktopTournamentPage />,
       },
     ],
   },
